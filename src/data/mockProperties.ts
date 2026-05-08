@@ -4,7 +4,7 @@ export const mockProperties: PropertyCardProps[] = [
   {
     id: "1",
     name: "Luxury Villa in Anna Nagar",
-    image: "/assets/images/property_images/1744975533_pexels-davidmcbee-1546166.jpg",
+    image: "/assets/images/property_images/1752744094_HouseLink360 - Sree Sai - Pallikaranai - 1280x667px -Tablet - Web Banner.png",
     permalink: "luxury-villa-anna-nagar",
     isFeatured: true,
     type: "Owner",

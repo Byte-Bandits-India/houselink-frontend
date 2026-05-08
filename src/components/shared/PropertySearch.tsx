@@ -1,283 +1,261 @@
 "use client";
 
 import { useState } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
-import { Select } from "antd";
+import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const categories = [
-  { id: "all",         name: "All" },
-  { id: "plots",       name: "Plots" },
-  { id: "apartments",  name: "Apartments" },
-  { id: "villas",      name: "Villas" },
-  { id: "house",       name: "Individual House" },
-  { id: "commercial",  name: "Commercial Property" },
+  { id: "all", name: "All" },
+  { id: "plots", name: "Plots" },
+  { id: "apartments", name: "Apartments" },
+  { id: "villas", name: "Villas" },
+  { id: "house", name: "Individual House" },
+  { id: "commercial", name: "Commercial Property" },
 ];
 
+const cities = [
+  { value: "chennai", label: "Chennai" },
+  { value: "bangalore", label: "Bangalore" },
+  { value: "mumbai", label: "Mumbai" },
+  { value: "hyderabad", label: "Hyderabad" },
+];
+
+const propertyCategories = [
+  { value: "residential", label: "Residential" },
+  { value: "commercial", label: "Commercial" },
+];
+
+/* ── Reusable field wrapper ── */
+function Field({
+  label,
+  divider = true,
+  children,
+  className,
+}: {
+  label: string;
+  divider?: boolean;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col justify-center px-4 py-2",
+        divider && "border-r border-gray-200",
+        className
+      )}
+    >
+      <p className="text-[16px] font-medium text-black tracking-wide mb-3">
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+/* ── Native select styled to match ── */
+function NativeSelect({
+  options,
+  placeholder,
+}: {
+  options: { value: string; label: string }[];
+  placeholder: string;
+}) {
+  return (
+    <div className="relative">
+      <select
+        defaultValue=""
+        className="w-full appearance-none bg-transparent border-none outline-none text-sm text-gray-800 font-medium pr-5 cursor-pointer"
+      >
+        <option value="" disabled>
+          {placeholder}
+        </option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        size={13}
+        className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+      />
+    </div>
+  );
+}
+
 export default function PropertySearch() {
-  const [activeTab, setActiveTab]           = useState("sell");
-  const [showAdvanced, setShowAdvanced]     = useState(false);
+  const [activeTab, setActiveTab] = useState("sell");
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [keyword, setKeyword] = useState("");
+  const [location, setLocation] = useState("");
 
   return (
-    <div className="w-full mb-10 relative z-20 -mt-24">
+    <div className="w-full max-w-[1240px] mx-auto mb-10 relative z-20 -mt-24">
 
-      {/* ── Tabs (For Sale / Rent Lease) ───────────────────────────────────── */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 0 }}>
+      {/* ── Tabs ── */}
+      <div className="flex justify-center">
         {[
           { key: "sell", label: "For Sale" },
-          { key: "rent", label: "Rent/Lease" },
+          { key: "rent", label: "Rent / Lease" },
         ].map(({ key, label }, i) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            style={{
-              minWidth: 130,
-              padding: "10px 30px",
-              fontSize: 16,
-              fontWeight: 600,
-              cursor: "pointer",
-              border: "none",
-              /* Active tab: white (matches card), inactive: translucent */
-              backgroundColor: activeTab === key ? "#ffffff" : "rgba(255,255,255,0.18)",
-              color: activeTab === key ? "#153e75" : "#ffffff",
-              borderTopLeftRadius:  i === 0 ? 10 : 0,
-              borderTopRightRadius: i === 1 ? 10 : 0,
-              borderBottomLeftRadius:  0,
-              borderBottomRightRadius: 0,
-              backdropFilter: "blur(6px)",
-              transition: "background-color 0.25s, color 0.25s",
-              /* Bottom of active tab merges into white card below */
-              boxShadow: activeTab === key
-                ? "0 -2px 8px rgba(0,0,0,0.06)"
-                : "none",
-            }}
+            className={cn(
+              "min-w-[130px] px-8 py-4 text-[15px] font-bold transition-all duration-200 backdrop-blur-lg",
+              i === 0 ? "rounded-tl-xl" : "rounded-tr-xl",
+              activeTab === key
+                ? "bg-white text-[#153e75] shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
+                : "bg-white/5 text-white hover:border-2 hover:border-white/50 hover:bg-white/20"
+            )}
           >
             {label}
           </button>
         ))}
       </div>
 
-      {/* ── White Search Card ────────────────────────────────────────────────── */}
-      <div
-        style={{
-          backgroundColor: "#ffffff",
-          borderRadius: 16,
-          boxShadow: "rgb(38, 57, 77) 0px 20px 30px -10px",
-          padding: "16px 20px",
-          position: "relative",
-          zIndex: 20,
-        }}
-      >
-        {/* Form row */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "flex-end",
-            gap: 0,
-          }}
-        >
-          <input type="hidden" name="property_purpose" value={activeTab} />
+      {/* ── Search Card ── */}
+      <div className="bg-white rounded-2xl rounded-tr-2xl shadow-[rgb(38,57,77)_0px_20px_30px_-10px] px-5 py-6">
+
+        {/* Main form row */}
+        <div className="flex flex-wrap items-stretch gap-y-2">
 
           {/* City */}
-          <div style={{ flex: "1 1 120px", borderRight: "1px solid #d9d9d9", paddingRight: 16, marginBottom: 8 }}>
-            <div style={{ fontSize: 12, fontWeight: 500, color: "#5c6368", marginBottom: 6 }}>City</div>
-            <Select
-              defaultValue="chennai"
-              variant="borderless"
-              options={[
-                { value: "0",         label: "Select City" },
-                { value: "chennai",   label: "Chennai" },
-                { value: "bangalore", label: "Bangalore" },
-              ]}
-              style={{ width: "100%", padding: 0, margin: "-4px -11px", color: "black", fontWeight: 400 }}
-            />
-          </div>
+          <Field label="City" className="flex-[1_1_120px]">
+            <NativeSelect options={cities} placeholder="Select City" />
+          </Field>
 
           {/* Keyword */}
-          <div style={{ flex: "1.5 1 160px", borderRight: "1px solid #d9d9d9", padding: "0 16px", marginBottom: 8 }}>
-            <div style={{ fontSize: 12, fontWeight: 500, color: "#5c6368", marginBottom: 6 }}>Keyword</div>
+          <Field label="Keyword" className="flex-[1.5_1_160px]">
             <input
               type="text"
-              id="keywordInput"
-              name="keyword"
-              placeholder="Search for Keyword"
-              autoComplete="off"
-              style={{
-                width: "100%",
-                border: "none",
-                outline: "none",
-                background: "transparent",
-                fontSize: 14,
-                color: "#212529",
-                padding: "4px 0",
-              }}
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              placeholder="Search for keyword"
+              className="bg-transparent border-none outline-none text-base text-black placeholder:text-black font-medium py-0.5"
             />
-          </div>
+          </Field>
 
           {/* Location */}
-          <div style={{ flex: "2 1 200px", borderRight: "1px solid #d9d9d9", padding: "0 16px", marginBottom: 8 }}>
-            <div style={{ fontSize: 12, fontWeight: 500, color: "#5c6368", marginBottom: 6 }}>Location</div>
+          <Field label="Location" className="flex-[2_1_200px]">
             <input
               type="text"
-              id="locationInput"
-              name="location"
-              placeholder="Enter Location"
-              autoComplete="off"
-              style={{
-                width: "100%",
-                border: "none",
-                outline: "none",
-                background: "transparent",
-                fontSize: 14,
-                color: "#212529",
-                padding: "4px 0",
-              }}
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Enter location"
+              className="bg-transparent border-none outline-none text-sm text-black placeholder:text-black font-medium py-0.5"
             />
-          </div>
+          </Field>
 
           {/* Category */}
-          <div style={{ flex: "1.2 1 140px", borderRight: "1px solid #d9d9d9", padding: "0 16px", marginBottom: 8 }}>
-            <div style={{ fontSize: 12, fontWeight: 500, color: "#5c6368", marginBottom: 6 }}>Category</div>
-            <Select
-              defaultValue=""
-              variant="borderless"
-              options={[
-                { value: "",            label: "Select Category" },
-                { value: "residential", label: "Residential" },
-                { value: "commercial",  label: "Commercial" },
-              ]}
-              style={{ width: "100%", padding: 0, margin: "-4px -11px", color: "black" }}
-            />
-          </div>
+          <Field label="Category" divider={false} className="flex-[1.2_1_140px]">
+            <NativeSelect options={propertyCategories} placeholder="Select Category" />
+          </Field>
 
-          {/* Buttons */}
-          <div style={{ flex: "0 0 auto", paddingLeft: 16, display: "flex", gap: 8, height: 45, marginBottom: 8 }}>
-            {/* Advanced */}
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 pl-4 flex-shrink-0">
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "0 18px",
-                border: "1px solid #d0d0d0",
-                borderRadius: 8,
-                background: "#fff",
-                color: "#444",
-                fontSize: 14,
-                fontWeight: 500,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                transition: "background 0.2s",
-              }}
+              className={cn(
+                "flex items-center gap-1.5 px-4 h-[42px] border rounded-lg text-sm font-medium transition-colors duration-200 whitespace-nowrap",
+                showAdvanced
+                  ? "border-[#153e75] text-[#153e75] bg-[#eaf0fb]"
+                  : "border-gray-300 text-gray-600 bg-white hover:border-[#153e75] hover:text-[#153e75]"
+              )}
             >
-              <SlidersHorizontal size={14} /> Advanced
+              <SlidersHorizontal size={14} />
+              Advanced
             </button>
 
-            {/* Search */}
             <button
               type="button"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "0 22px",
-                border: "none",
-                borderRadius: 8,
-                backgroundColor: "#153e75",
-                color: "#fff",
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                boxShadow: "0 4px 12px rgba(21,62,117,0.3)",
-                transition: "background 0.2s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1a4d8f")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#153e75")}
+              className="flex items-center gap-1.5 px-6 h-[42px] bg-[#153e75] hover:bg-[#1a4d8f] text-white text-sm font-semibold rounded-lg shadow-[0_4px_12px_rgba(21,62,117,0.3)] transition-colors duration-200 whitespace-nowrap"
             >
-              <Search size={14} /> Search
+              <Search size={14} />
+              Search
             </button>
           </div>
         </div>
 
-        {/* ── Advanced Filters ──────────────────────────────────────────────── */}
+        {/* ── Advanced Filters ── */}
         {showAdvanced && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: 24,
-              paddingTop: 20,
-              marginTop: 16,
-              borderTop: "1px solid #e5e7eb",
-            }}
-          >
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-5 mt-4 border-t border-gray-100">
+
+            {/* Price Range */}
             <div>
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#5c6368", marginBottom: 8 }}>Price Range</div>
-              <input type="range" min={0} max={10000000} style={{ width: "100%", accentColor: "#153e75" }} />
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#94a3b8", marginTop: 4 }}>
-                <span>₹0</span><span>₹1 Cr+</span>
+              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-2">
+                Price Range
+              </p>
+              <input
+                type="range"
+                min={0}
+                max={10000000}
+                className="w-full accent-[#153e75]"
+              />
+              <div className="flex justify-between text-[11px] text-gray-400 mt-1">
+                <span>₹0</span>
+                <span>₹1 Cr+</span>
               </div>
             </div>
+
+            {/* Bedrooms */}
             <div>
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#5c6368", marginBottom: 8 }}>Bathrooms</div>
-              <select name="bathrooms" style={{ width: "100%", border: "1px solid #c4c4c4", borderRadius: 6, padding: "8px 12px", fontSize: 14, color: "#212529" }}>
+              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-2">
+                Bedrooms
+              </p>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#153e75] transition-colors">
                 <option value="">All</option>
-                {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Bathroom{n > 1 ? "s" : ""}</option>)}
-                <option value="5+">5+ Bathrooms</option>
-              </select>
-            </div>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#5c6368", marginBottom: 8 }}>Bedrooms</div>
-              <select name="bedrooms" style={{ width: "100%", border: "1px solid #c4c4c4", borderRadius: 6, padding: "8px 12px", fontSize: 14, color: "#212529" }}>
-                <option value="">All</option>
-                {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Bedroom{n > 1 ? "s" : ""}</option>)}
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {n} Bedroom{n > 1 ? "s" : ""}
+                  </option>
+                ))}
                 <option value="5+">5+ Bedrooms</option>
               </select>
             </div>
+
+            {/* Bathrooms */}
+            <div>
+              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-2">
+                Bathrooms
+              </p>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#153e75] transition-colors">
+                <option value="">All</option>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {n} Bathroom{n > 1 ? "s" : ""}
+                  </option>
+                ))}
+                <option value="5+">5+ Bathrooms</option>
+              </select>
+            </div>
+
           </div>
         )}
       </div>
 
-      {/* ── Category Nav — underline style matching screenshot ──────────────── */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 28, marginTop: 36, flexWrap: "wrap" }}>
+      {/* ── Category Nav ── */}
+      <div className="flex justify-center gap-7 mt-9 flex-wrap">
         {categories.map((cat) => (
           <button
             key={cat.id}
             type="button"
             onClick={() => setActiveCategory(cat.id)}
-            style={{
-              background: "none",
-              border: "none",
-              borderBottom: activeCategory === cat.id ? "2.5px solid #153e75" : "2.5px solid transparent",
-              color: activeCategory === cat.id ? "#153e75" : "#6b7280",
-              fontSize: 15,
-              fontWeight: activeCategory === cat.id ? 600 : 400,
-              padding: "4px 2px 6px",
-              cursor: "pointer",
-              transition: "color 0.2s ease, border-color 0.2s ease",
-              whiteSpace: "nowrap",
-            }}
-            onMouseEnter={(e) => {
-              if (activeCategory !== cat.id) {
-                e.currentTarget.style.color = "#153e75";
-                e.currentTarget.style.borderBottomColor = "rgba(21,62,117,0.3)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (activeCategory !== cat.id) {
-                e.currentTarget.style.color = "#6b7280";
-                e.currentTarget.style.borderBottomColor = "transparent";
-              }
-            }}
+            className={cn(
+              "pb-1.5 text-[15px] font-medium border-b-[2.5px] transition-all duration-200 whitespace-nowrap",
+              activeCategory === cat.id
+                ? "border-[#153e75] text-[#153e75] font-semibold"
+                : "border-transparent text-gray-500 hover:text-[#153e75] hover:border-[#153e75]/30"
+            )}
           >
             {cat.name}
           </button>
         ))}
       </div>
+
     </div>
   );
 }

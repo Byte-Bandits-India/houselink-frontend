@@ -47,49 +47,47 @@ export default async function PropertyDetailPage({
       <PropertyGallery images={images} />
 
       {/* ── Body ── */}
-      <div className="container mx-auto px-4 pt-6">
+      <div className="container mx-auto px-4 pt-6 bg-white rounded-xl -top-16 relative">
+        {/* Header card */}
+        <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-start gap-4 justify-between">
+            <h1 className="text-xl md:text-4xl font-semibold text-gray-900 leading-snug flex-1">
+              {property.name}
+            </h1>
+            <div className="bg-[#1a3c6b] text-white px-5 py-3 rounded-xl whitespace-nowrap self-start">
+              <span className="text-xl font-semibold">{priceFormatted}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-5 mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
+            <span className="flex items-center gap-1.5">
+              <Calendar size={15} className="text-[#1a3c6b]" />
+              Listed: {property.created_at || "Recently"}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Tag size={15} className="text-[#1a3c6b]" />
+              {property.categoryName}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Eye size={15} className="text-[#1a3c6b]" />
+              {property.views ?? 0} Views
+            </span>
+            <button className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors text-sm">
+              <Heart
+                size={16}
+                className={
+                  property.isInWishlist
+                    ? "fill-red-500 text-red-500"
+                    : "text-gray-400"
+                }
+              />
+              Save
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
           {/* ── Left column ── */}
           <div className="space-y-4">
-
-            {/* Header card */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-              <div className="flex flex-col md:flex-row md:items-start gap-4 justify-between">
-                <h1 className="text-xl md:text-2xl font-semibold text-gray-900 leading-snug flex-1">
-                  {property.name}
-                </h1>
-                <div className="bg-[#1a3c6b] text-white px-5 py-3 rounded-xl whitespace-nowrap self-start">
-                  <span className="text-xl font-semibold">{priceFormatted}</span>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-5 mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
-                <span className="flex items-center gap-1.5">
-                  <Calendar size={15} className="text-[#1a3c6b]" />
-                  Listed: {property.created_at || "Recently"}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Tag size={15} className="text-[#1a3c6b]" />
-                  {property.categoryName}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Eye size={15} className="text-[#1a3c6b]" />
-                  {property.views ?? 0} Views
-                </span>
-                <button className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors text-sm">
-                  <Heart
-                    size={16}
-                    className={
-                      property.isInWishlist
-                        ? "fill-red-500 text-red-500"
-                        : "text-gray-400"
-                    }
-                  />
-                  Save
-                </button>
-              </div>
-            </div>
-
             {/* Description */}
             {property.description && (
               <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
@@ -230,7 +228,7 @@ export default async function PropertyDetailPage({
           </div>
 
           {/* ── Sidebar ── */}
-          <div className="lg:sticky lg:top-6 h-fit">
+          <div className="lg:sticky lg:top-16 h-fit">
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <h3 className="text-base font-semibold text-gray-900 mb-1">
                 Login/Signup to Request Info

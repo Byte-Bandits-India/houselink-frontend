@@ -1,3 +1,4 @@
+// Legacy stub — dashboard top nav is now part of the main Header
 export default function DashboardTopNav() {
-  return <div>{/* DashboardTopNav */}</div>;
+  return null;
 }

@@ -81,11 +81,10 @@ export default function FeaturedProperties() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-7 py-2.5 text-sm font-bold border-2 border-brand rounded-md transition-all duration-300 ${
-                activeTab === tab
-                  ? "bg-brand text-white shadow-md"
-                  : "bg-white text-brand hover:bg-brand/5"
-              }`}
+              className={`px-7 py-2.5 text-sm font-bold border-2 border-brand rounded-md transition-all duration-300 ${activeTab === tab
+                ? "bg-brand text-white shadow-md"
+                : "bg-white text-brand hover:bg-brand/5"
+                }`}
             >
               {tab === "sell" ? "For Sale" : "Rent/Lease"}
             </button>
@@ -104,18 +103,16 @@ export default function FeaturedProperties() {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`relative pb-1.5 text-[15px] font-medium transition-all duration-300 whitespace-nowrap ${
-                activeCategory === cat.id
-                  ? "text-brand font-semibold"
-                  : "text-ink-muted hover:text-brand"
-              }`}
+              className={`relative pb-1.5 text-[15px] font-medium transition-all duration-300 whitespace-nowrap ${activeCategory === cat.id
+                ? "text-brand font-semibold"
+                : "text-gray-500 hover:text-brand"
+                }`}
             >
               {cat.name}
               {/* Active underline */}
               <span
-                className={`absolute bottom-0 left-0 h-[2.5px] bg-brand rounded-full transition-all duration-300 ${
-                  activeCategory === cat.id ? "w-full" : "w-0"
-                }`}
+                className={`absolute bottom-0 left-0 h-[2.5px] bg-brand rounded-full transition-all duration-300 ${activeCategory === cat.id ? "w-full" : "w-0"
+                  }`}
               />
             </button>
           ))}
@@ -155,7 +152,7 @@ export default function FeaturedProperties() {
         >
           <Link
             href={`/properties?property_purpose=${activeTab}`}
-            className="inline-block px-10 py-3.5 bg-brand text-white font-semibold text-sm uppercase tracking-wider hover:bg-brand-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            className="inline-block px-10 py-3 bg-brand text-white rounded-[30px] font-semibold text-sm uppercase tracking-wider hover:bg-brand-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
           >
             See All Properties
           </Link>

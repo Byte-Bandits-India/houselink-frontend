@@ -8,118 +8,102 @@ interface GalleryImage {
     image_url: string;
 }
 
-interface PropertyGalleryProps {
-    images: GalleryImage[];
-}
-
-export default function PropertyGallery({ images }: PropertyGalleryProps) {
+export default function PropertyGallery({ images }: { images: GalleryImage[] }) {
     const [current, setCurrent] = useState(0);
-    const [direction, setDirection] = useState<"left" | "right" | null>(null);
-    const [animating, setAnimating] = useState(false);
-
+    const [sliding, setSliding] = useState(false);
+    const [slideDir, setSlideDir] = useState<"left" | "right">("left");
     const total = images.length;
 
-    const goTo = (index: number, dir: "left" | "right") => {
-        if (animating || total <= 1) return;
-        setDirection(dir);
-        setAnimating(true);
+    const go = (dir: "left" | "right") => {
+        if (sliding || total <= 1) return;
+        setSlideDir(dir);
+        setSliding(true);
         setTimeout(() => {
-            setCurrent(index);
-            setAnimating(false);
-            setDirection(null);
-        }, 350);
+            setCurrent((c) =>
+                dir === "left" ? (c + 1) % total : (c - 1 + total) % total
+            );
+            setSliding(false);
+        }, 380);
     };
 
-    const prev = () => {
-        const prevIndex = (current - 1 + total) % total;
-        goTo(prevIndex, "right");
-    };
-
-    const next = () => {
-        const nextIndex = (current + 1) % total;
-        goTo(nextIndex, "left");
-    };
-
-    // Visible images: main (center), left thumb, right thumb
-    const getIndex = (offset: number) => (current + offset + total) % total;
+    const idx = (offset: number) => (current + offset + total) % total;
 
     return (
-        <div className="relative w-full overflow-hidden">
-            {/* Sliding strip */}
-            <div
-                className="flex h-[240px] md:h-[420px] transition-transform duration-350 ease-in-out"
-                style={{
-                    transform: animating
-                        ? `translateX(${direction === "left" ? "-33.333%" : "33.333%"})`
-                        : "translateX(0)",
-                    transition: animating ? "transform 0.35s ease-in-out" : "none",
-                }}
-            >
-                {/* Show 3 images side by side — left, center (main), right */}
-                {[-1, 0, 1].map((offset) => {
-                    const idx = getIndex(offset);
-                    const isMain = offset === 0;
-                    return (
-                        <div
-                            key={idx}
-                            className={`relative flex-shrink-0 overflow-hidden ${isMain ? "w-1/2" : "w-1/4"
-                                }`}
-                        >
-                            <Image
-                                src={images[idx].image_url}
-                                alt={`Property photo ${idx + 1}`}
-                                fill
-                                className="object-cover"
-                                priority={isMain}
-                            />
-                            {/* Dim side images slightly */}
-                            {!isMain && (
-                                <div className="absolute inset-0 bg-black/20 pointer-events-none" />
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-
+        // Outer wrapper: positions the arrows outside the clip area
+        <div className="relative w-full select-none">
             {/* Left arrow */}
             <button
-                onClick={prev}
+                onClick={() => go("right")}
                 aria-label="Previous image"
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 active:scale-95 transition-all"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 bg-white rounded flex items-center justify-center shadow-md hover:bg-gray-50 active:scale-95 transition-all"
             >
                 <ChevronLeft size={18} className="text-gray-700" />
             </button>
 
+            {/* Clipping container — hides the overflowing slides */}
+            <div className="overflow-hidden w-full">
+                {/* Sliding strip */}
+                <div
+                    className="flex h-[200px] sm:h-[280px] md:h-[370px] w-[400%]"
+                    style={{
+                        transform: sliding
+                            ? `translateX(${slideDir === "left" ? "-12.5%" : "0%"})`
+                            : "translateX(-6.25%)",
+                        transition: sliding
+                            ? "transform 0.38s cubic-bezier(0.4,0,0.2,1)"
+                            : "none",
+                    }}
+                >
+                    {([-2, -1, 0, 1, 2] as const).map((offset) => {
+                        const i = idx(offset);
+                        
+                        let isCenter = false;
+                        if (sliding) {
+                            if (slideDir === "left" && offset === 1) isCenter = true;
+                            if (slideDir === "right" && offset === -1) isCenter = true;
+                        } else {
+                            if (offset === 0) isCenter = true;
+                        }
+
+                        // Each item takes a percentage of the *strip*.
+                        // We set strip width to 400% of parent.
+                        // So 25% of parent = 6.25% of strip.
+                        // 50% of parent = 12.5% of strip.
+                        const widthPct = isCenter ? "12.5%" : "6.25%";
+
+                        return (
+                            <div
+                                key={`${i}-${offset}`}
+                                className="relative flex-shrink-0 h-full p-1"
+                                style={{
+                                    width: widthPct,
+                                    transition: sliding ? "width 0.38s cubic-bezier(0.4,0,0.2,1)" : "none",
+                                }}
+                            >
+                                <div className={`relative w-full h-full overflow-hidden transition-all duration-300 ${isCenter ? 'rounded-xl shadow-md' : 'rounded-lg opacity-60'}`}>
+                                    <Image
+                                        src={images[i].image_url}
+                                        alt={`Property photo ${i + 1}`}
+                                        fill
+                                        sizes={isCenter ? "50vw" : "25vw"}
+                                        className="object-cover"
+                                        priority={offset === 0}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
             {/* Right arrow */}
             <button
-                onClick={next}
+                onClick={() => go("left")}
                 aria-label="Next image"
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 active:scale-95 transition-all"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 bg-white rounded flex items-center justify-center shadow-md hover:bg-gray-50 active:scale-95 transition-all"
             >
                 <ChevronRight size={18} className="text-gray-700" />
             </button>
-
-            {/* Dot indicators */}
-            {total > 1 && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                    {images.map((_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => goTo(i, i > current ? "left" : "right")}
-                            aria-label={`Go to image ${i + 1}`}
-                            className={`rounded-full transition-all duration-300 ${i === current
-                                    ? "w-5 h-1.5 bg-white"
-                                    : "w-1.5 h-1.5 bg-white/50"
-                                }`}
-                        />
-                    ))}
-                </div>
-            )}
-
-            {/* Image counter */}
-            <div className="absolute top-3 right-3 z-10 bg-black/40 text-white text-xs px-2.5 py-1 rounded-full backdrop-blur-sm">
-                {current + 1} / {total}
-            </div>
         </div>
     );
 }

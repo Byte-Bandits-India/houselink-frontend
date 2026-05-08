@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { FacebookFilled, InstagramFilled } from "@ant-design/icons";
+import { FacebookFilled, InstagramFilled, DribbbleOutlined } from "@ant-design/icons";
 import { useState } from "react";
 
 const navLinks = [
@@ -39,7 +39,7 @@ const socialLinks = [
     label: "Facebook",
   },
   {
-    Icon: FacebookFilled,
+    Icon: DribbbleOutlined,
     href: "https://dribbble.com/houselink360",
     label: "Dribbble",
   },
@@ -54,19 +54,19 @@ export default function Footer() {
   const [email, setEmail] = useState("");
 
   return (
-    <footer className="bg-[#0f1418] text-white">
+    <footer className="bg-[#192324] text-white relative z-50">
       {/* Top bar: logo + socials */}
       <div className="container mx-auto px-12 py-6 flex items-center justify-between border-b border-white/10">
         <Link href="/" className="flex items-center gap-3">
           <Image
-            src="/assets/logo.svg"
+            src="/assets/images/footer/footer-logo.png"
             alt="Houselink360"
             width={160}
             height={45}
           />
         </Link>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-white/50 mr-1">Follow Our Socials</span>
+          <span className="text-lg font-bold text-white mr-1">Follow Our Socials</span>
           {socialLinks.map(({ Icon, href, label }) => (
             <a
               key={label}
@@ -74,7 +74,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={label}
-              className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-content-center hover:border-white/60 transition-colors duration-200 text-white/70 hover:text-white flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-white text-brand hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center shadow-sm text-lg"
             >
               <Icon />
             </a>
@@ -90,7 +90,7 @@ export default function Footer() {
             <li key={l.href}>
               <Link
                 href={l.href}
-                className="text-sm text-white/55 hover:text-white transition-colors"
+                className="text-base font-medium text-white hover:text-white transition-colors"
               >
                 {l.label}
               </Link>
@@ -100,13 +100,13 @@ export default function Footer() {
 
         {/* Col 2: Policies */}
         <div>
-          <h4 className="text-sm font-semibold text-white mb-5">Policies</h4>
+          <h4 className="text-lg font-bold text-white mb-5">Policies</h4>
           <ul className="space-y-3">
             {policyLinks.map((l) => (
               <li key={l.href}>
                 <Link
                   href={l.href}
-                  className="text-sm text-white/55 hover:text-white transition-colors"
+                  className="text-base font-medium text-white hover:text-white transition-colors"
                 >
                   {l.label}
                 </Link>
@@ -117,13 +117,13 @@ export default function Footer() {
 
         {/* Col 3: Contact */}
         <div>
-          <h4 className="text-sm font-semibold text-white mb-5">Contact Us</h4>
+          <h4 className="text-lg font-bold text-white mb-5">Contact Us</h4>
           <ul className="space-y-3">
             {contactLinks.map((l) => (
               <li key={l.href}>
                 <a
                   href={l.href}
-                  className="text-sm text-white/55 hover:text-white transition-colors"
+                  className="text-base font-medium text-white hover:text-white transition-colors"
                 >
                   {l.label}
                 </a>
@@ -134,10 +134,10 @@ export default function Footer() {
 
         {/* Col 4: Newsletter */}
         <div>
-          <h4 className="text-sm font-semibold text-white mb-5">
+          <h4 className="text-lg font-bold text-white mb-5">
             Get The Latest Trending News
           </h4>
-          <p className="text-sm text-white/50 leading-relaxed mb-5">
+          <p className="text-base font-medium text-white leading-relaxed mb-5">
             Your Dream Space Starts Here. Get Exclusive Design Straight to Your
             Inbox!
           </p>
@@ -160,7 +160,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="py-4 text-center text-xs text-white/30">
+      <div className="w-full py-6 pb-10 text-center text-sm font-medium text-white mt-auto">
         Copyright © {new Date().getFullYear()} All Rights Reserved.
       </div>
     </footer>

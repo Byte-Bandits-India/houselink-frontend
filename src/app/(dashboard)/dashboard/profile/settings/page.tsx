@@ -1,7 +1,6 @@
+import { redirect } from "next/navigation";
+
 export default function SettingsPage() {
-  return (
-    <div>
-      <h1>Settings</h1>
-    </div>
-  );
+  // Settings are part of Profile page with tabs
+  redirect("/dashboard/profile");
 }

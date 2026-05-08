@@ -18,7 +18,7 @@ export interface PropertyCardProps {
   direction?: string;
   features?: Array<{ name: string; icon?: string }>;
   isInWishlist?: boolean;
-  
+
   // Extra fields for details page
   seo_title?: string;
   seo_desc?: string;
@@ -83,16 +83,22 @@ export default function PropertyCard(props: PropertyCardProps) {
 
             <div className="property-overlay-top">
               <div className="property-tags">
-                {props.isFeatured && <span className="flag-tag success">Featured</span>}
-                {props.type && <span className="property-type-tag capitalize">{props.type}</span>}
+                {props.isFeatured && <span className="tag-featured">Featured</span>}
+                {props.ownership_type && <span className="tag-owner">{props.ownership_type}</span>}
+                {props.property_for && <span className="tag-sell">{props.property_for}</span>}
+                {!props.property_for && props.type && <span className="tag-sell capitalize">{props.type}</span>}
               </div>
               <button className="property-wishlist-btn group/btn">
-                <Heart className={`w-5 h-5 ${props.isInWishlist ? 'fill-danger text-danger' : 'text-ink-secondary group-hover/btn:text-danger group-hover/btn:fill-danger transition-colors'}`} />
+                <Heart className={`w-[22px] h-[22px] ${props.isInWishlist ? 'fill-black text-black' : 'text-black group-hover/btn:fill-black transition-colors'} stroke-[2px]`} />
               </button>
             </div>
 
             <div className="property-overlay-bottom">
-              {props.categoryName && <span className="property-category-tag">{props.categoryName}</span>}
+              {props.categoryName && (
+                <span className="property-category-tag flex items-center gap-2">
+                  {props.categoryName}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -102,22 +108,22 @@ export default function PropertyCard(props: PropertyCardProps) {
             <div className="property-specs flex items-center gap-4 text-xs font-semibold text-ink-secondary mb-3">
               {props.bedrooms !== undefined && (
                 <div className="flex items-center gap-1">
-                  <BedDouble size={14} className="text-ink" /> {props.bedrooms}
+                  <BedDouble size={14} className="text-ink fill-current" /> {props.bedrooms}
                 </div>
               )}
               {props.bathrooms !== undefined && (
                 <div className="flex items-center gap-1">
-                  <Bath size={14} className="text-ink" /> {props.bathrooms}
+                  <Bath size={14} className="text-ink fill-current" /> {props.bathrooms}
                 </div>
               )}
               {props.direction && (
                 <div className="flex items-center gap-1">
-                  <Compass size={14} className="text-ink" /> {props.direction}
+                  <Compass size={14} className="text-ink fill-current" /> {props.direction}
                 </div>
               )}
               {props.area && (
                 <div className="flex items-center gap-1">
-                  <Ruler size={14} className="text-ink" /> {props.area}
+                  <Ruler size={14} className="text-ink fill-current" /> {props.area}
                 </div>
               )}
             </div>

@@ -2,191 +2,197 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { heroSlides } from "@/data/mockProperties";
 
-const SLIDE_DURATION = 5000;
-const DRAG_THRESHOLD = 50;
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-const contentVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.15 } },
-  exit: {},
-};
+interface HeroSlide {
+  id: string | number;
+  image: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+}
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
-};
+// ─── Replace with your real data import ──────────────────────────────────────
+// import { heroSlides } from "@/data/mockProperties";
 
-// Slide enters from right (forward) or from left (backward)
-import type { Variants } from "framer-motion";
-const slideVariants: Variants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? "100%" : "-100%",
-  }),
-  center: {
-    x: "0%",
-    transition: {
-      duration: 0.7,
-      ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
-    },
+const heroSlides: HeroSlide[] = [
+  {
+    id: 1,
+    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop&q=80",
+    title: "List Your Property",
+    subtitle: "Premium Listings",
+    description: "Showcase your property to thousands of active seekers. Easy listing. Maximum visibility. Zero hassle.",
   },
-  exit: (direction: number) => ({
-    x: direction > 0 ? "-100%" : "100%",
-    transition: {
-      duration: 0.7,
-      ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
-    },
-  }),
-};
+  {
+    id: 2,
+    image: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200&auto=format&fit=crop&q=80",
+    title: "Find Your Dream Home",
+    subtitle: "Exclusive Properties",
+    description: "Browse thousands of verified listings across the city. From cozy apartments to luxury villas.",
+  },
+  {
+    id: 3,
+    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&auto=format&fit=crop&q=80",
+    title: "Invest in Real Estate",
+    subtitle: "Best Deals",
+    description: "Discover high-yield investment properties and commercial spaces with expert guidance.",
+  },
+  {
+    id: 4,
+    image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1200&auto=format&fit=crop&q=80",
+    title: "Rent with Confidence",
+    subtitle: "Verified Rentals",
+    description: "Find verified rental homes and apartments with transparent pricing and zero brokerage.",
+  },
+];
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const SLIDE_DURATION = 4500;
+
+// ─── Slide image state helpers ────────────────────────────────────────────────
+
+type SlideState = "entering" | "active" | "exiting";
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HeroSlider() {
   const [current, setCurrent] = useState(0);
-  const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
-  const dragStartX = useRef<number | null>(null);
+  const [states, setStates] = useState<SlideState[]>(
+    heroSlides.map((_, i) => (i === 0 ? "active" : "entering"))
+  );
+  const [activeTab, setActiveTab] = useState<"sell" | "rent">("sell");
+  const transitioning = useRef(false);
+
+  const goTo = useCallback((next: number) => {
+    if (transitioning.current || next === current) return;
+    transitioning.current = true;
+
+    const prev = current;
+    setCurrent(next);
+
+    setStates((prev_states) => {
+      const s = [...prev_states];
+      s[next] = "entering";
+      return s;
+    });
+
+    // Double rAF to ensure entering class is painted before removing it
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setStates((s) => {
+          const ns = [...s];
+          ns[next] = "active";
+          ns[prev] = "exiting";
+          return ns;
+        });
+      });
+    });
+
+    setTimeout(() => {
+      setStates((s) => {
+        const ns = [...s];
+        ns[prev] = "entering"; // reset off-screen
+        return ns;
+      });
+      transitioning.current = false;
+    }, 800);
+  }, [current]);
 
   const handleNext = useCallback(() => {
-    setDirection(1);
-    setCurrent((prev) => (prev + 1) % heroSlides.length);
-  }, []);
+    goTo((current + 1) % heroSlides.length);
+  }, [current, goTo]);
 
-  const handlePrev = useCallback(() => {
-    setDirection(-1);
-    setCurrent((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
-  }, []);
-
-  const handleDotClick = useCallback(
-    (i: number) => {
-      setDirection(i > current ? 1 : -1);
-      setCurrent(i);
-    },
-    [current],
-  );
-
+  // Auto-advance (right to left only)
   useEffect(() => {
     const timer = setInterval(handleNext, SLIDE_DURATION);
     return () => clearInterval(timer);
   }, [handleNext]);
 
-  const onPointerDown = (e: React.PointerEvent<HTMLElement>) => {
-    dragStartX.current = e.clientX;
-  };
-
-  const onPointerUp = (e: React.PointerEvent<HTMLElement>) => {
-    if (dragStartX.current === null) return;
-    const diff = dragStartX.current - e.clientX;
-    if (Math.abs(diff) > DRAG_THRESHOLD) {
-      if (diff > 0) {
-        handleNext();
-      } else {
-        handlePrev();
-      }
-    }
-    dragStartX.current = null;
-  };
-
-  const slide = heroSlides[current];
-
   return (
-    <section
-      className="relative w-full h-[100vh] md:h-[80vh] min-h-[600px] overflow-hidden select-none"
-      onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
-    >
-      {/* Background images — animated with directional enter/exit */}
-      <AnimatePresence initial={false} custom={direction}>
-        <motion.div
+    <section className="relative w-full overflow-hidden select-none" style={{ height: "620px" }}>
+
+      {/* ── Background images ── */}
+      {heroSlides.map((slide, i) => (
+        <div
           key={slide.id}
-          className="absolute inset-0"
-          custom={direction}
-          variants={slideVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
+          className="absolute inset-0 transition-all"
+          style={{
+            transform:
+              states[i] === "entering"
+                ? "translateX(100%)"
+                : states[i] === "active"
+                  ? "translateX(0%)"
+                  : "translateX(-30%)",
+            opacity: states[i] === "active" ? 1 : 0,
+            transitionProperty: "transform, opacity",
+            transitionDuration: "0.75s",
+            transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
         >
           <Image
             src={slide.image}
             alt={slide.title}
             fill
             className="object-cover"
-            priority
+            priority={i === 0}
             draggable={false}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-        </motion.div>
-      </AnimatePresence>
+        </div>
+      ))}
 
-      {/* Content */}
-      <div className="container mx-auto px-4 h-full flex items-center relative z-10">
-        <div className="max-w-2xl">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={slide.id}
-              variants={contentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
+      {/* ── Gradient overlay (exact spec) ── */}
+      <div
+        className="absolute inset-0 z-10 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, #163D75 0%, #163D75 39.29%, rgba(115, 115, 115, 0) 100%)",
+        }}
+      />
+
+      {/* ── Hero text content ── */}
+      <div className="absolute inset-0 z-20 pointer-events-none">
+        <div className="container mx-auto h-full flex flex-col justify-center px-4 md:px-6 pointer-events-auto">
+          <div className="w-full md:w-[55%] lg:w-full">
+            <h1
+              className="font-bold text-white leading-tight mb-3"
+              style={{
+                fontSize: "clamp(2.5rem, 3.5vw, 5rem)",
+                letterSpacing: "-0.01em",
+              }}
             >
-              <motion.h3
-                className="text-brand-300 text-lg font-semibold tracking-wider uppercase mb-3"
-                variants={itemVariants}
-              >
-                {slide.subtitle}
-              </motion.h3>
-
-              <motion.h1
-                className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6"
-                variants={itemVariants}
-              >
-                {slide.title}
-              </motion.h1>
-
-              <motion.p
-                className="text-white/80 text-lg mb-8 leading-relaxed max-w-xl"
-                variants={itemVariants}
-              >
-                {slide.description}
-              </motion.p>
-
-              <motion.div
-                className="flex flex-wrap gap-4"
-                variants={itemVariants}
-              >
-                <Link
-                  href="/properties"
-                  className="px-8 py-3.5 bg-brand text-white font-semibold uppercase text-sm tracking-wider hover:bg-brand-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                  draggable={false}
-                >
-                  Explore More
-                </Link>
-                <Link
-                  href="/properties"
-                  className="px-8 py-3.5 bg-white backdrop-blur-sm border border-white/30 text-brand-900 font-semibold uppercase text-sm tracking-wider hover:bg-brand-700 hover:text-white transition-all duration-300 hover:-translate-y-0.5"
-                  draggable={false}
-                >
-                  View Properties
-                </Link>
-              </motion.div>
-            </motion.div>
-          </AnimatePresence>
+              {heroSlides[current].title}
+            </h1>
+            <p
+              className="text-white/80 leading-relaxed"
+              style={{ fontSize: "0.95rem", maxWidth: "340px" }}
+            >
+              {heroSlides[current].description}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Slide indicators */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3">
+      {/* ── Slide indicator dots ── */}
+      <div
+        className="absolute z-20 flex gap-1.5 items-center"
+        style={{ bottom: "148px", right: "2rem" }}
+      >
         {heroSlides.map((_, i) => (
           <button
             key={i}
-            onClick={() => handleDotClick(i)}
-            className={`h-1.5 rounded-full transition-all duration-500 ${
-              i === current
-                ? "w-10 bg-white"
-                : "w-4 bg-white/40 hover:bg-white/60"
-            }`}
+            onClick={() => goTo(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            className="rounded-full transition-all duration-500"
+            style={{
+              height: "5px",
+              width: i === current ? "28px" : "12px",
+              background: i === current ? "#fff" : "rgba(255,255,255,0.4)",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+            }}
           />
         ))}
       </div>
