@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Pencil, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Purpose = "sell" | "rent";
@@ -41,6 +42,7 @@ const statusBadge: Record<string, string> = {
 };
 
 export default function ExpiredPropertiesPage() {
+  const router = useRouter();
   const [purpose,   setPurpose]   = useState<Purpose>("sell");
   const [ownerType, setOwnerType] = useState<OwnerType>("owner");
 
@@ -114,7 +116,12 @@ export default function ExpiredPropertiesPage() {
               {filtered.map((p, idx) => (
                 <tr key={p.id} className={cn("border-t border-gray-100", idx % 2 === 0 ? "bg-white" : "bg-gray-50")}>
                   <td className="px-4 py-4">
-                    <p className="font-bold text-ink">{p.name}</p>
+                    <p
+                      className="font-bold text-ink hover:text-brand cursor-pointer transition-colors"
+                      onClick={() => router.push(`/dashboard/properties/${p.id}`)}
+                    >
+                      {p.name}
+                    </p>
                   </td>
                   <td className="px-4 py-4 text-center text-ink">{p.views}</td>
                   <td className="px-4 py-4 text-center font-bold text-ink">{p.id}</td>
@@ -132,7 +139,10 @@ export default function ExpiredPropertiesPage() {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex flex-col gap-1.5 items-center">
-                      <button className="flex items-center gap-1 text-xs font-semibold border border-brand text-brand px-3 py-1.5 rounded-lg hover:bg-brand hover:text-white transition-colors w-full justify-center">
+                      <button
+                        onClick={() => router.push(`/dashboard/properties/${p.id}/edit`)}
+                        className="flex items-center gap-1 text-xs font-semibold border border-brand text-brand px-3 py-1.5 rounded-lg hover:bg-brand hover:text-white transition-colors w-full justify-center"
+                      >
                         <Pencil className="w-3 h-3" /> Edit
                       </button>
                       <button className="flex items-center gap-1 text-xs font-semibold border border-red-400 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white transition-colors w-full justify-center">

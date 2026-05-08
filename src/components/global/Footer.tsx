@@ -23,31 +23,16 @@ const policyLinks = [
 
 const contactLinks = [
   { href: "tel:+919940234550", label: "+91 9940234550" },
-  {
-    href: "mailto:support@houselink360.com",
-    label: "support@houselink360.com",
-  },
+  { href: "mailto:support@houselink360.com", label: "support@houselink360.com" },
   { href: "/apps", label: "Our Apps With Logo" },
   { href: "/social", label: "Social Icons" },
   { href: "/newsletter", label: "Newsletter Subscription" },
 ];
 
 const socialLinks = [
-  {
-    Icon: FacebookFilled,
-    href: "https://facebook.com/houselink360",
-    label: "Facebook",
-  },
-  {
-    Icon: DribbbleOutlined,
-    href: "https://dribbble.com/houselink360",
-    label: "Dribbble",
-  },
-  {
-    Icon: InstagramFilled,
-    href: "https://instagram.com/houselink360",
-    label: "Instagram",
-  },
+  { Icon: FacebookFilled, href: "https://facebook.com/houselink360", label: "Facebook" },
+  { Icon: DribbbleOutlined, href: "https://dribbble.com/houselink360", label: "Dribbble" },
+  { Icon: InstagramFilled, href: "https://instagram.com/houselink360", label: "Instagram" },
 ];
 
 export default function Footer() {
@@ -55,8 +40,14 @@ export default function Footer() {
 
   return (
     <footer className="bg-[#192324] text-white relative z-50">
-      {/* Top bar: logo + socials */}
-      <div className="container mx-auto px-12 py-6 flex items-center justify-between border-b border-white/10">
+
+      {/* ── Top bar ── */}
+      {/* Desktop: logo left + socials right  |  Mobile: logo centred, socials centred below */}
+      <div className="container mx-auto px-6 md:px-12 py-6 border-b border-white/10
+                      flex flex-col items-center gap-4
+                      md:flex-row md:justify-between md:gap-0">
+
+        {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
           <Image
             src="/assets/images/footer/footer-logo.png"
@@ -65,6 +56,8 @@ export default function Footer() {
             height={45}
           />
         </Link>
+
+        {/* Socials */}
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold text-white mr-1">Follow Our Socials</span>
           {socialLinks.map(({ Icon, href, label }) => (
@@ -74,7 +67,9 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={label}
-              className="w-9 h-9 rounded-full bg-white text-brand hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center shadow-sm text-lg"
+              className="w-9 h-9 rounded-full bg-white text-brand hover:bg-gray-200
+                         transition-colors duration-200 flex items-center justify-center
+                         shadow-sm text-lg"
             >
               <Icon />
             </a>
@@ -82,15 +77,19 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Main 4-column grid */}
-      <div className="container mx-auto px-12 py-10 grid grid-cols-4 gap-6 border-b border-white/10">
-        {/* Col 1: Nav */}
+      {/* ── Main columns ── */}
+      {/* Desktop: 4-col grid  |  Mobile: single column, each section stacked */}
+      <div className="container mx-auto px-6 md:px-12 py-10 border-b border-white/10
+                      grid grid-cols-1 gap-8
+                      md:grid-cols-4 md:gap-6">
+
+        {/* Col 1 – Nav (no heading on mobile, matches screenshot) */}
         <ul className="space-y-3">
           {navLinks.map((l) => (
             <li key={l.href}>
               <Link
                 href={l.href}
-                className="text-base font-medium text-white hover:text-white transition-colors"
+                className="text-base font-medium text-white hover:text-white/80 transition-colors"
               >
                 {l.label}
               </Link>
@@ -98,7 +97,7 @@ export default function Footer() {
           ))}
         </ul>
 
-        {/* Col 2: Policies */}
+        {/* Col 2 – Policies */}
         <div>
           <h4 className="text-lg font-bold text-white mb-5">Policies</h4>
           <ul className="space-y-3">
@@ -106,7 +105,7 @@ export default function Footer() {
               <li key={l.href}>
                 <Link
                   href={l.href}
-                  className="text-base font-medium text-white hover:text-white transition-colors"
+                  className="text-base font-medium text-white hover:text-white/80 transition-colors"
                 >
                   {l.label}
                 </Link>
@@ -115,7 +114,7 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Col 3: Contact */}
+        {/* Col 3 – Contact */}
         <div>
           <h4 className="text-lg font-bold text-white mb-5">Contact Us</h4>
           <ul className="space-y-3">
@@ -123,7 +122,7 @@ export default function Footer() {
               <li key={l.href}>
                 <a
                   href={l.href}
-                  className="text-base font-medium text-white hover:text-white transition-colors"
+                  className="text-base font-medium text-white hover:text-white/80 transition-colors"
                 >
                   {l.label}
                 </a>
@@ -132,14 +131,13 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Col 4: Newsletter */}
+        {/* Col 4 – Newsletter */}
         <div>
           <h4 className="text-lg font-bold text-white mb-5">
             Get The Latest Trending News
           </h4>
           <p className="text-base font-medium text-white leading-relaxed mb-5">
-            Your Dream Space Starts Here. Get Exclusive Design Straight to Your
-            Inbox!
+            Your Dream Space Starts Here. Get Exclusive Design Straight to Your Inbox!
           </p>
           <div className="flex border border-white/20 rounded overflow-hidden bg-white">
             <input
@@ -147,10 +145,12 @@ export default function Footer() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="flex-1 bg-white border-none outline-none px-4 py-2.5 text-sm text-black placeholder:black"
+              className="flex-1 bg-white border-none outline-none px-4 py-2.5 text-sm
+                         text-black placeholder:text-black"
             />
             <button
-              className="px-4 border-l border-brand text-brand hover:text-brand transition-colors text-lg"
+              className="px-4 border-l border-brand text-brand hover:opacity-80
+                         transition-colors text-lg"
               aria-label="Subscribe"
             >
               →
@@ -159,8 +159,8 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div className="w-full py-6 pb-10 text-center text-sm font-medium text-white mt-auto">
+      {/* ── Bottom bar ── */}
+      <div className="w-full py-6 pb-10 text-center text-sm font-medium text-white">
         Copyright © {new Date().getFullYear()} All Rights Reserved.
       </div>
     </footer>

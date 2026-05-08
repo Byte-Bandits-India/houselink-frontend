@@ -21,8 +21,6 @@ import {
     ChartContainer,
     ChartTooltip,
     ChartTooltipContent,
-    ChartLegend,
-    ChartLegendContent,
 } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
 
@@ -139,9 +137,6 @@ export default function PropertyCharts() {
                                     <Cell key={entry.status} fill={entry.fill} />
                                 ))}
                             </Pie>
-                            <ChartLegend
-                                content={<ChartLegendContent nameKey="status" />}
-                            />
                         </PieChart>
                     </ChartContainer>
 

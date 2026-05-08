@@ -5,50 +5,11 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { fadeUp, stagger } from "@/lib/animations";
 
-const cards = [
-  {
-    tag: "RENT A PROPERTY",
-    tagColor: "bg-blue-100 text-blue-700",
-    cardBg: "bg-white",
-    imageBg: "bg-blue-50",
-    title:
-      "Find your perfect rental space with ease, comfort, and verified listings",
-    btnLabel: "Rent Now",
-    btnColor: "bg-[#153e75] hover:bg-[#0d2a52] text-white",
-    href: "/rent",
-    image: "/assets/images/about-us/howWe1.png",
-  },
-  {
-    tag: "BECOME A PARTNER",
-    tagColor: "bg-teal-100 text-teal-700",
-    cardBg: "bg-[#EFFFFE]",
-    imageBg: "bg-[#d4f5ee]",
-    title:
-      "Find your perfect rental space with ease, comfort, and verified listings",
-    btnLabel: "Become a Partner",
-    btnColor: "bg-teal-600 hover:bg-teal-700 text-white",
-    href: "/partner",
-    image: "/assets/images/about-us/howWe2.png",
-  },
-  {
-    tag: "BUY A PROPERTY",
-    tagColor: "bg-blue-100 text-blue-700",
-    cardBg: "bg-white",
-    imageBg: "bg-blue-50",
-    title:
-      "Find your perfect rental space with ease, comfort, and verified listings",
-    btnLabel: "Buy Now",
-    btnColor: "bg-[#153e75] hover:bg-[#0d2a52] text-white",
-    href: "/buy",
-    image: "/assets/images/about-us/howWe3.png",
-  },
-];
-
 export default function WhatWeDo() {
   return (
     <section className="py-20 md:py-28 bg-white" id="what-we-do">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header — centered */}
+        {/* Header */}
         <motion.div
           initial="hidden"
           whileInView="show"
@@ -80,45 +41,98 @@ export default function WhatWeDo() {
           variants={stagger}
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-          {cards.map((card, i) => (
-            <motion.div
-              key={i}
-              variants={fadeUp}
-              className={`relative rounded-3xl overflow-hidden shadow-[0_4px_20px_0px_rgba(0,0,0,0.25)] border border-gray-100 ${card.cardBg} flex flex-col min-h-[150px]`}
-            >
-              {/* Content + Image row */}
-              <div className="flex flex-row items-end justify-between flex-1 px-6 pb-3 pt-4 gap-2">
-                {/* Left — text + button */}
-                <div className="flex flex-col gap-5 max-w-[55%]">
-                  {/* Tag */}
-                  <span
-                    className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full tracking-wide ${card.tagColor}`}
-                  >
-                    {card.tag}
-                  </span>
-                  <p className="text-[#0d2247] text-sm font-medium leading-snug">
-                    {card.title}
-                  </p>
-                  <Link
-                    href={card.href}
-                    className={`inline-block self-start px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-300 ${card.btnColor}`}
-                  >
-                    {card.btnLabel}
-                  </Link>
-                </div>
-
-                {/* Right — person image */}
-                <div className="relative w-[45%] h-[200px] flex-shrink-0">
-                  <Image
-                    src={card.image}
-                    alt={card.tag}
-                    fill
-                    className="object-contain object-bottom"
-                  />
-                </div>
+          {/* Card 1 — Rent a Property */}
+          <motion.div
+            variants={fadeUp}
+            className="relative rounded-3xl overflow-hidden shadow-[0_4px_20px_0px_rgba(0,0,0,0.25)] border border-gray-100 bg-white flex flex-col min-h-[150px]"
+          >
+            <div className="flex flex-row items-end justify-between flex-1 px-6 pb-3 pt-4 gap-2">
+              <div className="flex flex-col gap-5 max-w-[55%]">
+                <span className="inline-block text-xs font-semibold px-3 py-1.5 rounded-full tracking-wide bg-blue-100 text-blue-700">
+                  RENT A PROPERTY
+                </span>
+                <p className="text-[#0d2247] text-sm font-medium leading-snug">
+                  Find your perfect rental space with ease, comfort, and verified listings
+                </p>
+                <Link
+                  href="/rent"
+                  className="inline-block self-start px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-300 bg-[#153e75] hover:bg-[#0d2a52] text-white"
+                >
+                  Rent Now
+                </Link>
               </div>
-            </motion.div>
-          ))}
+              <div className="relative w-[50%] h-[200px] flex-shrink-0">
+                <Image
+                  src="/assets/images/about-us/howWe1.png"
+                  alt="Rent a Property"
+                  fill
+                  className="object-contain object-bottom"
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Card 2 — Become a Partner */}
+          <motion.div
+            variants={fadeUp}
+            className="relative rounded-3xl overflow-hidden shadow-[0_4px_20px_0px_rgba(0,0,0,0.25)] border border-gray-100 bg-[#EFFFFE] flex flex-col min-h-[150px]"
+          >
+            <div className="flex flex-row items-end justify-between flex-1 px-6 pb-3 pt-4 gap-2">
+              <div className="flex flex-col gap-5 max-w-[55%]">
+                <span className="inline-block text-xs font-semibold px-3 py-1.5 rounded-full tracking-wide bg-teal-100 text-teal-700">
+                  BECOME A PARTNER
+                </span>
+                <p className="text-[#0d2247] text-sm font-medium leading-snug">
+                  Find your perfect rental space with ease, comfort, and verified listings
+                </p>
+                <Link
+                  href="/partner"
+                  className="inline-block self-start px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-300 bg-teal-600 hover:bg-teal-700 text-white"
+                >
+                  Become a Partner
+                </Link>
+              </div>
+              <div className="relative w-[45%] h-[200px] flex-shrink-0">
+                <Image
+                  src="/assets/images/about-us/howWe2.png"
+                  alt="Become a Partner"
+                  fill
+                  className="object-contain object-bottom"
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Card 3 — Buy a Property */}
+          <motion.div
+            variants={fadeUp}
+            className="relative rounded-3xl overflow-hidden shadow-[0_4px_20px_0px_rgba(0,0,0,0.25)] border border-gray-100 bg-white flex flex-col min-h-[150px]"
+          >
+            <div className="flex flex-row items-end justify-between flex-1 px-6 pb-3 pt-4 gap-2">
+              <div className="flex flex-col gap-5 max-w-[55%]">
+                <span className="inline-block text-xs font-semibold px-3 py-1.5 rounded-full tracking-wide bg-blue-100 text-blue-700">
+                  BUY A PROPERTY
+                </span>
+                <p className="text-[#0d2247] text-sm font-medium leading-snug">
+                  Find your perfect rental space with ease, comfort, and verified listings
+                </p>
+                <Link
+                  href="/buy"
+                  className="inline-block self-start px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-300 bg-[#153e75] hover:bg-[#0d2a52] text-white"
+                >
+                  Buy Now
+                </Link>
+              </div>
+              <div className="relative w-[45%] h-[200px] flex-shrink-0">
+                <Image
+                  src="/assets/images/about-us/howWe3.png"
+                  alt="Buy a Property"
+                  fill
+                  className="object-contain object-bottom"
+                />
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
     </section>

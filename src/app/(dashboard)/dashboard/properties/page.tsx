@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Eye, Pencil, Trash2, Plus, CheckCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Eye, Pencil, Trash2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PropertyCharts from "@/components/shared/PropertyCharts";
 
@@ -44,6 +45,7 @@ const statusBadge: Record<string, string> = {
 };
 
 export default function PropertiesPage() {
+  const router = useRouter();
   const [purpose, setPurpose] = useState<Purpose>("sell");
   const [ownerType, setOwnerType] = useState<OwnerType>("owner");
 
@@ -62,7 +64,10 @@ export default function PropertiesPage() {
       {/* Title + Add Property */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-ink">Property</h1>
-        <button className="flex items-center gap-2 border-2 border-brand text-brand font-bold text-sm px-4 py-2 rounded-lg hover:bg-brand hover:text-white transition-colors duration-200">
+        <button
+          onClick={() => router.push("/dashboard/properties/new")}
+          className="flex items-center gap-2 border-2 border-brand text-brand font-bold text-sm px-4 py-2 rounded-lg hover:bg-brand hover:text-white transition-colors duration-200"
+        >
           <Plus className="w-4 h-4" /> Add Property
         </button>
       </div>
@@ -105,7 +110,10 @@ export default function PropertiesPage() {
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-ink-muted">
           <p className="font-medium mb-3">No properties found.</p>
-          <button className="text-sm font-semibold text-white bg-brand px-4 py-2 rounded-lg hover:bg-brand-700 transition-colors">
+          <button
+            onClick={() => router.push("/dashboard/properties/new")}
+            className="text-sm font-semibold text-white bg-brand px-4 py-2 rounded-lg hover:bg-brand/90 transition-colors"
+          >
             Add Property
           </button>
         </div>
@@ -128,7 +136,12 @@ export default function PropertiesPage() {
               {filtered.map((p, idx) => (
                 <tr key={p.id} className={cn("border-t border-gray-100", idx % 2 === 0 ? "bg-white" : "bg-gray-50")}>
                   <td className="px-4 py-4">
-                    <p className="font-bold text-ink">{p.name}</p>
+                    <p
+                      className="font-bold text-ink hover:text-brand cursor-pointer transition-colors"
+                      onClick={() => router.push(`/dashboard/properties/${p.id}`)}
+                    >
+                      {p.name}
+                    </p>
                   </td>
                   <td className="px-4 py-4 text-center text-ink">{p.views}</td>
                   <td className="px-4 py-4 text-center font-bold text-ink">{p.id}</td>
@@ -146,13 +159,21 @@ export default function PropertiesPage() {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex flex-col gap-1.5 items-center">
-                      {p.moderationStatus !== "pending" ? (
-                        <button className="flex items-center gap-1 text-xs font-semibold border border-brand text-brand px-3 py-1.5 rounded-lg hover:bg-brand hover:text-white transition-colors w-full justify-center">
-                          <Pencil className="w-3 h-3" /> Edit
+                      {p.moderationStatus === "pending" ? (
+                        /* Pending: view-only, no editing allowed */
+                        <button
+                          onClick={() => router.push(`/dashboard/properties/${p.id}`)}
+                          className="flex items-center gap-1 text-xs font-semibold border border-brand text-brand px-3 py-1.5 rounded-lg hover:bg-brand hover:text-white transition-colors w-full justify-center"
+                        >
+                          <Eye className="w-3 h-3" /> View
                         </button>
                       ) : (
-                        <button className="flex items-center gap-1 text-xs font-semibold border border-brand text-brand px-3 py-1.5 rounded-lg hover:bg-brand hover:text-white transition-colors w-full justify-center">
-                          <Eye className="w-3 h-3" /> View
+                        /* Approved / rejected: edit page doubles as the detail view */
+                        <button
+                          onClick={() => router.push(`/dashboard/properties/${p.id}/edit`)}
+                          className="flex items-center gap-1 text-xs font-semibold border border-brand text-brand px-3 py-1.5 rounded-lg hover:bg-brand hover:text-white transition-colors w-full justify-center"
+                        >
+                          <Pencil className="w-3 h-3" /> Edit
                         </button>
                       )}
                       <button className="flex items-center gap-1 text-xs font-semibold border border-red-400 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white transition-colors w-full justify-center">

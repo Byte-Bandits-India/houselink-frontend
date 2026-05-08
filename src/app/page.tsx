@@ -20,9 +20,8 @@ export default function HomePage() {
       <section className="relative">
         <HeroSlider />
 
-        {/* PropertySearch overlaps the bottom of the hero */}
-        <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 z-20">
-          <div className="container mx-auto px-4">
+        <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 z-20 pointer-events-none">
+          <div className="container mx-auto px-4 pointer-events-auto">
             <PropertySearch />
           </div>
         </div>
