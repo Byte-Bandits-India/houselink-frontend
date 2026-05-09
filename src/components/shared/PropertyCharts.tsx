@@ -24,22 +24,18 @@ import {
 } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
 
-/* ─── Data ────────────────────────────────────────────────────────────────── */
+/* ─── Types ─────────────────────────────────────────────────────────────────── */
 
-const viewsData = [
-    { name: "Greenwood", views: 142 },
-    { name: "Sunrise Villa", views: 87 },
-    { name: "Metro Studio", views: 210 },
-    { name: "Coastal Dream", views: 55 },
-    { name: "Tranquil Nest", views: 98 },
-    { name: "Park View", views: 44 },
-];
+interface Property {
+    id: number;
+    name: string;
+    views: number;
+    moderationStatus: string;
+}
 
-const moderationData = [
-    { status: "approved", count: 4, fill: "var(--color-approved)" },
-    { status: "pending", count: 2, fill: "var(--color-pending)" },
-    { status: "rejected", count: 1, fill: "var(--color-rejected)" },
-];
+interface PropertyChartsProps {
+    properties: Property[];
+}
 
 /* ─── Chart configs ───────────────────────────────────────────────────────── */
 
@@ -53,9 +49,38 @@ const pieConfig = {
     rejected: { label: "Rejected", color: "#ef4444" },
 } satisfies ChartConfig;
 
+const statusColors: Record<string, string> = {
+    approved: "#153e75",
+    pending: "#f59e0b",
+    rejected: "#ef4444",
+};
+
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
-export default function PropertyCharts() {
+export default function PropertyCharts({ properties }: PropertyChartsProps) {
+    // Derive views data from properties (top 6 by views)
+    const viewsData = [...properties]
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 6)
+        .map((p) => ({
+            name: p.name.split(" ").slice(0, 2).join(" "),
+            views: p.views,
+        }));
+
+    // Derive moderation breakdown dynamically
+    const moderationCounts = properties.reduce<Record<string, number>>((acc, p) => {
+        acc[p.moderationStatus] = (acc[p.moderationStatus] || 0) + 1;
+        return acc;
+    }, {});
+
+    const moderationData = Object.entries(moderationCounts)
+        .filter(([status]) => status !== "archived")
+        .map(([status, count]) => ({
+            status,
+            count,
+            fill: statusColors[status] ?? "#94a3b8",
+        }));
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 

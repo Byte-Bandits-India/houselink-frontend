@@ -25,12 +25,37 @@ interface Property {
 
 /* ── Mock data from properties.blade.php ─────────────────── */
 const properties: Property[] = [
+  // ── Sell · Owner ──────────────────────────────────────────
   { id: 101, name: "Greenwood Heights Apartment", state: "Karnataka", views: 142, expiredAt: "15-06-2026", createdAt: "10-03-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "owner" },
   { id: 102, name: "Sunrise Villa", state: "Karnataka", views: 87, expiredAt: "20-07-2026", createdAt: "05-04-2026", status: "Selling", moderationStatus: "pending", purpose: "sell", ownerType: "owner" },
+  { id: 107, name: "Blue Horizon 3BHK", state: "Tamil Nadu", views: 193, expiredAt: "12-08-2026", createdAt: "18-03-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "owner" },
+  { id: 108, name: "Palm Grove Residency", state: "Kerala", views: 64, expiredAt: "01-09-2026", createdAt: "02-04-2026", status: "Selling", moderationStatus: "rejected", purpose: "sell", ownerType: "owner" },
+  { id: 109, name: "Silver Oaks Villa", state: "Andhra Pradesh", views: 115, expiredAt: "28-06-2026", createdAt: "14-03-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "owner" },
+
+  // ── Sell · Builder ─────────────────────────────────────────
   { id: 103, name: "Metro Studio Flat", state: "Karnataka", views: 210, expiredAt: "01-05-2026", createdAt: "12-02-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "builder" },
+  { id: 110, name: "Prestige Skyline Tower", state: "Maharashtra", views: 320, expiredAt: "30-09-2026", createdAt: "01-01-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "builder" },
+  { id: 111, name: "Golden Gate Towers", state: "Karnataka", views: 178, expiredAt: "15-10-2026", createdAt: "20-02-2026", status: "Selling", moderationStatus: "pending", purpose: "sell", ownerType: "builder" },
+  { id: 112, name: "Emerald Isle Apartments", state: "Tamil Nadu", views: 245, expiredAt: "05-11-2026", createdAt: "11-03-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "builder" },
+  { id: 113, name: "Phoenix Grand Residences", state: "Telangana", views: 99, expiredAt: "22-07-2026", createdAt: "03-04-2026", status: "Selling", moderationStatus: "rejected", purpose: "sell", ownerType: "builder" },
+
+  // ── Sell · Consultant ──────────────────────────────────────
   { id: 104, name: "Coastal Dream Villa", state: "Karnataka", views: 55, expiredAt: "10-04-2026", createdAt: "22-01-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "consultant" },
+  { id: 114, name: "Royal Heritage Bungalow", state: "Rajasthan", views: 132, expiredAt: "25-08-2026", createdAt: "07-03-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "consultant" },
+  { id: 115, name: "City Center Penthouse", state: "Maharashtra", views: 76, expiredAt: "18-09-2026", createdAt: "28-02-2026", status: "Selling", moderationStatus: "pending", purpose: "sell", ownerType: "consultant" },
+  { id: 116, name: "Meadow Walk Duplex", state: "Gujarat", views: 41, expiredAt: "12-05-2026", createdAt: "15-04-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "consultant" },
+
+  // ── Rent · Owner ───────────────────────────────────────────
   { id: 105, name: "Tranquil Nest 2BHK", state: "Karnataka", views: 98, expiredAt: "N/A", createdAt: "01-04-2026", status: "Renting", moderationStatus: "approved", purpose: "rent", ownerType: "owner" },
   { id: 106, name: "Park View Flat", state: "Maharashtra", views: 44, expiredAt: "N/A", createdAt: "15-03-2026", status: "Renting", moderationStatus: "pending", purpose: "rent", ownerType: "owner" },
+  { id: 117, name: "Lake Side Studio", state: "Karnataka", views: 67, expiredAt: "N/A", createdAt: "20-03-2026", status: "Renting", moderationStatus: "approved", purpose: "rent", ownerType: "owner" },
+  { id: 118, name: "Garden View 1BHK", state: "Tamil Nadu", views: 51, expiredAt: "N/A", createdAt: "08-04-2026", status: "Renting", moderationStatus: "rejected", purpose: "rent", ownerType: "owner" },
+
+  // ── Rent · Consultant ──────────────────────────────────────
+  { id: 119, name: "Urban Loft Studio", state: "Maharashtra", views: 112, expiredAt: "N/A", createdAt: "25-03-2026", status: "Renting", moderationStatus: "approved", purpose: "rent", ownerType: "consultant" },
+  { id: 120, name: "Downtown 2BHK Suite", state: "Karnataka", views: 89, expiredAt: "N/A", createdAt: "10-04-2026", status: "Renting", moderationStatus: "pending", purpose: "rent", ownerType: "consultant" },
+  { id: 121, name: "Hill View Cottage", state: "Himachal Pradesh", views: 37, expiredAt: "N/A", createdAt: "03-04-2026", status: "Renting", moderationStatus: "approved", purpose: "rent", ownerType: "consultant" },
+  { id: 122, name: "Beachside Bungalow", state: "Goa", views: 156, expiredAt: "N/A", createdAt: "17-03-2026", status: "Renting", moderationStatus: "approved", purpose: "rent", ownerType: "consultant" },
 ];
 
 const moderationBadge: Record<string, string> = {
@@ -72,7 +97,7 @@ export default function PropertiesPage() {
         </button>
       </div>
 
-      <PropertyCharts />
+      <PropertyCharts properties={filtered} />
 
       {/* Sell / Rent-Lease toggle */}
       <div className="flex gap-2">

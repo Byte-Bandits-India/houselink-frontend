@@ -17,23 +17,17 @@ import {
 } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
 
-/* ─── Data ────────────────────────────────────────────────────────────────── */
+/* ─── Types ─────────────────────────────────────────────────────────────────── */
 
-// Bar — Leads per property
-const leadsPerPropertyData = [
-    { name: "Greenwood", leads: 5 },
-    { name: "Sunrise Villa", leads: 3 },
-    { name: "Metro Studio", leads: 7 },
-    { name: "Coastal Dream", leads: 2 },
-    { name: "Tranquil Nest", leads: 4 },
-    { name: "Park View", leads: 2 },
-];
+interface Lead {
+    id: number;
+    property: string;
+    filter: "sell" | "rent";
+}
 
-// Pie — Sell vs Rent/Lease leads
-const leadsByTypeData = [
-    { type: "sell", count: 3, fill: "var(--color-sell)" },
-    { type: "rent", count: 2, fill: "var(--color-rent)" },
-];
+interface LeadChartsProps {
+    leads: Lead[];
+}
 
 /* ─── Chart Configs ───────────────────────────────────────────────────────── */
 
@@ -48,7 +42,28 @@ const pieConfig = {
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
-export default function LeadCharts() {
+export default function LeadCharts({ leads }: LeadChartsProps) {
+    // Derive bar data — count leads per property, sorted by most leads
+    const propertyLeadCounts = leads.reduce<Record<string, number>>((acc, l) => {
+        const shortName = l.property.split(" ").slice(0, 2).join(" ");
+        acc[shortName] = (acc[shortName] || 0) + 1;
+        return acc;
+    }, {});
+
+    const leadsPerPropertyData = Object.entries(propertyLeadCounts)
+        .map(([name, leadsCount]) => ({ name, leads: leadsCount }))
+        .sort((a, b) => b.leads - a.leads)
+        .slice(0, 6);
+
+    // Derive pie data — sell vs rent breakdown across ALL leads
+    const sellCount = leads.filter((l) => l.filter === "sell").length;
+    const rentCount = leads.filter((l) => l.filter === "rent").length;
+
+    const leadsByTypeData = [
+        { type: "sell", count: sellCount, fill: pieConfig.sell.color },
+        { type: "rent", count: rentCount, fill: pieConfig.rent.color },
+    ].filter((d) => d.count > 0);
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 

@@ -147,7 +147,7 @@ export default function HeroSlider() {
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
           background:
-            "linear-gradient(90deg, #163D75 0%, #163D75 39.29%, rgba(115, 115, 115, 0) 100%)",
+            "linear-gradient(90deg, #163D75 0%, #163D75 20.29%, rgba(115, 115, 115, 0) 100%)",
         }}
       />
 
@@ -172,29 +172,6 @@ export default function HeroSlider() {
             </p>
           </div>
         </div>
-      </div>
-
-      {/* ── Slide indicator dots ── */}
-      <div
-        className="absolute z-20 flex gap-1.5 items-center"
-        style={{ bottom: "148px", right: "2rem" }}
-      >
-        {heroSlides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goTo(i)}
-            aria-label={`Go to slide ${i + 1}`}
-            className="rounded-full transition-all duration-500"
-            style={{
-              height: "5px",
-              width: i === current ? "28px" : "12px",
-              background: i === current ? "#fff" : "rgba(255,255,255,0.4)",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-            }}
-          />
-        ))}
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import HeroSlider from "@/components/home/HeroSlider";
-import PropertySearch from "@/components/home/HomePropertySearch";
+import PropertySearch from "@/components/shared/PropertySearch";
 import FeaturedProperties from "@/components/home/FeaturedProperties";
 import HowWeWork from "@/components/home/HowWeWork";
 import LatestBlogs from "@/components/home/LatestBlogs";
@@ -20,7 +20,7 @@ export default function HomePage() {
       <section className="relative">
         <HeroSlider />
 
-        <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 z-20 pointer-events-none">
+        <div className="absolute -bottom-20 left-0 right-0 translate-y-1/2 z-20 pointer-events-none">
           <div className="container mx-auto px-4 pointer-events-auto">
             <PropertySearch />
           </div>

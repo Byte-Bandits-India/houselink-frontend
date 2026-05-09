@@ -204,7 +204,7 @@ export default function Header() {
               trigger={
                 <span className="flex flex-col items-center gap-1 px-5 py-2 rounded-xl cursor-pointer hover:bg-blue-50 text-[#1a3a6b] transition-colors select-none">
                   <img src="/assets/header/1.svg" alt="1" />
-                  <span className="flex items-center gap-1 text-xs font-semibold">
+                  <span className="flex items-center gap-1 text-sm font-semibold">
                     Listings <ChevronDown size={12} />
                   </span>
                 </span>
@@ -217,7 +217,7 @@ export default function Header() {
               trigger={
                 <span className="flex flex-col items-center gap-1 px-5 py-2 rounded-xl cursor-pointer hover:bg-blue-50 text-[#1a3a6b] transition-colors select-none">
                   <img src="/assets/header/2.svg" alt="2" />
-                  <span className="flex items-center gap-1 text-xs font-semibold">
+                  <span className="flex items-center gap-1 text-sm font-semibold">
                     Others <ChevronDown size={12} />
                   </span>
                 </span>
@@ -230,7 +230,7 @@ export default function Header() {
               className="flex flex-col items-center gap-1 px-5 py-2 rounded-xl hover:bg-blue-50 text-[#1a3a6b] transition-colors"
             >
               <img src="/assets/header/3.svg" alt="3" />
-              <span className="text-xs font-semibold">Blogs</span>
+              <span className="text-sm font-semibold">Blogs</span>
             </Link>
 
             {/* Partner With Us */}
@@ -239,7 +239,7 @@ export default function Header() {
               className="flex flex-col items-center gap-1 px-5 py-2 rounded-xl hover:bg-blue-50 text-[#1a3a6b] transition-colors"
             >
               <img src="/assets/header/4.svg" alt="4" />
-              <span className="text-xs font-semibold">Partner with us</span>
+              <span className="text-sm font-semibold">Partner with us</span>
             </Link>
 
           </nav>

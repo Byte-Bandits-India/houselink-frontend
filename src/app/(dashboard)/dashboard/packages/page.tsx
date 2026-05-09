@@ -55,23 +55,23 @@ function CreditCard({ entry }: { entry: CreditEntry }) {
   const { Icon } = entry;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 flex flex-col items-center text-center min-h-[260px]">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 flex flex-col items-center text-center min-h-[260px]">
       <Icon />
 
-      <h4 className="text-base lg:text-xl font-bold text-brand mt-4 mb-2">{entry.title}</h4>
+      <h4 className="text-base lg:text-xl font-bold text-brand mt-1">{entry.title}</h4>
 
       {isActive ? (
         <>
-          <p className="text-4xl font-bold text-ink leading-none mb-1">{entry.credits}</p>
+          <p className="text-4xl font-bold text-ink leading-none mb-0.5">{entry.credits}</p>
           {entry.expiry && (
-            <p className="text-sm text-ink-secondary mb-4">Expiry-Date: {entry.expiry}</p>
+            <p className="text-sm text-ink-secondary mb-1">Expiry-Date: {entry.expiry}</p>
           )}
         </>
       ) : (
-        <p className="text-sm font-semibold text-ink mb-4">No package found</p>
+        <p className="text-sm font-semibold text-ink mb-1">No package found</p>
       )}
 
-      <div className="mt-auto w-full pt-2">
+      <div className="mt-auto w-full pt-1">
         {isActive ? (
           <button
             disabled

@@ -95,7 +95,7 @@ export default function PropertySearch() {
     <div className="w-full max-w-[1240px] mx-auto mb-10 relative z-20 -mt-24">
 
       {/* ── Tabs ── */}
-      <div className="flex justify-center">
+      <div className="flex justify-center gap-2">
         {[
           { key: "sell", label: "For Sale" },
           { key: "rent", label: "Rent / Lease" },
@@ -104,8 +104,7 @@ export default function PropertySearch() {
             key={key}
             onClick={() => setActiveTab(key)}
             className={cn(
-              "min-w-[130px] px-8 py-4 text-[15px] font-bold transition-all duration-200 backdrop-blur-lg",
-              i === 0 ? "rounded-tl-xl" : "rounded-tr-xl",
+              "min-w-[130px] px-6 py-4 text-[15px] font-bold transition-all duration-200 backdrop-blur-lg rounded-t-xl",
               activeTab === key
                 ? "bg-white text-[#153e75] shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
                 : "bg-white/5 text-white hover:border-2 hover:border-white/50 hover:bg-white/20"
@@ -182,55 +181,67 @@ export default function PropertySearch() {
 
         {/* ── Advanced Filters ── */}
         {showAdvanced && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-5 mt-4 border-t border-gray-100">
+          <div className="pt-5 mt-4 border-t border-gray-100 flex flex-col gap-6">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+              {/* Price Range */}
+              <div>
+                <p className="text-[13px] font-medium text-gray-500 mb-3 flex items-center gap-2">
+                  Price Range <span className="text-gray-400 font-normal">from ₹0 to ₹100 Cr</span>
+                </p>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  defaultValue={100}
+                  className="w-full accent-[#153e75]"
+                />
+                <div className="flex justify-between text-[11px] text-gray-400 mt-1">
+                  <span>₹0</span>
+                  <span>₹100 Cr</span>
+                </div>
+              </div>
 
-            {/* Price Range */}
-            <div>
-              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-2">
-                Price Range
-              </p>
-              <input
-                type="range"
-                min={0}
-                max={10000000}
-                className="w-full accent-[#153e75]"
-              />
-              <div className="flex justify-between text-[11px] text-gray-400 mt-1">
-                <span>₹0</span>
-                <span>₹1 Cr+</span>
+              {/* Square Range */}
+              <div>
+                <p className="text-[13px] font-medium text-gray-500 mb-3 flex items-center gap-2">
+                  Square Range <span className="text-gray-400 font-normal">from 0 to 100000</span>
+                </p>
+                <input
+                  type="range"
+                  min={0}
+                  max={100000}
+                  defaultValue={100000}
+                  className="w-full accent-[#153e75]"
+                />
+                <div className="flex justify-between text-[11px] text-gray-400 mt-1">
+                  <span>0</span>
+                  <span>100000</span>
+                </div>
               </div>
             </div>
 
-            {/* Bedrooms */}
-            <div>
-              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-2">
-                Bedrooms
-              </p>
-              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#153e75] transition-colors">
-                <option value="">All</option>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <option key={n} value={n}>
-                    {n} Bedroom{n > 1 ? "s" : ""}
-                  </option>
-                ))}
-                <option value="5+">5+ Bedrooms</option>
-              </select>
-            </div>
-
-            {/* Bathrooms */}
-            <div>
-              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-2">
-                Bathrooms
-              </p>
-              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#153e75] transition-colors">
-                <option value="">All</option>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <option key={n} value={n}>
-                    {n} Bathroom{n > 1 ? "s" : ""}
-                  </option>
-                ))}
-                <option value="5+">5+ Bathrooms</option>
-              </select>
+            {/* Amenities */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-5 gap-x-4 mt-2">
+              {[
+                "Wifi",
+                "Swimming pool",
+                "Security",
+                "Garden",
+                "Balcony",
+                "Air Conditioning",
+                "Fitness center",
+                "Car Parking",
+                "Bike Parking",
+              ].map((amenity) => (
+                <label key={amenity} className="flex items-center gap-2.5 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    className="w-[15px] h-[15px] rounded-[3px] border-gray-300 text-[#153e75] focus:ring-[#153e75] accent-[#153e75]"
+                  />
+                  <span className="text-[13px] text-gray-500 font-medium group-hover:text-gray-800 transition-colors">{amenity}</span>
+                </label>
+              ))}
             </div>
 
           </div>

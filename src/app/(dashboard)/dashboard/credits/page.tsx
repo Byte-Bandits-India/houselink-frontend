@@ -36,27 +36,29 @@ interface Pkg { id: string; name: string; price: string; posts: string; descript
 
 function PackageCard({ pkg }: { pkg: Pkg }) {
   return (
-    <div className="relative bg-white border border-gray-100 rounded-2xl p-5 flex flex-col items-center text-center shadow-md hover:shadow-lg transition-shadow duration-200">
+    <div className="relative bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center text-center shadow-md hover:shadow-lg transition-shadow duration-200">
       {pkg.savePct !== null && (
         <div className="absolute top-0 right-0 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-tr-2xl rounded-bl-xl">
           SAVE {pkg.savePct}.00%
         </div>
       )}
 
-      <div className="mt-3 mb-4">
-        <div className="w-20 h-20 flex items-center justify-center mx-auto">
-          <img className="w-20 h-20" src="/icon/award.png" alt="" />
+      <div className="mt-2 mb-2">
+        <div className="w-16 h-16 flex items-center justify-center mx-auto">
+          <img className="w-16 h-16" src="/icon/award.png" alt="" />
         </div>
       </div>
 
-      <p className="text-lg font-bold text-ink">{pkg.price} <span className="text-ink-secondary font-normal text-sm">/ {pkg.posts}</span></p>
-      <p className="text-base font-semibold text-ink mt-1">{pkg.name}</p>
-      <p className="text-sm text-ink-secondary mt-1">{pkg.description}</p>
-      <p className="text-sm text-ink-secondary mb-5">{pkg.validity}</p>
+      <p className="text-lg font-bold text-ink">
+        {pkg.price} <span className="text-ink-secondary font-normal text-sm">/ {pkg.posts}</span>
+      </p>
+      <p className="text-base font-semibold text-ink mt-0.5">{pkg.name}</p>
+      <p className="text-sm text-ink-secondary mt-0.5">{pkg.description}</p>
+      <p className="text-sm text-ink-secondary mb-3">{pkg.validity}</p>
 
       {pkg.isActive ? (
         <div className="w-full mt-auto">
-          {pkg.expiry && <p className="text-xs text-ink-muted mb-2">Expiry-Date: {pkg.expiry}</p>}
+          {pkg.expiry && <p className="text-xs text-ink-muted mb-1">Expiry-Date: {pkg.expiry}</p>}
           <button disabled className="w-full bg-emerald-600 text-white font-bold text-sm py-2.5 rounded-lg opacity-90 cursor-not-allowed">
             Active
           </button>

@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Heart, MapPin, BedDouble, Bath, Ruler, Compass } from 'lucide-react';
 
 export interface PropertyCardProps {
   id: string;
@@ -89,7 +88,7 @@ export default function PropertyCard(props: PropertyCardProps) {
                 {!props.property_for && props.type && <span className="tag-sell capitalize">{props.type}</span>}
               </div>
               <button className="property-wishlist-btn group/btn">
-                <Heart className={`w-[22px] h-[22px] ${props.isInWishlist ? 'fill-black text-black' : 'text-black group-hover/btn:fill-black transition-colors'} stroke-[2px]`} />
+                <i className={`${props.isInWishlist ? 'fa-solid' : 'fa-regular'} fa-heart text-[20px] text-black transition-colors group-hover/btn:font-black`}></i>
               </button>
             </div>
 
@@ -108,22 +107,22 @@ export default function PropertyCard(props: PropertyCardProps) {
             <div className="property-specs flex items-center gap-4 text-xs font-semibold text-ink-secondary mb-3">
               {props.bedrooms !== undefined && (
                 <div className="flex items-center gap-1">
-                  <BedDouble size={14} className="text-ink fill-current" /> {props.bedrooms}
+                  <i className="fa fa-bed text-ink text-[14px]"></i> {props.bedrooms}
                 </div>
               )}
               {props.bathrooms !== undefined && (
                 <div className="flex items-center gap-1">
-                  <Bath size={14} className="text-ink fill-current" /> {props.bathrooms}
+                  <i className="fa fa-bath text-ink text-[14px]"></i> {props.bathrooms}
                 </div>
               )}
               {props.direction && (
                 <div className="flex items-center gap-1">
-                  <Compass size={14} className="text-ink fill-current" /> {props.direction}
+                  <i className="fa fa-compass text-ink text-[14px]"></i> {props.direction}
                 </div>
               )}
               {props.area && (
                 <div className="flex items-center gap-1">
-                  <Ruler size={14} className="text-ink fill-current" /> {props.area}
+                  <i className="fa fa-ruler text-ink text-[14px]"></i> {props.area}
                 </div>
               )}
             </div>
@@ -131,7 +130,7 @@ export default function PropertyCard(props: PropertyCardProps) {
             <h5 className="property-title">{props.name}</h5>
 
             <div className="property-location">
-              <MapPin size={16} className="text-brand mr-1" />
+              <i className="fa fa-map-marker-alt text-brand text-[16px] mr-1"></i>
               <span>{props.location}</span>
             </div>
 

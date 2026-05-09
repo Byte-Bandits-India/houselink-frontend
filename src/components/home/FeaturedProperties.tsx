@@ -39,18 +39,18 @@ export default function FeaturedProperties() {
           <motion.div
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "-80px" }}
             variants={stagger}
           >
             <motion.h3
               variants={fadeUp}
-              className="text-brand text-sm font-semibold tracking-wider uppercase mb-2"
+              className="text-brand text-sm font-semibold tracking-wider mb-2"
             >
               Featured Properties
             </motion.h3>
             <motion.h2
               variants={fadeUp}
-              className="text-3xl sm:text-4xl font-bold text-ink"
+              className="text-5xl sm:text-5xl font-extrabold text-ink"
             >
               Best Picks For You
             </motion.h2>
@@ -59,9 +59,9 @@ export default function FeaturedProperties() {
           <motion.p
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "-80px" }}
             variants={fadeUp}
-            className="text-ink-secondary max-w-lg text-base leading-relaxed"
+            className="text-ink-secondary max-w-xl text-base leading-relaxed"
           >
             We curate a versatile selection of properties, from carefully crafted
             residential homes to visually captivating and performance-driven
@@ -73,7 +73,7 @@ export default function FeaturedProperties() {
         <motion.div
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-80px" }}
           variants={fadeUp}
           className="flex justify-center gap-3 mb-8"
         >
@@ -95,7 +95,7 @@ export default function FeaturedProperties() {
         <motion.div
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-80px" }}
           variants={fadeUp}
           className="flex justify-center flex-wrap gap-6 mb-12"
         >
@@ -122,7 +122,7 @@ export default function FeaturedProperties() {
         <motion.div
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-80px" }}
           variants={stagger}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
@@ -146,7 +146,7 @@ export default function FeaturedProperties() {
         <motion.div
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-80px" }}
           variants={fadeUp}
           className="text-center mt-12"
         >
