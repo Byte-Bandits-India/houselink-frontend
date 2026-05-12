@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
@@ -50,7 +50,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="w-full max-w-[500px] bg-white rounded-xl shadow-[3px_3px_6px_0px_#e4e4e4] p-8 lg:p-10 mx-auto">
+    <>
       <h3 className="text-3xl font-bold text-center text-gray-900 mb-2">Reset Password</h3>
       <p className="text-center text-gray-500 mb-8 font-medium">
         Enter your new password below.
@@ -104,6 +104,16 @@ export default function ResetPasswordPage() {
           {isLoading ? "Resetting..." : "Reset Password"}
         </button>
       </form>
+    </>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <div className="w-full max-w-[500px] bg-white rounded-xl shadow-[3px_3px_6px_0px_#e4e4e4] p-8 lg:p-10 mx-auto">
+      <Suspense fallback={<div className="text-center py-10">Loading form...</div>}>
+        <ResetPasswordForm />
+      </Suspense>
     </div>
   );
 }

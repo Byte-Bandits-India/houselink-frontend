@@ -1,0 +1,37 @@
+name: Deploy Next.js to Webuzo
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: 103.91.186.61
+          username: YOUR_SERVER_USER
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            cd /home/YOUR_SERVER_USER/YOUR_REPO
+
+            echo "Pulling latest code..."
+            git pull origin main
+
+            echo "Installing dependencies..."
+            npm install
+
+            echo "Building project..."
+            npm run build
+
+            echo "Restarting app..."
+            pm2 restart nextjs-app || pm2 start npm --name "nextjs-app" -- start
+
+            echo "Deployment complete"
