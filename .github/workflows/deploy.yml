@@ -30,11 +30,12 @@ jobs:
 
             echo "Installing dependencies..."
             npm install
+            npm install sharp
 
             echo "Building project..."
             npm run build
 
             echo "Restarting app..."
-            pm2 restart nextjs-app || pm2 start npm --name "nextjs-app" -- start
+            pm2 restart houselink-nextjs || pm2 start npm --name "houselink-nextjs" -- start
 
             echo "Deployment complete"
