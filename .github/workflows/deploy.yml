@@ -28,6 +28,9 @@ jobs:
             echo "Pulling latest code..."
             git pull origin main
 
+            echo "Fixing file ownership..."
+            sudo chown -R houselink360:houselink360 /home/houselink360/nextjs
+
             echo "Installing dependencies..."
             npm install
             npm install sharp
