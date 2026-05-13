@@ -21,6 +21,8 @@ jobs:
           script: |
             set -e
 
+            git config --global --add safe.directory /home/houselink360/nextjs
+
             cd /home/houselink360/nextjs
 
             echo "Pulling latest code..."
