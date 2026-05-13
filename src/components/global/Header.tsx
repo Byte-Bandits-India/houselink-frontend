@@ -3,6 +3,8 @@
 import { useState, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/AuthContext"
 import {
   User,
   ChevronDown,
@@ -126,11 +128,14 @@ function MobileAccordion({
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const router = useRouter()
+  const { user, isLoggedIn, logout } = useAuth()
 
-  // ── Toggle these to test both states ──────────────────────────────────────
-  const isLoggedIn = true
-  const user = { first_name: "John" }
-  // ─────────────────────────────────────────────────────────────────────────
+  const handleLogout = async () => {
+    await logout()
+    setIsMobileMenuOpen(false)
+    router.push("/")
+  }
 
   /* ------------------------------------------------------------------ menus */
   const listingsMenu = [
@@ -151,11 +156,18 @@ export default function Header() {
     { key: "1", label: <Link href="/dashboard/enquiries">My Enquiries</Link> },
     { key: "2", label: <Link href="/dashboard/leads">Property Leads</Link> },
     { key: "3", label: <Link href="/dashboard">Dashboard</Link> },
-    { key: "4", label: <Link href="/settings">Settings</Link> },
+    { key: "4", label: <Link href="/dashboard/profile">Settings</Link> },
     { type: "divider" },
     {
       key: "5",
-      label: <span className="text-red-500 font-medium cursor-pointer">Logout</span>,
+      label: (
+        <span
+          className="text-red-500 font-medium cursor-pointer w-full block"
+          onClick={handleLogout}
+        >
+          Logout
+        </span>
+      ),
     },
   ]
 
@@ -285,7 +297,7 @@ export default function Header() {
                     className="flex items-center gap-2 bg-[#1a3a6b] text-white px-5 h-11 rounded-full hover:bg-[#162f5a] transition-colors font-bold text-sm cursor-pointer"
                   >
                     <User size={18} strokeWidth={1.8} />
-                    Hi {user.first_name}
+                    Hi {user?.firstName ?? ""}
                   </Link>
                 }
               />

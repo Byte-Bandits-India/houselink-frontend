@@ -4,9 +4,12 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { sendOtp, retryOtp, verifyOtpLogin, ApiError } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setAuthUser } = useAuth();
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -16,7 +19,12 @@ export default function LoginPage() {
   const [otpError, setOtpError] = useState("");
 
   const [timeLeft, setTimeLeft] = useState(0);
-  const otpRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+  const otpRefs = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+  ];
 
   // Countdown timer logic
   useEffect(() => {
@@ -35,16 +43,31 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // TODO: API POST /api/auth/send-otp
-      // Replace this timeout with actual API call
-      // const response = await fetch('/api/auth/send-otp', { method: 'POST', body: JSON.stringify({ phone }) });
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      await sendOtp({ phone });
       setOtpSent(true);
-      setTimeLeft(60); // Start 60s countdown
-      setOtp(["", "", "", ""]); // Reset OTP inputs
-    } catch (error) {
-      setPhoneError("Failed to send OTP. Please try again.");
+      setTimeLeft(60);
+      setOtp(["", "", "", ""]);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        setPhoneError("This phone number is not registered. Please sign up.");
+      } else if (err instanceof ApiError && err.status === 400) {
+        setPhoneError("Invalid phone number format.");
+      } else {
+        setPhoneError("Failed to send OTP. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setIsLoading(true);
+    try {
+      await retryOtp({ phone, retryType: "text" });
+      setTimeLeft(60);
+      setOtp(["", "", "", ""]);
+    } catch {
+      setOtpError("Failed to resend OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -60,15 +83,16 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // TODO: API POST /api/auth/verify-otp
-      // Replace this timeout with actual API call
-      // const response = await fetch('/api/auth/verify-otp', { method: 'POST', body: JSON.stringify({ phone, otp: otpValue }) });
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // On success, redirect
-      router.push("/dashboard");
-    } catch (error) {
-      setOtpError("Invalid OTP. Please try again.");
+      const res = await verifyOtpLogin({ phone, otp: otpValue });
+      // Tokens auto-saved; instantly update the auth context
+      setAuthUser(res.customer);
+      router.push("/");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 400) {
+        setOtpError("Invalid or expired OTP. Please try again.");
+      } else {
+        setOtpError("Verification failed. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +111,10 @@ export default function LoginPage() {
     }
   };
 
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleOtpKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       otpRefs[index - 1].current?.focus();
     }
@@ -137,7 +164,9 @@ export default function LoginPage() {
                 </button>
               )}
             </div>
-            {phoneError && <p className="mt-2 text-sm text-red-500">{phoneError}</p>}
+            {phoneError && (
+              <p className="mt-2 text-sm text-red-500">{phoneError}</p>
+            )}
           </div>
 
           {/* OTP Input Section */}
@@ -145,9 +174,10 @@ export default function LoginPage() {
             <div className="animate-fade-in space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                  Enter OTP
+                  Enter 4-digit OTP sent to{" "}
+                  <span className="text-brand font-semibold">+91 {phone}</span>
                 </label>
-                <div className="flex justify-center gap-3">
+                <div className="flex justify-center gap-2">
                   {otp.map((digit, index) => (
                     <input
                       key={index}
@@ -157,24 +187,31 @@ export default function LoginPage() {
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className={`w-14 h-14 text-center text-xl font-bold border-2 rounded-lg transition-all outline-none
+                      className={`w-12 h-12 text-center text-xl font-bold border-2 rounded-lg transition-all outline-none
                         ${digit ? "border-[#4f8bd3] bg-[#f8fff9]" : "border-gray-200 bg-white"}
                         focus:border-brand focus:ring-4 focus:ring-brand/10`}
                     />
                   ))}
                 </div>
-                {otpError && <p className="mt-2 text-sm text-center text-red-500">{otpError}</p>}
+                {otpError && (
+                  <p className="mt-2 text-sm text-center text-red-500">
+                    {otpError}
+                  </p>
+                )}
               </div>
 
               <div className="text-center text-sm">
-                <span className="text-gray-500">Didn't receive OTP? </span>
+                <span className="text-gray-500">Didn&apos;t receive OTP? </span>
                 {timeLeft > 0 ? (
-                  <span className="text-red-500 font-bold">Resend in {timeLeft}s</span>
+                  <span className="text-red-500 font-bold">
+                    Resend in {timeLeft}s
+                  </span>
                 ) : (
                   <button
                     type="button"
-                    onClick={handleSendOtp}
-                    className="text-brand hover:underline font-medium"
+                    onClick={handleResendOtp}
+                    disabled={isLoading}
+                    className="text-brand hover:underline font-medium disabled:opacity-50"
                   >
                     Resend OTP
                   </button>

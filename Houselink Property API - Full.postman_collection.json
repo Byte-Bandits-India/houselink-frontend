@@ -1,0 +1,2774 @@
+{
+  "info": {
+    "_postman_id": "70d45f30-097b-44d6-b595-d794d21da5a7",
+    "name": "Houselink Property API - Full",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "42491806"
+  },
+  "item": [
+    {
+      "name": "📁 CREATE",
+      "item": [
+        {
+          "name": "Sell / Owner / apartment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"apartment\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"apartment - owner\",\n  \"Permalink\": \"apartment-owner-sell\",\n  \"Description\": \"Testing apartment for sell by owner\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": 1,\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1200,\n    \"Carpet_Area\": 980,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 10,\n    \"Property_On_Floor\": 4,\n    \"UDS_Area\": 80\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Owner / villa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"villa\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"villa - owner\",\n  \"Permalink\": \"villa-owner-sell\",\n  \"Description\": \"Testing villa for sell by owner\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": 1,\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"3bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 3,\n  \"Bathrooms\": 3,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"swimming_pool\": \"No\",\n  \"Land_Details\": {\n    \"Land_Area\": 3000,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 2400,\n    \"Carpet_Area\": 2000,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Owner / individual_house",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"individual_house\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"individual_house - owner\",\n  \"Permalink\": \"individual_house-owner-sell\",\n  \"Description\": \"Testing individual_house for sell by owner\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"Land_Details\": {\n    \"Land_Area\": 2400,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1800,\n    \"Carpet_Area\": 1500,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Owner / plot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"plot\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"plot - owner\",\n  \"Permalink\": \"plot-owner-sell\",\n  \"Description\": \"Testing plot for sell by owner\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Plot_Details\": {\n    \"Plot_Area\": 2400,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 50,\n    \"Breadth\": 48\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"no\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Owner / land",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"land\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"land - owner\",\n  \"Permalink\": \"land-owner-sell\",\n  \"Description\": \"Testing land for sell by owner\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Land_Details\": {\n    \"Land_Area\": 5000,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 100,\n    \"Breadth\": 50\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"yes\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Owner / shop",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"shop\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"shop - owner\",\n  \"Permalink\": \"shop-owner-sell\",\n  \"Description\": \"Testing shop for sell by owner\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 500,\n    \"Carpet_Area\": 450,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Retail\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"washroom\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Bike\",\n  \"Number_Of_slots\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Owner / building",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"building\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"building - owner\",\n  \"Permalink\": \"building-owner-sell\",\n  \"Description\": \"Testing building for sell by owner\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 5000,\n    \"Carpet_Area\": 4500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 4,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Office\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Owner / godown",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"godown\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"godown - owner\",\n  \"Permalink\": \"godown-owner-sell\",\n  \"Description\": \"Testing godown for sell by owner\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 3500,\n    \"Carpet_Area\": 3200,\n    \"Storage_Area\": 200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 1,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"loading dock\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Owner / warehouse",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"warehouse\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"warehouse - owner\",\n  \"Permalink\": \"warehouse-owner-sell\",\n  \"Description\": \"Testing warehouse for sell by owner\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 8000,\n    \"Carpet_Area\": 7500,\n    \"Storage_Area\": 500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"loading dock\",\n    \"cctv\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Owner / office_space",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"office_space\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"office_space - owner\",\n  \"Permalink\": \"office_space-owner-sell\",\n  \"Description\": \"Testing office_space for sell by owner\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1500,\n    \"Carpet_Area\": 1200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 5,\n    \"Property_On_Floor\": 3\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"Pantry_Area\": \"yes\",\n  \"property_suitable_for\": \"IT Office\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Owner / apartment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"apartment\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"apartment - owner Rent\",\n  \"Permalink\": \"apartment-owner-rent\",\n  \"Description\": \"Testing apartment for rent by owner\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1200,\n    \"Carpet_Area\": 980,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 10,\n    \"Property_On_Floor\": 4,\n    \"UDS_Area\": 80\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Owner / villa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"villa\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"villa - owner Rent\",\n  \"Permalink\": \"villa-owner-rent\",\n  \"Description\": \"Testing villa for rent by owner\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"3bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 3,\n  \"Bathrooms\": 3,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"swimming_pool\": \"No\",\n  \"Land_Details\": {\n    \"Land_Area\": 3000,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 2400,\n    \"Carpet_Area\": 2000,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Owner / individual_house",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"individual_house\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"individual_house - owner Rent\",\n  \"Permalink\": \"individual_house-owner-rent\",\n  \"Description\": \"Testing individual_house for rent by owner\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"Land_Details\": {\n    \"Land_Area\": 2400,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1800,\n    \"Carpet_Area\": 1500,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Owner / plot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"plot\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"plot - owner Rent\",\n  \"Permalink\": \"plot-owner-rent\",\n  \"Description\": \"Testing plot for rent by owner\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Plot_Details\": {\n    \"Plot_Area\": 2400,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 50,\n    \"Breadth\": 48\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"no\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Owner / land",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"land\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"land - owner Rent\",\n  \"Permalink\": \"land-owner-rent\",\n  \"Description\": \"Testing land for rent by owner\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Land_Details\": {\n    \"Land_Area\": 5000,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 100,\n    \"Breadth\": 50\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"yes\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Owner / shop",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"shop\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"shop - owner Rent\",\n  \"Permalink\": \"shop-owner-rent\",\n  \"Description\": \"Testing shop for rent by owner\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 500,\n    \"Carpet_Area\": 450,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Retail\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"washroom\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Bike\",\n  \"Number_Of_slots\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Owner / building",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"building\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"building - owner Rent\",\n  \"Permalink\": \"building-owner-rent\",\n  \"Description\": \"Testing building for rent by owner\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 5000,\n    \"Carpet_Area\": 4500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 4,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Office\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Owner / godown",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"godown\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"godown - owner Rent\",\n  \"Permalink\": \"godown-owner-rent\",\n  \"Description\": \"Testing godown for rent by owner\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 3500,\n    \"Carpet_Area\": 3200,\n    \"Storage_Area\": 200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 1,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"loading dock\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Owner / warehouse",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"warehouse\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"warehouse - owner Rent\",\n  \"Permalink\": \"warehouse-owner-rent\",\n  \"Description\": \"Testing warehouse for rent by owner\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 8000,\n    \"Carpet_Area\": 7500,\n    \"Storage_Area\": 500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"loading dock\",\n    \"cctv\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Owner / office_space",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"owner\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"office_space\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"office_space - owner Rent\",\n  \"Permalink\": \"office_space-owner-rent\",\n  \"Description\": \"Testing office_space for rent by owner\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1500,\n    \"Carpet_Area\": 1200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 5,\n    \"Property_On_Floor\": 3\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"Pantry_Area\": \"yes\",\n  \"property_suitable_for\": \"IT Office\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Builder / apartment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"apartment\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"apartment - builder\",\n  \"Permalink\": \"apartment-builder-sell\",\n  \"Description\": \"Testing apartment for sell by builder\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1200,\n    \"Carpet_Area\": 980,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 10,\n    \"Property_On_Floor\": 4,\n    \"UDS_Area\": 80\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Builder / villa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"villa\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"villa - builder\",\n  \"Permalink\": \"villa-builder-sell\",\n  \"Description\": \"Testing villa for sell by builder\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"3bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 3,\n  \"Bathrooms\": 3,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"swimming_pool\": \"No\",\n  \"Land_Details\": {\n    \"Land_Area\": 3000,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 2400,\n    \"Carpet_Area\": 2000,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Builder / individual_house",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"individual_house\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"individual_house - builder\",\n  \"Permalink\": \"individual_house-builder-sell\",\n  \"Description\": \"Testing individual_house for sell by builder\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"Land_Details\": {\n    \"Land_Area\": 2400,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1800,\n    \"Carpet_Area\": 1500,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Builder / plot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"plot\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"plot - builder\",\n  \"Permalink\": \"plot-builder-sell\",\n  \"Description\": \"Testing plot for sell by builder\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Plot_Details\": {\n    \"Plot_Area\": 2400,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 50,\n    \"Breadth\": 48\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"no\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Builder / land",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"land\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"land - builder\",\n  \"Permalink\": \"land-builder-sell\",\n  \"Description\": \"Testing land for sell by builder\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Land_Details\": {\n    \"Land_Area\": 5000,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 100,\n    \"Breadth\": 50\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"yes\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Builder / shop",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"shop\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"shop - builder\",\n  \"Permalink\": \"shop-builder-sell\",\n  \"Description\": \"Testing shop for sell by builder\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 500,\n    \"Carpet_Area\": 450,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Retail\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"washroom\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Bike\",\n  \"Number_Of_slots\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Builder / building",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"building\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"building - builder\",\n  \"Permalink\": \"building-builder-sell\",\n  \"Description\": \"Testing building for sell by builder\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 5000,\n    \"Carpet_Area\": 4500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 4,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Office\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Builder / godown",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"godown\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"godown - builder\",\n  \"Permalink\": \"godown-builder-sell\",\n  \"Description\": \"Testing godown for sell by builder\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 3500,\n    \"Carpet_Area\": 3200,\n    \"Storage_Area\": 200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 1,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"loading dock\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Builder / warehouse",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"warehouse\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"warehouse - builder\",\n  \"Permalink\": \"warehouse-builder-sell\",\n  \"Description\": \"Testing warehouse for sell by builder\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 8000,\n    \"Carpet_Area\": 7500,\n    \"Storage_Area\": 500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"loading dock\",\n    \"cctv\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Builder / office_space",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"office_space\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"office_space - builder\",\n  \"Permalink\": \"office_space-builder-sell\",\n  \"Description\": \"Testing office_space for sell by builder\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1500,\n    \"Carpet_Area\": 1200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 5,\n    \"Property_On_Floor\": 3\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"Pantry_Area\": \"yes\",\n  \"property_suitable_for\": \"IT Office\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Builder / apartment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"apartment\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"apartment - builder Rent\",\n  \"Permalink\": \"apartment-builder-rent\",\n  \"Description\": \"Testing apartment for rent by builder\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1200,\n    \"Carpet_Area\": 980,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 10,\n    \"Property_On_Floor\": 4,\n    \"UDS_Area\": 80\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Builder / villa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"villa\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"villa - builder Rent\",\n  \"Permalink\": \"villa-builder-rent\",\n  \"Description\": \"Testing villa for rent by builder\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"3bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 3,\n  \"Bathrooms\": 3,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"swimming_pool\": \"No\",\n  \"Land_Details\": {\n    \"Land_Area\": 3000,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 2400,\n    \"Carpet_Area\": 2000,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Builder / individual_house",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"individual_house\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"individual_house - builder Rent\",\n  \"Permalink\": \"individual_house-builder-rent\",\n  \"Description\": \"Testing individual_house for rent by builder\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"Land_Details\": {\n    \"Land_Area\": 2400,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1800,\n    \"Carpet_Area\": 1500,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Builder / plot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"plot\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"plot - builder Rent\",\n  \"Permalink\": \"plot-builder-rent\",\n  \"Description\": \"Testing plot for rent by builder\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Plot_Details\": {\n    \"Plot_Area\": 2400,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 50,\n    \"Breadth\": 48\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"no\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Builder / land",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"land\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"land - builder Rent\",\n  \"Permalink\": \"land-builder-rent\",\n  \"Description\": \"Testing land for rent by builder\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Land_Details\": {\n    \"Land_Area\": 5000,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 100,\n    \"Breadth\": 50\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"yes\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Builder / shop",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"shop\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"shop - builder Rent\",\n  \"Permalink\": \"shop-builder-rent\",\n  \"Description\": \"Testing shop for rent by builder\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 500,\n    \"Carpet_Area\": 450,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Retail\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"washroom\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Bike\",\n  \"Number_Of_slots\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Builder / building",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"building\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"building - builder Rent\",\n  \"Permalink\": \"building-builder-rent\",\n  \"Description\": \"Testing building for rent by builder\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 5000,\n    \"Carpet_Area\": 4500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 4,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Office\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Builder / godown",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"godown\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"godown - builder Rent\",\n  \"Permalink\": \"godown-builder-rent\",\n  \"Description\": \"Testing godown for rent by builder\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 3500,\n    \"Carpet_Area\": 3200,\n    \"Storage_Area\": 200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 1,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"loading dock\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Builder / warehouse",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"warehouse\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"warehouse - builder Rent\",\n  \"Permalink\": \"warehouse-builder-rent\",\n  \"Description\": \"Testing warehouse for rent by builder\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 8000,\n    \"Carpet_Area\": 7500,\n    \"Storage_Area\": 500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"loading dock\",\n    \"cctv\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Builder / office_space",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"builder\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"office_space\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"office_space - builder Rent\",\n  \"Permalink\": \"office_space-builder-rent\",\n  \"Description\": \"Testing office_space for rent by builder\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Seo_Tags\": {\n    \"seo_title\": \"Test\",\n    \"seo_desc\": \"Test desc\",\n    \"seo_index\": 1,\n    \"seo_img\": [],\n    \"seo_vid\": [],\n    \"seo_thumbnail_img\": []\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1500,\n    \"Carpet_Area\": 1200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 5,\n    \"Property_On_Floor\": 3\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"Pantry_Area\": \"yes\",\n  \"property_suitable_for\": \"IT Office\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Consultant / apartment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"apartment\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"apartment - consultant\",\n  \"Permalink\": \"apartment-consultant-sell\",\n  \"Description\": \"Testing apartment for sell by consultant\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1200,\n    \"Carpet_Area\": 980,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 10,\n    \"Property_On_Floor\": 4,\n    \"UDS_Area\": 80\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Consultant / villa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"villa\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"villa - consultant\",\n  \"Permalink\": \"villa-consultant-sell\",\n  \"Description\": \"Testing villa for sell by consultant\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"3bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 3,\n  \"Bathrooms\": 3,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"swimming_pool\": \"No\",\n  \"Land_Details\": {\n    \"Land_Area\": 3000,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 2400,\n    \"Carpet_Area\": 2000,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Consultant / individual_house",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"individual_house\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"individual_house - consultant\",\n  \"Permalink\": \"individual_house-consultant-sell\",\n  \"Description\": \"Testing individual_house for sell by consultant\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"Land_Details\": {\n    \"Land_Area\": 2400,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1800,\n    \"Carpet_Area\": 1500,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Consultant / plot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"plot\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"plot - consultant\",\n  \"Permalink\": \"plot-consultant-sell\",\n  \"Description\": \"Testing plot for sell by consultant\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Plot_Details\": {\n    \"Plot_Area\": 2400,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 50,\n    \"Breadth\": 48\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"no\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Consultant / land",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"land\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"land - consultant\",\n  \"Permalink\": \"land-consultant-sell\",\n  \"Description\": \"Testing land for sell by consultant\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Land_Details\": {\n    \"Land_Area\": 5000,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 100,\n    \"Breadth\": 50\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"yes\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Consultant / shop",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"shop\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"shop - consultant\",\n  \"Permalink\": \"shop-consultant-sell\",\n  \"Description\": \"Testing shop for sell by consultant\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Area_Details\": {\n    \"Built_Up_Area\": 500,\n    \"Carpet_Area\": 450,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Retail\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"washroom\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Bike\",\n  \"Number_Of_slots\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Consultant / building",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"building\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"building - consultant\",\n  \"Permalink\": \"building-consultant-sell\",\n  \"Description\": \"Testing building for sell by consultant\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Area_Details\": {\n    \"Built_Up_Area\": 5000,\n    \"Carpet_Area\": 4500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 4,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Office\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Consultant / godown",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"godown\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"godown - consultant\",\n  \"Permalink\": \"godown-consultant-sell\",\n  \"Description\": \"Testing godown for sell by consultant\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Area_Details\": {\n    \"Built_Up_Area\": 3500,\n    \"Carpet_Area\": 3200,\n    \"Storage_Area\": 200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 1,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"loading dock\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Consultant / warehouse",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"warehouse\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"warehouse - consultant\",\n  \"Permalink\": \"warehouse-consultant-sell\",\n  \"Description\": \"Testing warehouse for sell by consultant\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Area_Details\": {\n    \"Built_Up_Area\": 8000,\n    \"Carpet_Area\": 7500,\n    \"Storage_Area\": 500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"loading dock\",\n    \"cctv\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell / Consultant / office_space",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"office_space\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"office_space - consultant\",\n  \"Permalink\": \"office_space-consultant-sell\",\n  \"Description\": \"Testing office_space for sell by consultant\",\n  \"Auto_Renewal_Option\": \"1hour\",\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Pricing Details\": {\n    \"Price\": 5000000,\n    \"AmountInWords\": \"Fifty Lakhs\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1500,\n    \"Carpet_Area\": 1200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 5,\n    \"Property_On_Floor\": 3\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"Pantry_Area\": \"yes\",\n  \"property_suitable_for\": \"IT Office\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Consultant / apartment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"apartment\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"apartment - consultant Rent\",\n  \"Permalink\": \"apartment-consultant-rent\",\n  \"Description\": \"Testing apartment for rent by consultant\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1200,\n    \"Carpet_Area\": 980,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 10,\n    \"Property_On_Floor\": 4,\n    \"UDS_Area\": 80\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Consultant / villa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"villa\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"villa - consultant Rent\",\n  \"Permalink\": \"villa-consultant-rent\",\n  \"Description\": \"Testing villa for rent by consultant\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"3bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 3,\n  \"Bathrooms\": 3,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"swimming_pool\": \"No\",\n  \"Land_Details\": {\n    \"Land_Area\": 3000,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 2400,\n    \"Carpet_Area\": 2000,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Consultant / individual_house",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"individual_house\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"individual_house - consultant Rent\",\n  \"Permalink\": \"individual_house-consultant-rent\",\n  \"Description\": \"Testing individual_house for rent by consultant\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"ownership_type\": \"fully_owned\",\n  \"furnishing_type\": \"Semi-Furnished\",\n  \"water_supply\": \"Corporation\",\n  \"food_preference\": \"No Restrictions\",\n  \"pet_policy\": \"Allowed\",\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"1\",\n  \"House_Type\": \"2bhk\",\n  \"Construction_Age\": \"New Construction\",\n  \"Bedrooms\": 2,\n  \"Bathrooms\": 2,\n  \"Balcony\": \"Yes\",\n  \"garden\": \"Yes\",\n  \"Land_Details\": {\n    \"Land_Area\": 2400,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1800,\n    \"Carpet_Area\": 1500,\n    \"Unit\": \"Sq. Ft\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Consultant / plot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"Residential\",\n  \"property_type\": \"plot\",\n  \"customer_id\": 1,\n  \"category_id\": 1,\n  \"Property_Name\": \"plot - consultant Rent\",\n  \"Permalink\": \"plot-consultant-rent\",\n  \"Description\": \"Testing plot for rent by consultant\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Plot_Details\": {\n    \"Plot_Area\": 2400,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 50,\n    \"Breadth\": 48\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"no\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Consultant / land",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"land\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"land - consultant Rent\",\n  \"Permalink\": \"land-consultant-rent\",\n  \"Description\": \"Testing land for rent by consultant\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Land_Details\": {\n    \"Land_Area\": 5000,\n    \"Unit\": \"Sq. Ft\",\n    \"Length\": 100,\n    \"Breadth\": 50\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"corner_property\": \"yes\",\n  \"compound_wall\": \"yes\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Consultant / shop",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"shop\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"shop - consultant Rent\",\n  \"Permalink\": \"shop-consultant-rent\",\n  \"Description\": \"Testing shop for rent by consultant\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Area_Details\": {\n    \"Built_Up_Area\": 500,\n    \"Carpet_Area\": 450,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Retail\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"washroom\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Bike\",\n  \"Number_Of_slots\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Consultant / building",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"building\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"building - consultant Rent\",\n  \"Permalink\": \"building-consultant-rent\",\n  \"Description\": \"Testing building for rent by consultant\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Area_Details\": {\n    \"Built_Up_Area\": 5000,\n    \"Carpet_Area\": 4500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 4,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"property_suitable_for\": \"Office\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Consultant / godown",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"godown\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"godown - consultant Rent\",\n  \"Permalink\": \"godown-consultant-rent\",\n  \"Description\": \"Testing godown for rent by consultant\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Area_Details\": {\n    \"Built_Up_Area\": 3500,\n    \"Carpet_Area\": 3200,\n    \"Storage_Area\": 200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 1,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 1,\n  \"corner_property\": \"yes\",\n  \"utility_area\": \"no\",\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"parking\",\n    \"loading dock\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Consultant / warehouse",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"warehouse\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"warehouse - consultant Rent\",\n  \"Permalink\": \"warehouse-consultant-rent\",\n  \"Description\": \"Testing warehouse for rent by consultant\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Area_Details\": {\n    \"Built_Up_Area\": 8000,\n    \"Carpet_Area\": 7500,\n    \"Storage_Area\": 500,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 2,\n    \"Property_On_Floor\": 1\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"loading_unloading_facility\": \"yes\",\n  \"key_specifications\": [\n    \"loading dock\",\n    \"cctv\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Truck\",\n  \"Number_Of_slots\": \"10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rent / Consultant / office_space",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"owner_type\": \"consultant\",\n  \"property_purpose\": \"commercial\",\n  \"property_type\": \"office_space\",\n  \"customer_id\": 1,\n  \"category_id\": 2,\n  \"Property_Name\": \"office_space - consultant Rent\",\n  \"Permalink\": \"office_space-consultant-rent\",\n  \"Description\": \"Testing office_space for rent by consultant\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Tenant_Preference\": [\n    \"Family\",\n    \"Any\"\n  ],\n  \"Pricing_Details_Rent\": {\n    \"Price\": 25000,\n    \"AmountInWords\": \"Twenty Five Thousand\",\n    \"Security_Deposit\": 50000,\n    \"Security_Deposit_In_Words\": \"Fifty Thousand\",\n    \"Fixed_or_Negotiable\": \"Fixed\",\n    \"Maintenance_Charge\": \"Yes\",\n    \"Maintenance_Charge_Amount\": 2000,\n    \"Notice_Period\": \"1 Month\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"Price_Details_Lease\": {\n    \"Lease_Amount\": 500000,\n    \"AmountInWords\": \"Five Lakhs\",\n    \"Lease_Duration\": \"11 Months\",\n    \"Maintenance_Responsibility\": \"Tenant\",\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-06-30\"\n  },\n  \"images\": [],\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"Anna Nagar\"\n  },\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Bank\",\n        \"distance\": 200\n      },\n      {\n        \"name\": \"ATM\",\n        \"distance\": 100\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Parking\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  },\n  \"Direction_Facing\": \"North\",\n  \"Brokerage_Type\": \"fixed\",\n  \"Brokerage_Fixed_Amount\": 25000,\n  \"Brokerage_Percentage\": 2,\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1500,\n    \"Carpet_Area\": 1200,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 5,\n    \"Property_On_Floor\": 3\n  },\n  \"ownership_type\": \"fully_owned\",\n  \"Bathrooms\": 2,\n  \"Pantry_Area\": \"yes\",\n  \"property_suitable_for\": \"IT Office\",\n  \"key_specifications\": [\n    \"parking\",\n    \"lift\"\n  ],\n  \"parking_availability\": \"Yes\",\n  \"Parking_Type\": \"Car\",\n  \"Number_Of_slots\": \"5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 GET",
+      "item": [
+        {
+          "name": "Get Single Property",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties/{{prop_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties",
+                "{{prop_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List All (paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?page=1&page_size=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Sell only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?property_for=sell",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "property_for",
+                  "value": "sell"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Rent only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?property_for=rent",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "property_for",
+                  "value": "rent"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Lease only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?property_for=lease",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "property_for",
+                  "value": "lease"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Owner type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?owner_type=Owner",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "owner_type",
+                  "value": "Owner"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Builder type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?owner_type=Builder",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "owner_type",
+                  "value": "Builder"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Consultant type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?owner_type=Consultant",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "owner_type",
+                  "value": "Consultant"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Residential category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?category_id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "category_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Commercial category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?category_id=2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "category_id",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Price range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?min_price=1000000&max_price=10000000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "min_price",
+                  "value": "1000000"
+                },
+                {
+                  "key": "max_price",
+                  "value": "10000000"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Search keyword",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?search=apartment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "apartment"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Customer properties",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?customer_id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "customer_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - Pending moderation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?moderation=pending",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "moderation",
+                  "value": "pending"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List - City filter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties?city_id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "city_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "https://testing.houselink360.com/api/v2/states",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://testing.houselink360.com/api/v2/states",
+              "protocol": "https",
+              "host": [
+                "testing",
+                "houselink360",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v2",
+                "states"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 UPDATE",
+      "item": [
+        {
+          "name": "Update - Basic Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Property_Name\": \"Updated Name\",\n  \"Description\": \"Updated description\",\n  \"Direction_Facing\": \"East\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties/{{prop_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties",
+                "{{prop_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update - Sell Price",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"sell\",\n  \"Pricing Details\": {\n    \"Price\": 6500000,\n    \"Availability\": \"Ready to move on\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties/{{prop_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties",
+                "{{prop_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update - Rent Price",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_for\": \"Rent/lease\",\n  \"Rent_or_Lease\": \"Rent\",\n  \"Pricing_Details_Rent\": {\n    \"Price\": 30000,\n    \"Security_Deposit\": 60000,\n    \"Notice_Period\": \"2 Months\",\n    \"Availability\": \"Available from\",\n    \"availability_date\": \"2026-08-01\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties/{{prop_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties",
+                "{{prop_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update - Location",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Location\": {\n    \"State\": \"Tamil Nadu\",\n    \"City\": \"Chennai\",\n    \"Property_Location\": \"T Nagar\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties/{{prop_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties",
+                "{{prop_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update - Amenities",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Amenities\": {\n    \"Key_Facilities\": [\n      {\n        \"name\": \"Metro\",\n        \"distance\": 300\n      }\n    ],\n    \"Features\": [\n      {\n        \"name\": \"Swimming Pool\"\n      },\n      {\n        \"name\": \"Gym\"\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties/{{prop_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties",
+                "{{prop_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update - SEO Tags",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Seo_Tags\": {\n    \"seo_title\": \"Updated SEO Title\",\n    \"seo_desc\": \"Updated SEO description for better ranking\",\n    \"seo_index\": 1\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties/{{prop_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties",
+                "{{prop_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update - Brokerage (Consultant)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"owner_type\": \"consultant\",\n  \"Brokerage_Type\": \"percentage\",\n  \"Brokerage_Percentage\": 1.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties/{{prop_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties",
+                "{{prop_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update - Area Details (Residential)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Area_Details\": {\n    \"Built_Up_Area\": 1400,\n    \"Carpet_Area\": 1100,\n    \"Unit\": \"Sq. Ft\"\n  },\n  \"Floor_Details\": {\n    \"Total_Floors\": 12,\n    \"Property_On_Floor\": 6\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties/{{prop_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties",
+                "{{prop_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 DELETE",
+      "item": [
+        {
+          "name": "Delete Property",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/properties/{{prop_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "properties",
+                "{{prop_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 PROFILE",
+      "item": [
+        {
+          "name": "Update Profile & Avatar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "firstName",
+                  "value": "John",
+                  "type": "text"
+                },
+                {
+                  "key": "lastName",
+                  "value": "Doe",
+                  "type": "text"
+                },
+                {
+                  "key": "dob",
+                  "value": "1990-01-01",
+                  "type": "text"
+                },
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "prop_id",
+      "value": "1"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    }
+  ]
+}

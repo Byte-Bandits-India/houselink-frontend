@@ -4,71 +4,95 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import {
+  sendOtpRegister,
+  register,
+  retryOtp,
+  getStates,
+  getCities,
+  ApiError,
+} from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import type { State, City } from "@/types/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { setAuthUser } = useAuth();
 
   // Form State
   const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [stateId, setStateId] = useState("");
-  const [cityId, setCityId] = useState("");
+  const [stateId, setStateId] = useState<number | "">("");
+  const [cityId, setCityId] = useState<number | "">("");
 
   // OTP State
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(0);
-  const otpRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+  const otpRefs = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+  ];
+
+  // Location State
+  const [states, setStates] = useState<State[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [loadingStates, setLoadingStates] = useState(true);
+  const [loadingCities, setLoadingCities] = useState(false);
 
   // UI State
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Mock Data (Replace with API fetch later)
-  const states = [
-    { id: "1", name: "Maharashtra" },
-    { id: "2", name: "Delhi" },
-    { id: "3", name: "Karnataka" },
-  ];
-
-  const [cities, setCities] = useState<{ id: string, name: string }[]>([]);
-
-  // Fetch cities when state changes
+  // ── Fetch states on mount ──────────────────────────────────────────────────
   useEffect(() => {
-    if (stateId) {
-      // TODO: API GET /api/getcities/{stateId}
-      // Replace mock with actual API
-      const mockCities = [
-        { id: "101", name: "Mumbai", stateId: "1" },
-        { id: "102", name: "Pune", stateId: "1" },
-        { id: "201", name: "New Delhi", stateId: "2" },
-        { id: "301", name: "Bangalore", stateId: "3" },
-      ].filter(c => c.stateId === stateId);
+    getStates()
+      .then((res) => setStates(res.data))
+      .catch(() => setErrors((e) => ({ ...e, states: "Failed to load states" })))
+      .finally(() => setLoadingStates(false));
+  }, []);
 
-      setCities(mockCities);
-      setCityId(""); // reset city
-    } else {
+  // ── Fetch cities when stateId changes ─────────────────────────────────────
+  useEffect(() => {
+    if (!stateId) {
       setCities([]);
+      setCityId("");
+      return;
     }
+    setLoadingCities(true);
+    getCities(stateId as number)
+      .then((res) => {
+        setCities(res.data);
+        setCityId("");
+      })
+      .catch(() => setErrors((e) => ({ ...e, city: "Failed to load cities" })))
+      .finally(() => setLoadingCities(false));
   }, [stateId]);
 
-  // Countdown timer logic
+  // ── Countdown timer ────────────────────────────────────────────────────────
   useEffect(() => {
     if (timeLeft > 0) {
-      const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timerId);
+      const id = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
+      return () => clearTimeout(id);
     }
   }, [timeLeft]);
 
+  // ── Validation ─────────────────────────────────────────────────────────────
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!firstName.trim()) newErrors.firstName = "First Name is required";
-    else if (!/^[A-Za-z\s]+$/.test(firstName)) newErrors.firstName = "Only letters and spaces allowed";
+    else if (!/^[A-Za-z\s]+$/.test(firstName))
+      newErrors.firstName = "Only letters and spaces allowed";
 
-    if (!phone || phone.length !== 10) newErrors.phone = "Valid 10-digit phone required";
+    if (!phone || phone.length !== 10)
+      newErrors.phone = "Valid 10-digit phone required";
     if (!email) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = "Invalid email format";
+    else if (!/\S+@\S+\.\S+/.test(email))
+      newErrors.email = "Invalid email format";
 
     if (!stateId) newErrors.state = "State is required";
     if (!cityId) newErrors.city = "City is required";
@@ -77,41 +101,66 @@ export default function RegisterPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // ── Send OTP (registration) ────────────────────────────────────────────────
   const handleSendOtp = async () => {
     if (!phone || phone.length !== 10) {
-      setErrors({ ...errors, phone: "Please enter a valid 10-digit phone number" });
+      setErrors((e) => ({ ...e, phone: "Please enter a valid 10-digit phone number" }));
       return;
     }
-    setErrors({ ...errors, phone: "" });
+    setErrors((e) => ({ ...e, phone: "" }));
     setIsLoading(true);
 
     try {
-      // TODO: API POST /api/auth/send-otp-registration
-      // await fetch('/api/auth/send-otp-registration', { method: 'POST', body: JSON.stringify({ phone }) });
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      await sendOtpRegister({ phone });
       setOtpSent(true);
       setTimeLeft(60);
       setOtp(["", "", "", ""]);
-    } catch (error) {
-      setErrors({ ...errors, phone: "Failed to send OTP" });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setErrors((e) => ({
+          ...e,
+          phone: "This phone number is already registered. Please login.",
+        }));
+      } else if (err instanceof ApiError && err.status === 400) {
+        setErrors((e) => ({ ...e, phone: "Invalid phone number format." }));
+      } else {
+        setErrors((e) => ({ ...e, phone: "Failed to send OTP. Please try again." }));
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ── Resend OTP ─────────────────────────────────────────────────────────────
+  const handleResendOtp = async () => {
+    setIsLoading(true);
+    try {
+      await retryOtp({ phone, retryType: "text" });
+      setTimeLeft(60);
+      setOtp(["", "", "", ""]);
+    } catch {
+      setErrors((e) => ({ ...e, otp: "Failed to resend OTP." }));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ── Register ───────────────────────────────────────────────────────────────
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     if (!otpSent) {
-      setErrors({ ...errors, general: "Please verify phone number with OTP first" });
+      setErrors((e) => ({
+        ...e,
+        general: "Please verify phone number with OTP first",
+      }));
       return;
     }
 
     const otpValue = otp.join("");
     if (otpValue.length !== 4) {
-      setErrors({ ...errors, otp: "Please enter the complete 4-digit OTP" });
+      setErrors((e) => ({ ...e, otp: "Please enter the complete 4-digit OTP" }));
       return;
     }
 
@@ -119,42 +168,44 @@ export default function RegisterPage() {
     setErrors({});
 
     try {
-      // TODO: API POST /api/auth/register
-      /*
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          first_name: firstName,
-          phone,
-          email,
-          state: stateId,
-          city: cityId,
-          otp: otpValue
-        })
+      const res = await register({
+        firstName,
+        lastName: lastName || undefined,
+        phone,
+        email,
+        otp: otpValue,
+        stateId: stateId as number,
+        cityId: cityId as number,
       });
-      */
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Redirect on success
-      router.push("/dashboard");
-    } catch (error) {
-      setErrors({ general: "Registration failed. Please try again." });
+      // Tokens auto-saved; instantly update the auth context
+      setAuthUser(res.customer);
+      router.push("/");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 400) {
+        setErrors({ general: "Invalid OTP or form data. Please check and try again." });
+      } else if (err instanceof ApiError && err.status === 409) {
+        setErrors({ general: "Phone number already registered. Please login." });
+      } else {
+        setErrors({ general: "Registration failed. Please try again." });
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ── OTP input handlers ─────────────────────────────────────────────────────
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-
     if (value && index < 3) otpRefs[index + 1].current?.focus();
   };
 
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleOtpKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       otpRefs[index - 1].current?.focus();
     }
@@ -193,27 +244,49 @@ export default function RegisterPage() {
               <input
                 type="text"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value.replace(/[^A-Za-z\s]/g, ""))}
+                onChange={(e) =>
+                  setFirstName(e.target.value.replace(/[^A-Za-z\s]/g, ""))
+                }
                 placeholder="First Name"
                 className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
               />
-              {errors.firstName && <p className="mt-1 text-xs text-red-500">{errors.firstName}</p>}
+              {errors.firstName && (
+                <p className="mt-1 text-xs text-red-500">{errors.firstName}</p>
+              )}
             </div>
 
-            {/* Email */}
+            {/* Last Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email <span className="text-red-500">*</span>
+                Last Name
               </label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email Address"
+                type="text"
+                value={lastName}
+                onChange={(e) =>
+                  setLastName(e.target.value.replace(/[^A-Za-z\s]/g, ""))
+                }
+                placeholder="Last Name (optional)"
                 className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
               />
-              {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
             </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email Address"
+              className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
+            />
+            {errors.email && (
+              <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -224,13 +297,24 @@ export default function RegisterPage() {
               </label>
               <select
                 value={stateId}
-                onChange={(e) => setStateId(e.target.value)}
-                className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white"
+                onChange={(e) =>
+                  setStateId(e.target.value ? Number(e.target.value) : "")
+                }
+                disabled={loadingStates}
+                className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white disabled:bg-gray-50"
               >
-                <option value="">Select State</option>
-                {states.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                <option value="">
+                  {loadingStates ? "Loading states..." : "Select State"}
+                </option>
+                {states.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
               </select>
-              {errors.state && <p className="mt-1 text-xs text-red-500">{errors.state}</p>}
+              {errors.state && (
+                <p className="mt-1 text-xs text-red-500">{errors.state}</p>
+              )}
             </div>
 
             {/* City */}
@@ -240,14 +324,28 @@ export default function RegisterPage() {
               </label>
               <select
                 value={cityId}
-                onChange={(e) => setCityId(e.target.value)}
-                disabled={!stateId || cities.length === 0}
+                onChange={(e) =>
+                  setCityId(e.target.value ? Number(e.target.value) : "")
+                }
+                disabled={!stateId || loadingCities || cities.length === 0}
                 className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white disabled:bg-gray-50"
               >
-                <option value="">Select City</option>
-                {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <option value="">
+                  {loadingCities
+                    ? "Loading cities..."
+                    : !stateId
+                    ? "Select State first"
+                    : "Select City"}
+                </option>
+                {cities.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
-              {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city}</p>}
+              {errors.city && (
+                <p className="mt-1 text-xs text-red-500">{errors.city}</p>
+              )}
             </div>
           </div>
 
@@ -277,16 +375,21 @@ export default function RegisterPage() {
                 </button>
               )}
             </div>
-            {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
+            {errors.phone && (
+              <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
+            )}
           </div>
 
           {/* OTP Verification Section */}
           {otpSent && (
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 animate-fade-in mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                Enter OTP <span className="text-green-600 text-xs ml-1">✓ Verification Required</span>
+                Enter 4-digit OTP{" "}
+                <span className="text-green-600 text-xs ml-1">
+                  ✓ sent to +91 {phone}
+                </span>
               </label>
-              <div className="flex justify-center gap-3 mb-3">
+              <div className="flex justify-center gap-2 mb-3">
                 {otp.map((digit, index) => (
                   <input
                     key={index}
@@ -296,23 +399,30 @@ export default function RegisterPage() {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className={`w-12 h-12 text-center text-lg font-bold border-2 rounded-md transition-all outline-none
+                    className={`w-10 h-10 text-center text-lg font-bold border-2 rounded-md transition-all outline-none
                       ${digit ? "border-[#4f8bd3] bg-[#f8fff9]" : "border-gray-200 bg-white"}
                       focus:border-brand focus:ring-2`}
                   />
                 ))}
               </div>
-              {errors.otp && <p className="text-center text-xs text-red-500 mb-2">{errors.otp}</p>}
+              {errors.otp && (
+                <p className="text-center text-xs text-red-500 mb-2">
+                  {errors.otp}
+                </p>
+              )}
 
               <div className="text-center text-xs">
-                <span className="text-gray-500">Didn't receive OTP? </span>
+                <span className="text-gray-500">Didn&apos;t receive OTP? </span>
                 {timeLeft > 0 ? (
-                  <span className="text-red-500 font-bold">Resend in {timeLeft}s</span>
+                  <span className="text-red-500 font-bold">
+                    Resend in {timeLeft}s
+                  </span>
                 ) : (
                   <button
                     type="button"
-                    onClick={handleSendOtp}
-                    className="text-brand hover:underline font-medium"
+                    onClick={handleResendOtp}
+                    disabled={isLoading}
+                    className="text-brand hover:underline font-medium disabled:opacity-50"
                   >
                     Resend OTP
                   </button>
