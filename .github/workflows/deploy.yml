@@ -14,13 +14,13 @@ jobs:
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: 103.91.186.61
-          username: YOUR_SERVER_USER
+          username: houselink360
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
             set -e
 
-            cd /home/YOUR_SERVER_USER/YOUR_REPO
+            cd /home/houselink360/nextjs
 
             echo "Pulling latest code..."
             git pull origin main
