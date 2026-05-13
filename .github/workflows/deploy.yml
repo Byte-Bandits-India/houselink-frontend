@@ -16,6 +16,7 @@ jobs:
           host: 103.91.186.61
           username: houselink360
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: 22
           script: |
             set -e
