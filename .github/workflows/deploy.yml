@@ -35,6 +35,9 @@ jobs:
             echo "Building project..."
             npm run build
 
+            echo "Fixing permissions for web server..."
+            chmod -R 755 .next public
+
             echo "Restarting app..."
             pm2 restart houselink-nextjs || pm2 start npm --name "houselink-nextjs" -- start
 
