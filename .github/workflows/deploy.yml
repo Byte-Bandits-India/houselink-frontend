@@ -39,6 +39,8 @@ jobs:
             chmod -R 755 .next public
 
             echo "Restarting app..."
-            pm2 restart houselink-nextjs || pm2 start npm --name "houselink-nextjs" -- start
+            pm2 delete nextjs-app || true
+            pm2 delete houselink-nextjs || true
+            pm2 start npm --name "houselink-nextjs" -- start
 
             echo "Deployment complete"
