@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 type Filter = "sell" | "rent";
 
@@ -40,35 +41,23 @@ interface CreditEntry {
   Icon: React.FC;
 }
 
-const sellCards: CreditEntry[] = [
-  { title: "Owner Credit Points", credits: 0, expiry: null, buyHref: "/dashboard/credits?tab=owner", Icon: OwnerIcon },
-  { title: "Builder Credit Points", credits: 1, expiry: "19-05-2026", buyHref: "/dashboard/credits?tab=builder", Icon: BuilderIcon },
-  { title: "Consultant Credit Points", credits: 2, expiry: "19-05-2026", buyHref: "/dashboard/credits?tab=consultant", Icon: ConsultantIcon },
-];
-
-const rentCards: CreditEntry[] = [
-  { title: "Enquiry Credit Points", credits: 8, expiry: "30-06-2026", buyHref: "/dashboard/credits?filter=rent", Icon: EnquiryIcon },
-];
-
 function CreditCard({ entry }: { entry: CreditEntry }) {
   const isActive = entry.credits > 0;
   const { Icon } = entry;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 flex flex-col items-center text-center min-h-[260px]">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 flex flex-col items-center text-center min-h-[260px] hover:shadow-md transition-shadow duration-300">
       <Icon />
 
       <h4 className="text-base lg:text-xl font-bold text-brand mt-1">{entry.title}</h4>
 
       {isActive ? (
         <>
-          <p className="text-4xl font-bold text-ink leading-none mb-0.5">{entry.credits}</p>
-          {entry.expiry && (
-            <p className="text-sm text-ink-secondary mb-1">Expiry-Date: {entry.expiry}</p>
-          )}
+          <p className="text-4xl font-bold text-ink leading-none my-2">{entry.credits}</p>
+          <p className="text-sm text-ink-secondary mb-1">Active Listing Points</p>
         </>
       ) : (
-        <p className="text-sm font-semibold text-ink mb-1">No package found</p>
+        <p className="text-sm font-semibold text-ink my-3">No package found</p>
       )}
 
       <div className="mt-auto w-full pt-1">
@@ -82,7 +71,7 @@ function CreditCard({ entry }: { entry: CreditEntry }) {
         ) : (
           <Link
             href={entry.buyHref}
-            className="inline-block border border-gray-300 text-ink-secondary font-medium text-sm px-6 py-2 rounded-lg hover:border-brand hover:text-brand transition-colors duration-200"
+            className="inline-block w-full border border-gray-300 text-ink-secondary font-medium text-sm px-6 py-2 rounded-lg hover:border-brand hover:text-brand transition-colors duration-200"
           >
             Buy Package
           </Link>
@@ -94,9 +83,56 @@ function CreditCard({ entry }: { entry: CreditEntry }) {
 
 /* ── Page ─────────────────────────────────────────────── */
 export default function PackageDetailsPage() {
+  const { user, refreshUser } = useAuth();
   const [filter, setFilter] = useState<Filter>("sell");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        await refreshUser();
+      } catch (err) {
+        console.error("Failed to refresh user profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [refreshUser]);
+
+  const sellCards: CreditEntry[] = [
+    { title: "Owner Credit Points", credits: user?.creditPointsOwner ?? 0, expiry: null, buyHref: "/dashboard/credits?tab=owners", Icon: OwnerIcon },
+    { title: "Builder Credit Points", credits: user?.creditPointsBuilder ?? 0, expiry: "active", buyHref: "/dashboard/credits?tab=builders", Icon: BuilderIcon },
+    { title: "Consultant Credit Points", credits: user?.creditPointsConsultant ?? 0, expiry: "active", buyHref: "/dashboard/credits?tab=consultants", Icon: ConsultantIcon },
+  ];
+
+  const rentCards: CreditEntry[] = [
+    { title: "Owner Credit Points", credits: user?.creditPointsOwner ?? 0, expiry: "active", buyHref: "/dashboard/credits?filter=rent", Icon: EnquiryIcon },
+  ];
 
   const cards = filter === "sell" ? sellCards : rentCards;
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-brand">Dashboard</h1>
+        <div className="flex gap-2">
+          <div className="w-24 h-10 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="w-32 h-10 bg-gray-200 rounded-lg animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {Array.from({ length: 3 }).map((_, idx) => (
+            <div key={idx} className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col items-center min-h-[260px] animate-pulse">
+              <div className="w-20 h-20 bg-gray-200 rounded-full mb-3" />
+              <div className="h-6 bg-gray-200 rounded w-2/3 mb-4" />
+              <div className="h-10 bg-gray-200 rounded w-1/3 mb-4" />
+              <div className="h-10 bg-gray-200 rounded w-full mt-auto" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

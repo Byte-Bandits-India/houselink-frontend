@@ -1,4 +1,5 @@
 "use client"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Form, Input, Button, Upload, message } from "antd"
@@ -14,32 +15,38 @@ import {
   TrendingUp,
   ArrowRight
 } from "lucide-react"
+import { getPartners, createPartnerInquiry } from "@/lib/api"
+import type { Partner } from "@/types/partner"
 
-const partners = [
+const mockPartners = [
   {
     id: 1,
     title: "Casagrand Builder",
+    name: "Casagrand Builder",
     description: "Premium residential properties across South India.",
     image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=600&h=400",
-    link: "#"
+    link: "https://www.casagrand.co.in"
   },
   {
     id: 2,
     title: "Sobha Developers",
+    name: "Sobha Developers",
     description: "Luxury apartments and villas with international quality.",
     image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=600&h=400",
-    link: "#"
+    link: "https://www.sobha.com"
   },
   {
     id: 3,
     title: "Prestige Group",
+    name: "Prestige Group",
     description: "Innovative commercial and residential real estate.",
     image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=600&h=400",
-    link: "#"
+    link: "https://www.prestigeconstructions.com"
   }
-]
+];
 
 const fadeUp: Variants = {
+
   hidden: { opacity: 0, y: 40 },
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
 }
@@ -53,42 +60,131 @@ const stagger: Variants = {
 }
 
 function PartnerCard({ partner }: { partner: any }) {
+  const titleText = partner.title || partner.name;
+  const linkUrl = partner.link || "#";
+
+  const isExternal = linkUrl.startsWith("http") || linkUrl.startsWith("//");
+  const isHash = linkUrl === "#";
+
+  const getImageUrl = (img?: string | null) => {
+    if (!img) return "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=600&h=400";
+    if (img.startsWith("http")) return img;
+    const baseUrl = process.env.NEXT_PUBLIC_WEB_API_URL || "http://localhost:4000";
+    const cleanImg = img.startsWith("/") ? img.substring(1) : img;
+    return `${baseUrl}/${cleanImg}`;
+  };
+
   return (
     <motion.div
+      initial="hidden"
+      animate="show"
       variants={fadeUp}
-      className="group relative overflow-hidden bg-white shadow-md transition-all duration-300 w-full max-w-[403px] h-[548px] mx-auto"
+      className="group relative overflow-hidden bg-white shadow-md transition-all duration-300 w-full max-w-[403px] h-[548px] mx-auto cursor-pointer"
     >
-      <HoverViewCard className="absolute inset-0 z-30">
-        <Link href={partner.link} className="absolute inset-0">
-          <span className="sr-only">View {partner.title}</span>
-        </Link>
-      </HoverViewCard>
-
+      {/* Background Image */}
       <Image
-        src={partner.image}
-        alt={partner.title}
+        src={getImageUrl(partner.image)}
+        alt={titleText}
         fill
+        unoptimized={true}
         className="object-cover transition-transform duration-700 group-hover:scale-105"
       />
+
+      {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10 transition-opacity duration-300 group-hover:opacity-90" />
 
-      <div className="absolute bottom-0 left-0 w-full p-8 z-20 flex flex-col justify-end transform transition-transform duration-300">
+      {/* Text Content Overlay */}
+      <div className="absolute bottom-0 left-0 w-full p-8 z-20 flex flex-col justify-end transform transition-transform duration-300 select-none pointer-events-none">
         <h3 className="text-2xl font-bold mb-3 text-white">
-          {partner.title}
+          {titleText}
         </h3>
         <p className="text-white/80 text-base leading-relaxed line-clamp-3">{partner.description}</p>
       </div>
+
+      {/* Transparent Click Overlay & Cursor Circle Wrapper */}
+      {isExternal ? (
+        <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-30 block w-full h-full">
+          <HoverViewCard className="w-full h-full">
+            <span className="sr-only">View {titleText}</span>
+          </HoverViewCard>
+        </a>
+      ) : isHash ? (
+        <a href={linkUrl} className="absolute inset-0 z-30 block w-full h-full">
+          <HoverViewCard className="w-full h-full">
+            <span className="sr-only">View {titleText}</span>
+          </HoverViewCard>
+        </a>
+      ) : (
+        <Link href={linkUrl} className="absolute inset-0 z-30 block w-full h-full">
+          <HoverViewCard className="w-full h-full">
+            <span className="sr-only">View {titleText}</span>
+          </HoverViewCard>
+        </Link>
+      )}
     </motion.div>
-  )
+  );
 }
+
 
 export default function PartnerPage() {
   const [form] = Form.useForm()
+  const [partnerList, setPartnerList] = useState<Partner[]>([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  const onFinish = (values: any) => {
-    console.log(values)
-    message.success("Form submitted successfully")
-    form.resetFields()
+  useEffect(() => {
+    async function fetchPartners() {
+      try {
+        const response = await getPartners({ status: "active" });
+        if (response.success && response.data.length > 0) {
+          setPartnerList(response.data);
+        } else {
+          setPartnerList(mockPartners as any);
+        }
+      } catch (err) {
+        console.error("Failed to load active partners, falling back to mocks", err);
+        setPartnerList(mockPartners as any);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPartners();
+  }, []);
+
+
+  const onFinish = async (values: any) => {
+    if (!selectedFile) {
+      message.error("Please upload a file");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("company_name", values.company_name);
+      formData.append("property_name", values.property_name);
+      formData.append("property_location", values.property_location);
+      formData.append("email", values.email);
+      formData.append("phone", values.phone);
+      if (values.message) {
+        formData.append("message", values.message);
+      }
+      formData.append("file", selectedFile);
+
+      await createPartnerInquiry(formData);
+      message.success("Your inquiry has been submitted successfully!");
+      form.resetFields();
+      setSelectedFile(null);
+
+      const fileInput = document.getElementById("partner-file-input") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+    } catch (err: any) {
+      console.error(err);
+      message.error(err.message || "Failed to submit inquiry. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const beforeUpload = (file: File) => {
@@ -96,8 +192,9 @@ export default function PartnerPage() {
     if (!isValid) {
       message.error("File must be smaller than 2MB!")
     }
-    return isValid || Upload.LIST_IGNORE
+    return isValid
   }
+
 
   return (
     <div className="bg-surface text-ink overflow-hidden pb-16">
@@ -210,10 +307,24 @@ export default function PartnerPage() {
             variants={stagger}
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {partners.map((partner) => (
-              <PartnerCard key={partner.id} partner={partner} />
-            ))}
+            {loading ? (
+              Array.from({ length: 3 }).map((_, idx) => (
+                <div key={idx} className="w-full max-w-[403px] h-[548px] bg-white border border-surface-tertiary shadow-sm rounded-lg p-6 flex flex-col justify-between animate-pulse mx-auto">
+                  <div className="w-full h-[60%] bg-surface-secondary rounded-lg" />
+                  <div className="space-y-4 mt-6">
+                    <div className="h-6 w-3/4 bg-surface-secondary rounded" />
+                    <div className="h-4 w-5/6 bg-surface-secondary rounded" />
+                    <div className="h-4 w-2/3 bg-surface-secondary rounded" />
+                  </div>
+                </div>
+              ))
+            ) : (
+              partnerList.map((partner) => (
+                <PartnerCard key={partner.id} partner={partner} />
+              ))
+            )}
           </motion.div>
+
         </div>
 
         {/* HOW IT WORKS */}
@@ -432,28 +543,47 @@ export default function PartnerPage() {
                 rules={[{ required: true, message: 'Please upload a file' }]}
                 extra={<span className="text-[#6c757d] text-[13px] mt-1 block">Upload PDF or image files (max 2MB)</span>}
               >
-                <input
-                  type="file"
-                  accept=".pdf,image/*"
-                  className="w-full rounded border border-[#c3c3c3] text-sm text-ink-secondary
-                    file:mr-4 file:py-2 file:px-4
-                    file:border-0 file:border-r file:border-[#c3c3c3]
-                    file:text-sm file:font-medium
-                    file:bg-surface-secondary file:text-ink
-                    hover:file:bg-surface-tertiary cursor-pointer"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) beforeUpload(file);
-                  }}
-                />
+                <div>
+                  <input
+                    id="partner-file-input"
+                    type="file"
+                    accept=".pdf,image/*"
+                    className="w-full rounded border border-[#c3c3c3] text-sm text-ink-secondary
+                      file:mr-4 file:py-2 file:px-4
+                      file:border-0 file:border-r file:border-[#c3c3c3]
+                      file:text-sm file:font-medium
+                      file:bg-surface-secondary file:text-ink
+                      hover:file:bg-surface-tertiary cursor-pointer"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const isValid = beforeUpload(file);
+                        if (isValid) {
+                          setSelectedFile(file);
+                          form.setFieldsValue({ file });
+                        } else {
+                          setSelectedFile(null);
+                          form.setFieldsValue({ file: undefined });
+                          e.target.value = '';
+                        }
+                      } else {
+                        setSelectedFile(null);
+                        form.setFieldsValue({ file: undefined });
+                      }
+                    }}
+                  />
+                </div>
               </Form.Item>
 
               <Button
                 htmlType="submit"
-                className="bg-brand text-white hover:!bg-brand-700 hover:!text-white rounded flex items-center gap-2 px-8 border-none font-medium mt-2 transition-all h-[45px] text-base"
+                loading={submitting}
+                disabled={submitting}
+                className="bg-brand text-white hover:!bg-brand-700 hover:!text-white rounded flex items-center gap-2 px-8 border-none font-medium mt-2 transition-all h-[45px] text-base disabled:opacity-50"
               >
-                Submit <ArrowRight className="w-5 h-5" />
+                {submitting ? "Submitting..." : "Submit"} <ArrowRight className="w-5 h-5" />
               </Button>
+
             </Form>
           </motion.div>
         </div>

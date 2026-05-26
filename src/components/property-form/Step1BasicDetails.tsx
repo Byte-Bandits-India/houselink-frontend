@@ -10,6 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { message } from "antd";
 import {
   PropertyFormData,
   PropertySubtype,
@@ -30,21 +32,26 @@ const RadioPill = ({
   checked,
   label,
   onChange,
+  disabled = false,
+  onDisabledClick,
 }: {
   name: string;
   value: string;
   checked: boolean;
   label: string;
   onChange: () => void;
+  disabled?: boolean;
+  onDisabledClick?: () => void;
 }) => (
   <button
     type="button"
-    onClick={onChange}
+    onClick={disabled && onDisabledClick ? onDisabledClick : onChange}
     className={cn(
       "px-5 py-2 rounded-full border text-sm font-medium transition-all duration-200",
       checked
         ? "bg-brand text-white border-brand shadow-sm"
-        : "bg-white text-gray-600 border-gray-300 hover:border-brand hover:text-brand"
+        : "bg-white text-gray-600 border-gray-300 hover:border-brand hover:text-brand",
+      disabled && "opacity-50 hover:border-gray-300 hover:text-gray-600"
     )}
   >
     {label}
@@ -55,19 +62,23 @@ const SubtypeButton = ({
   active,
   label,
   onClick,
+  disabled = false,
 }: {
   active: boolean;
   label: string;
   onClick: () => void;
+  disabled?: boolean;
 }) => (
   <button
     type="button"
+    disabled={disabled}
     onClick={onClick}
     className={cn(
       "px-4 py-2 rounded-lg border text-sm font-semibold transition-all duration-200",
       active
         ? "bg-brand text-white border-brand"
-        : "bg-white text-brand border-brand/50 hover:bg-brand hover:text-white"
+        : "bg-white text-brand border-brand/50 hover:bg-brand hover:text-white",
+      disabled && "opacity-50 cursor-not-allowed hover:bg-white hover:text-brand"
     )}
   >
     {label}
@@ -81,8 +92,27 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default function Step1BasicDetails({ data, onChange, disabled = false }: Props) {
-  const isPlotOrLand = ["plot", "land"].includes(data.property_subtype || "");
-  const isApartmentOrShop = ["apartment", "shop"].includes(data.property_subtype || "");
+  const { user } = useAuth();
+  const subtype = data.property_subtype || "";
+
+  const hasOwnerCredits = (user?.creditPointsOwner ?? 0) > 0;
+  const hasBuilderCredits = (user?.creditPointsBuilder ?? 0) > 0;
+  const hasConsultantCredits = (user?.creditPointsConsultant ?? 0) > 0;
+
+  // ── Step 1 fields based strictly on step1.MD ──
+  const showLandPlotDetails = ["villa", "individual_house", "plot", "land"].includes(subtype);
+  const showPlotAreaRequired = ["villa", "individual_house", "plot", "land"].includes(subtype);
+
+  const showAreaDetails = subtype && subtype !== "plot" && subtype !== "land";
+  const showCarpetArea = ["villa", "individual_house", "shop", "building", "godown", "warehouse", "office_space"].includes(subtype);
+  const showStorageArea = ["godown", "warehouse"].includes(subtype);
+
+  const showFloorDetails = ["apartment", "shop", "building", "godown", "warehouse", "office_space"].includes(subtype);
+  const isFloorRequired = ["apartment", "building"].includes(subtype);
+  const showUdsArea = subtype === "apartment" && data.property_for !== "rent_lease";
+
+  const showAdditionalDetails = ["plot", "land"].includes(subtype);
+
   const isResidential = data.property_main_type === "residential";
   const showResidential =
     isResidential
@@ -94,6 +124,13 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
 
   const handleSubtype = (val: PropertySubtype) => {
     onChange({ property_subtype: val });
+  };
+
+  const handleDecimalInput = (field: keyof PropertyFormData, value: string) => {
+    const clean = value.replace(/[^0-9.]/g, "");
+    const parts = clean.split(".");
+    const sanitized = parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : clean;
+    onChange({ [field]: sanitized });
   };
 
   return (
@@ -108,14 +145,19 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           value="sell"
           checked={data.property_for === "sell"}
           label="Sell"
-          onChange={() => !disabled && onChange({ property_for: "sell", property_subtype: "" })}
+          disabled={disabled}
+          onChange={() => onChange({ property_for: "sell", property_subtype: "" })}
         />
         <RadioPill
           name="property_for"
           value="rent_lease"
           checked={data.property_for === "rent_lease"}
           label="Rent / Lease"
-          onChange={() => !disabled && onChange({ property_for: "rent_lease", property_subtype: "" })}
+          disabled={disabled}
+          onChange={() => {
+            const nextOwnerType = data.owner_type === "Builder" ? "Owner" : data.owner_type;
+            onChange({ property_for: "rent_lease", property_subtype: "", owner_type: nextOwnerType });
+          }}
         />
       </div>
 
@@ -127,16 +169,28 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
         {(data.property_for === "sell"
           ? ["Owner", "Builder", "Consultant"]
           : ["Owner", "Consultant"]
-        ).map((t) => (
-          <RadioPill
-            key={t}
-            name="owner_type"
-            value={t}
-            checked={data.owner_type === t}
-            label={t}
-            onChange={() => onChange({ owner_type: t as any })}
-          />
-        ))}
+        ).map((t) => {
+          let isOptionDisabled = disabled;
+          if (user && data.property_for === "sell") {
+            if (t === "Owner" && !hasOwnerCredits) isOptionDisabled = true;
+            if (t === "Builder" && !hasBuilderCredits) isOptionDisabled = true;
+            if (t === "Consultant" && !hasConsultantCredits) isOptionDisabled = true;
+          }
+          return (
+            <RadioPill
+              key={t}
+              name="owner_type"
+              value={t}
+              checked={data.owner_type === t}
+              label={t}
+              disabled={isOptionDisabled}
+              onChange={() => onChange({ owner_type: t as any })}
+              onDisabledClick={() => {
+                message.warning(`You do not have active credit points to list as a ${t}. Please purchase a package first.`);
+              }}
+            />
+          );
+        })}
       </div>
 
       {/* Main Type */}
@@ -149,6 +203,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           value="residential"
           checked={data.property_main_type === "residential"}
           label="Residential"
+          disabled={disabled}
           onChange={() => onChange({ property_main_type: "residential", property_subtype: "" })}
         />
         <RadioPill
@@ -156,6 +211,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           value="commercial"
           checked={data.property_main_type === "commercial"}
           label="Commercial"
+          disabled={disabled}
           onChange={() => onChange({ property_main_type: "commercial", property_subtype: "" })}
         />
       </div>
@@ -170,28 +226,30 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
             key={s.value}
             active={data.property_subtype === s.value}
             label={s.label}
+            disabled={disabled}
             onClick={() => handleSubtype(s.value)}
           />
         ))}
       </div>
 
       {/* Dynamic Area Fields */}
-      {data.property_subtype && (
+      {subtype && (
         <div className="mt-4 rounded-xl space-y-4">
-          {/* Plot / Land */}
-          {isPlotOrLand && (
+          {/* Land Details / Plot Details */}
+          {showLandPlotDetails && (
             <>
               <h4 className="font-semibold text-sm text-gray-700">
-                {data.property_subtype === "plot" ? "Plot Details" : "Land Details"}
+                {subtype === "plot" ? "Plot Details" : "Land Details"}
               </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>
-                    {data.property_subtype === "plot" ? "Plot Area" : "Land Area"}{" "}
-                    <span className="text-red-500">*</span>
+                    {subtype === "plot" ? "Plot Area" : "Land Area"}{" "}
+                    {showPlotAreaRequired && <span className="text-red-500">*</span>}
                   </Label>
                   <Input
                     type="number"
+                    disabled={disabled}
                     value={data.plot_area || ""}
                     onChange={(e) => onChange({ plot_area: e.target.value })}
                     placeholder="Enter area"
@@ -202,6 +260,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                     Unit <span className="text-red-500">*</span>
                   </Label>
                   <Select
+                    disabled={disabled}
                     value={data.plot_unit || ""}
                     onValueChange={(v) => onChange({ plot_unit: v })}
                   >
@@ -218,31 +277,11 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>Length</Label>
-                  <Input
-                    type="number"
-                    value={data.plot_length || ""}
-                    onChange={(e) => onChange({ plot_length: e.target.value })}
-                    placeholder="Length"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>Breadth</Label>
-                  <Input
-                    type="number"
-                    value={data.plot_breadth || ""}
-                    onChange={(e) => onChange({ plot_breadth: e.target.value })}
-                    placeholder="Breadth"
-                  />
-                </div>
-              </div>
             </>
           )}
 
-          {/* Structure Area (non-plot) */}
-          {!isPlotOrLand && (
+          {/* Area Details */}
+          {showAreaDetails && (
             <>
               <h4 className="font-semibold text-sm text-gray-700">Area Details</h4>
               <div className="grid grid-cols-2 gap-4">
@@ -252,6 +291,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   </Label>
                   <Input
                     type="number"
+                    disabled={disabled}
                     value={data.super_builtup_area || ""}
                     onChange={(e) => onChange({ super_builtup_area: e.target.value })}
                     placeholder="Enter area"
@@ -262,6 +302,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                     Unit <span className="text-red-500">*</span>
                   </Label>
                   <Select
+                    disabled={disabled}
                     value={data.builtup_unit || ""}
                     onValueChange={(v) => onChange({ builtup_unit: v })}
                   >
@@ -277,60 +318,114 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Carpet Area (Optional) */}
+              {showCarpetArea && (
                 <div className="space-y-1">
-                  <Label>Carpet Area</Label>
+                  <Label>Carpet Area (Sq. Ft)</Label>
                   <Input
-                    type="number"
+                    disabled={disabled}
                     value={data.carpet_area || ""}
-                    onChange={(e) => onChange({ carpet_area: e.target.value })}
-                    placeholder="Enter area"
+                    onChange={(e) => handleDecimalInput("carpet_area", e.target.value)}
+                    placeholder="Enter carpet area"
+                    className="rounded-xl border-gray-200 focus-visible:ring-brand"
                   />
                 </div>
+              )}
+
+              {/* Storage Area (Required for Godown/Warehouse) */}
+              {showStorageArea && (
                 <div className="space-y-1">
-                  <Label>Unit</Label>
-                  <Select
-                    value={data.carpet_unit || data.builtup_unit || ""}
-                    onValueChange={(v) => onChange({ carpet_unit: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AREA_UNITS.map((u) => (
-                        <SelectItem key={u.value} value={u.value}>
-                          {u.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>
+                    Storage Area (Sq. Ft) <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    disabled={disabled}
+                    value={data.storage_area || ""}
+                    onChange={(e) => handleDecimalInput("storage_area", e.target.value)}
+                    placeholder="Enter storage area"
+                    className="rounded-xl border-gray-200 focus-visible:ring-brand"
+                  />
                 </div>
-              </div>
+              )}
             </>
           )}
 
-          {/* Floor Details (apartment/shop) */}
-          {isApartmentOrShop && (
+          {/* Floor Details */}
+          {showFloorDetails && (
             <>
               <h4 className="font-semibold text-sm text-gray-700 mt-2">
                 Floor Details
               </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label>Total Floors</Label>
+                  <Label>
+                    Total Floors {isFloorRequired && <span className="text-red-500">*</span>}
+                  </Label>
                   <Input
                     type="number"
+                    disabled={disabled}
                     value={data.total_floors || ""}
                     onChange={(e) => onChange({ total_floors: e.target.value })}
                     placeholder="e.g. 10"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>Property on Floor</Label>
+                  <Label>
+                    Property on Floor {isFloorRequired && <span className="text-red-500">*</span>}
+                  </Label>
                   <Input
                     type="number"
+                    disabled={disabled}
                     value={data.property_on_floor || ""}
                     onChange={(e) => onChange({ property_on_floor: e.target.value })}
                     placeholder="e.g. 3"
+                  />
+                </div>
+              </div>
+
+              {/* UDS Area (Optional, Apartment only) */}
+              {showUdsArea && (
+                <div className="space-y-1 mt-2">
+                  <Label>UDS Area (Sq. Ft)</Label>
+                  <Input
+                    disabled={disabled}
+                    value={data.uds_area || ""}
+                    onChange={(e) => handleDecimalInput("uds_area", e.target.value)}
+                    placeholder="Enter undivided share area"
+                    className="rounded-xl border-gray-200 focus-visible:ring-brand"
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Additional Details (Length/Breadth for Plot/Land) */}
+          {showAdditionalDetails && (
+            <>
+              <h4 className="font-semibold text-sm text-gray-700 mt-2">
+                Additional Details
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label>Length (Ft)</Label>
+                  <Input
+                    type="number"
+                    disabled={disabled}
+                    value={data.plot_length || ""}
+                    onChange={(e) => onChange({ plot_length: e.target.value })}
+                    placeholder="e.g. 60"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Breadth (Ft)</Label>
+                  <Input
+                    type="number"
+                    disabled={disabled}
+                    value={data.plot_breadth || ""}
+                    onChange={(e) => onChange({ plot_breadth: e.target.value })}
+                    placeholder="e.g. 40"
                   />
                 </div>
               </div>

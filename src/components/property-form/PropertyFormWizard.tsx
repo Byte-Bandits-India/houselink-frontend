@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Save, Send, Eye } from "lucide-react";
-import { PropertyFormData, defaultFormData } from "@/types/property";
+import { PropertyFormData, defaultFormData, getSchemaFields } from "@/types/property";
 import Step1BasicDetails from "./Step1BasicDetails";
 import Step2PropertyProfile from "./Step2PropertyProfile";
 import Step3Location from "./Step3Location";
@@ -21,10 +21,8 @@ const STEPS = [
 interface Props {
   initialData?: Partial<PropertyFormData>;
   isEditMode?: boolean;
-  /** Read-only view — all fields disabled, no submit button */
   isViewMode?: boolean;
   onSubmit?: (data: PropertyFormData) => void;
-  /** Called when user clicks "Edit Listing" in view mode */
   onEdit?: () => void;
 }
 
@@ -46,11 +44,137 @@ export default function PropertyFormWizard({
     setFormData((prev) => ({ ...prev, ...update }));
   };
 
+  const isStepValid = (stepIndex: number, data: PropertyFormData): boolean => {
+    if (isViewMode) return true;
+    const subtype = data.property_subtype || "";
+
+    if (stepIndex === 0) {
+      if (!data.property_for || !data.owner_type || !data.property_main_type || !subtype) {
+        return false;
+      }
+      const showLandPlotDetails = ["villa", "individual_house", "plot", "land"].includes(subtype);
+      if (showLandPlotDetails) {
+        if (!data.plot_area || !data.plot_unit) return false;
+      }
+      const showAreaDetails = subtype !== "plot" && subtype !== "land";
+      if (showAreaDetails) {
+        if (!data.super_builtup_area || !data.builtup_unit) return false;
+        const showStorageArea = ["godown", "warehouse"].includes(subtype);
+        if (showStorageArea && !data.storage_area) return false;
+      }
+      const showFloorDetails = ["apartment", "shop", "building", "godown", "warehouse", "office_space"].includes(subtype);
+      const isFloorRequired = ["apartment", "building"].includes(subtype);
+      if (showFloorDetails && isFloorRequired) {
+        if (!data.total_floors || !data.property_on_floor) return false;
+      }
+      return true;
+    }
+
+    if (stepIndex === 1) {
+      const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
+      if (allowedFields.name && !data.name) return false;
+      if (allowedFields.description && !data.description) return false;
+      if (allowedFields.house_type && !data.house_type) return false;
+      if (allowedFields.bedrooms && !data.bedrooms) return false;
+      if (allowedFields.bathrooms && !data.bathrooms) return false;
+      
+      if (allowedFields.furnishing_type) {
+        const isFurnishingRequired = ["apartment", "villa", "individual_house"].includes(subtype);
+        if (isFurnishingRequired && !data.furnishing_type) return false;
+      }
+      
+      if (allowedFields.food_preference && !data.food_preference) return false;
+      if (allowedFields.ownership_type && !data.ownership_type) return false;
+      
+      if (allowedFields.property_suitable_for) {
+        const isSuitableRequired = data.property_for === "rent_lease" || subtype === "office_space";
+        if (isSuitableRequired && !data.property_suitable_for) return false;
+      }
+      
+      if (allowedFields.loading_unloading_facility) {
+        const isLoadingRequired = data.property_for === "rent_lease" && ["godown", "warehouse"].includes(subtype);
+        if (isLoadingRequired && !data.loading_unloading_facility) return false;
+      }
+      
+      if (allowedFields.pet_policy && !data.pet_policy) return false;
+      
+      if (allowedFields.tenant_preference) {
+        if (!data.tenant_preference || data.tenant_preference.length === 0) return false;
+      }
+      
+      if (allowedFields.parking_availability) {
+        const isParkingRequired = data.property_for === "rent_lease" || ["apartment", "villa", "individual_house"].includes(subtype) || subtype === "office_space";
+        if (isParkingRequired && !data.parking_availability) return false;
+      }
+      
+      if (allowedFields.rent_lease_type && !data.rent_lease_type) return false;
+      
+      if (allowedFields.price) {
+        if (data.property_for === "rent_lease" && !data.rent_lease_type) return false;
+        if (!data.price) return false;
+      }
+      
+      if (data.rent_lease_type === "lease") {
+        if (allowedFields.lease_duration && !data.lease_duration) return false;
+        if (allowedFields.maintenance_responsibility && !data.maintenance_responsibility) return false;
+      }
+      
+      if (data.rent_lease_type === "rent") {
+        if (allowedFields.security_deposit && !data.security_deposit) return false;
+        if (allowedFields.maintenance_charge_status) {
+          if (!data.maintenance_charge_status) return false;
+        }
+      }
+      
+      if (allowedFields.availability_status) {
+        if (!data.availability_status) return false;
+        if (data.availability_status === "Available From" && allowedFields.availability_date && !data.availability_date) return false;
+      }
+      
+      return true;
+    }
+
+    if (stepIndex === 2) {
+      if (!data.state || !data.city || !data.address) return false;
+      return true;
+    }
+
+    if (stepIndex === 3) {
+      const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
+      if (allowedFields.direction_facing) {
+        const isDirectionRequired = data.property_for === "sell" && (data.owner_type === "Builder" || data.owner_type === "Consultant") && subtype === "plot";
+        if (isDirectionRequired && !data.direction_facing) return false;
+      }
+      return true;
+    }
+
+    if (stepIndex === 4) {
+      const isConsultant = data.owner_type === "Consultant";
+      if (isConsultant) {
+        const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
+        if (allowedFields.brokerage_type) {
+          if (!data.brokerage_type) return false;
+          if (data.brokerage_type === "fixed" && allowedFields.brokerage_fee && !data.brokerage_fee) return false;
+          if (data.brokerage_type === "percentage" && allowedFields.brokerage_percentage && !data.brokerage_percentage) return false;
+        }
+      }
+      return true;
+    }
+
+    return true;
+  };
+
   const canGoNext = () => {
-    if (isViewMode) return true; // always allow navigation in view mode
-    if (step === 0) return !!formData.property_subtype && !!formData.owner_type;
-    if (step === 1) return !!formData.name && !!formData.description;
-    if (step === 2) return !!formData.state && !!formData.city;
+    return isStepValid(step, formData);
+  };
+
+  const canNavigateToStep = (targetStep: number): boolean => {
+    if (isViewMode) return true;
+    if (targetStep <= step) return true; // always allowed to go backward
+    // to go forward to targetStep, all steps before targetStep must be valid
+    for (let j = 0; j < targetStep; j++) {
+      if (!isStepValid(j, formData)) return false;
+    }
     return true;
   };
 
@@ -73,11 +197,15 @@ export default function PropertyFormWizard({
         {STEPS.map((s, i) => {
           const done = i < step;
           const active = i === step;
+          const clickable = canNavigateToStep(i);
           return (
             <div
               key={i}
-              className="relative z-10 flex flex-col items-center gap-1.5 cursor-pointer"
-              onClick={() => { if (done || isViewMode) setStep(i); }}
+              className={cn(
+                "relative z-10 flex flex-col items-center gap-1.5",
+                clickable ? "cursor-pointer" : "cursor-not-allowed opacity-60"
+              )}
+              onClick={() => { if (clickable) setStep(i); }}
             >
               <div className={cn(
                 "w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all duration-300",
@@ -128,7 +256,7 @@ export default function PropertyFormWizard({
           {step === 1 && <Step2PropertyProfile data={formData} onChange={patch} disabled={isViewMode} />}
           {step === 2 && <Step3Location data={formData} onChange={patch} disabled={isViewMode} />}
           {step === 3 && <Step4Amenities data={formData} onChange={patch} disabled={isViewMode} />}
-          {step === 4 && <Step5Final data={formData} onChange={patch} isEditMode={isEditMode || isViewMode} />}
+          {step === 4 && <Step5Final data={formData} onChange={patch} isEditMode={isEditMode} disabled={isViewMode} />}
         </div>
       </div>
 
@@ -169,7 +297,13 @@ export default function PropertyFormWizard({
           <button
             type="button"
             onClick={() => onSubmit?.(formData)}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-brand text-white text-sm font-bold hover:bg-brand/90 transition-colors shadow-sm"
+            disabled={!isStepValid(step, formData)}
+            className={cn(
+              "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200",
+              isStepValid(step, formData)
+                ? "bg-brand text-white hover:bg-brand/90 transition-colors shadow-sm"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            )}
           >
             {isEditMode ? <><Save className="w-4 h-4" /> Save Changes</> : <><Send className="w-4 h-4" /> Submit Listing</>}
           </button>

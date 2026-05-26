@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getStates, getCities, getFeatures } from "@/lib/api";
 
 const categories = [
   { id: "all", name: "All" },
@@ -20,10 +22,58 @@ const cities = [
   { value: "hyderabad", label: "Hyderabad" },
 ];
 
+const defaultAmenities = [
+  "Wifi",
+  "Swimming pool",
+  "Security",
+  "Garden",
+  "Balcony",
+  "Air Conditioning",
+  "Fitness center",
+  "Car Parking",
+  "Bike Parking",
+];
+
 const propertyCategories = [
   { value: "residential", label: "Residential" },
   { value: "commercial", label: "Commercial" },
 ];
+
+/* ── Controlled select ── */
+function NativeSelect({
+  options,
+  placeholder,
+  value,
+  onChange,
+}: {
+  options: { value: string; label: string }[];
+  placeholder: string;
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full appearance-none bg-transparent border-none outline-none text-sm text-gray-800 font-medium pr-5 cursor-pointer"
+      >
+        <option value="" disabled>
+          {placeholder}
+        </option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        size={13}
+        className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+      />
+    </div>
+  );
+}
 
 /* ── Reusable field wrapper ── */
 function Field({
@@ -53,43 +103,162 @@ function Field({
   );
 }
 
-/* ── Native select styled to match ── */
-function NativeSelect({
-  options,
-  placeholder,
-}: {
-  options: { value: string; label: string }[];
-  placeholder: string;
-}) {
-  return (
-    <div className="relative">
-      <select
-        defaultValue=""
-        className="w-full appearance-none bg-transparent border-none outline-none text-sm text-gray-800 font-medium pr-5 cursor-pointer"
-      >
-        <option value="" disabled>
-          {placeholder}
-        </option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown
-        size={13}
-        className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-      />
-    </div>
-  );
-}
-
 export default function PropertySearch() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const basePath = ["/", "/properties", "/properties/featured", "/properties/owner"].includes(pathname)
+    ? pathname
+    : "/properties";
+
+  // State initialized from URL query params (browser execution only)
   const [activeTab, setActiveTab] = useState("sell");
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("");
+  const [city, setCity] = useState("");
+  const [categoryType, setCategoryType] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [priceRange, setPriceRange] = useState(100);
+  const [areaRange, setAreaRange] = useState(100000);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [citiesList, setCitiesList] = useState<{ value: string; label: string }[]>(cities);
+  const [amenityList, setAmenityList] = useState<string[]>(defaultAmenities);
+
+  useEffect(() => {
+    async function loadBackendData() {
+      try {
+        const statesRes = await getStates();
+        if (statesRes.success && statesRes.data) {
+          const list: { value: string; label: string }[] = [];
+          for (const state of statesRes.data) {
+            const citiesRes = await getCities(Number(state.id));
+            if (citiesRes.success && citiesRes.data) {
+              citiesRes.data.forEach((c) => {
+                if (!list.some(item => item.value === c.name.toLowerCase())) {
+                  list.push({
+                    value: c.name.toLowerCase(),
+                    label: c.name,
+                  });
+                }
+              });
+            }
+          }
+          if (list.length > 0) {
+            setCitiesList(list);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load cities from backend, using fallback:", e);
+      }
+
+      try {
+        const featuresRes = await getFeatures();
+        if (featuresRes.success && featuresRes.data) {
+          const list = featuresRes.data.map(f => f.name);
+          if (list.length > 0) {
+            setAmenityList(list);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load features from backend, using fallback:", e);
+      }
+    }
+    loadBackendData();
+  }, []);
+
+  useEffect(() => {
+    if (searchParams) {
+      setActiveTab(searchParams.get("property_purpose") || "sell");
+      setActiveCategory(searchParams.get("category") || "all");
+      setKeyword(searchParams.get("keyword") || "");
+      setLocation(searchParams.get("location") || "");
+      setCity(searchParams.get("city") || "");
+      setCategoryType(searchParams.get("category_type") || "");
+      
+      const hasMaxPrice = searchParams.get("max_price");
+      const hasMaxArea = searchParams.get("max_area");
+      const hasAmenities = searchParams.get("amenities");
+      
+      if (hasMaxPrice || hasMaxArea || hasAmenities) {
+        setShowAdvanced(true);
+        if (hasMaxPrice) setPriceRange(Number(hasMaxPrice) / 10000000);
+        if (hasMaxArea) setAreaRange(Number(hasMaxArea));
+        if (hasAmenities) setSelectedAmenities(hasAmenities.split(","));
+      } else {
+        setShowAdvanced(false);
+        setPriceRange(100);
+        setAreaRange(100000);
+        setSelectedAmenities([]);
+      }
+    }
+  }, [searchParams]);
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    params.set("property_purpose", activeTab);
+    if (city) params.set("city", city);
+    if (keyword) params.set("keyword", keyword);
+    if (location) params.set("location", location);
+    if (categoryType) params.set("category_type", categoryType);
+    if (activeCategory !== "all") params.set("category", activeCategory);
+
+    if (showAdvanced) {
+      // price range 0-100 Cr converted to actual currency
+      params.set("max_price", String(priceRange * 10000000));
+      params.set("max_area", String(areaRange));
+      if (selectedAmenities.length > 0) {
+        params.set("amenities", selectedAmenities.join(","));
+      }
+    }
+
+    router.push(`${basePath}?${params.toString()}`);
+  };
+
+  const handleTabClick = (key: string) => {
+    setActiveTab(key);
+    
+    const params = new URLSearchParams();
+    params.set("property_purpose", key);
+    if (city) params.set("city", city);
+    if (keyword) params.set("keyword", keyword);
+    if (location) params.set("location", location);
+    if (categoryType) params.set("category_type", categoryType);
+    if (activeCategory !== "all") params.set("category", activeCategory);
+
+    if (showAdvanced) {
+      params.set("max_price", String(priceRange * 10000000));
+      params.set("max_area", String(areaRange));
+      if (selectedAmenities.length > 0) {
+        params.set("amenities", selectedAmenities.join(","));
+      }
+    }
+    
+    router.push(`${basePath}?${params.toString()}`);
+  };
+
+  const handleCategoryNavClick = (catId: string) => {
+    setActiveCategory(catId);
+    
+    const params = new URLSearchParams();
+    params.set("property_purpose", activeTab);
+    if (city) params.set("city", city);
+    if (keyword) params.set("keyword", keyword);
+    if (location) params.set("location", location);
+    if (categoryType) params.set("category_type", categoryType);
+    if (catId !== "all") params.set("category", catId);
+
+    if (showAdvanced) {
+      params.set("max_price", String(priceRange * 10000000));
+      params.set("max_area", String(areaRange));
+      if (selectedAmenities.length > 0) {
+        params.set("amenities", selectedAmenities.join(","));
+      }
+    }
+    
+    router.push(`${basePath}?${params.toString()}`);
+  };
 
   return (
     <div className="w-full max-w-[1240px] mx-auto mb-10 relative z-20 -mt-24">
@@ -99,10 +268,10 @@ export default function PropertySearch() {
         {[
           { key: "sell", label: "For Sale" },
           { key: "rent", label: "Rent / Lease" },
-        ].map(({ key, label }, i) => (
+        ].map(({ key, label }) => (
           <button
             key={key}
-            onClick={() => setActiveTab(key)}
+            onClick={() => handleTabClick(key)}
             className={cn(
               "min-w-[130px] px-6 py-4 text-[15px] font-bold transition-all duration-200 backdrop-blur-lg rounded-t-xl",
               activeTab === key
@@ -123,7 +292,12 @@ export default function PropertySearch() {
 
           {/* City */}
           <Field label="City" className="flex-[1_1_120px]">
-            <NativeSelect options={cities} placeholder="Select City" />
+            <NativeSelect
+              options={citiesList}
+              placeholder="Select City"
+              value={city}
+              onChange={setCity}
+            />
           </Field>
 
           {/* Keyword */}
@@ -150,7 +324,12 @@ export default function PropertySearch() {
 
           {/* Category */}
           <Field label="Category" divider={false} className="flex-[1.2_1_140px]">
-            <NativeSelect options={propertyCategories} placeholder="Select Category" />
+            <NativeSelect
+              options={propertyCategories}
+              placeholder="Select Category"
+              value={categoryType}
+              onChange={setCategoryType}
+            />
           </Field>
 
           {/* Action buttons */}
@@ -171,6 +350,7 @@ export default function PropertySearch() {
 
             <button
               type="button"
+              onClick={handleSearch}
               className="flex items-center gap-1.5 px-6 h-[42px] bg-[#153e75] hover:bg-[#1a4d8f] text-white text-sm font-semibold rounded-lg shadow-[0_4px_12px_rgba(21,62,117,0.3)] transition-colors duration-200 whitespace-nowrap"
             >
               <Search size={14} />
@@ -187,17 +367,19 @@ export default function PropertySearch() {
               {/* Price Range */}
               <div>
                 <p className="text-[13px] font-medium text-gray-500 mb-3 flex items-center gap-2">
-                  Price Range <span className="text-gray-400 font-normal">from ₹0 to ₹100 Cr</span>
+                  Price Range <span className="text-[#153e75] font-bold">up to ₹{priceRange} Cr</span>
                 </p>
                 <input
                   type="range"
-                  min={0}
+                  min={0.1}
                   max={100}
-                  defaultValue={100}
+                  step={0.1}
+                  value={priceRange}
+                  onChange={(e) => setPriceRange(Number(e.target.value))}
                   className="w-full accent-[#153e75]"
                 />
                 <div className="flex justify-between text-[11px] text-gray-400 mt-1">
-                  <span>₹0</span>
+                  <span>₹0.1 Cr</span>
                   <span>₹100 Cr</span>
                 </div>
               </div>
@@ -205,38 +387,38 @@ export default function PropertySearch() {
               {/* Square Range */}
               <div>
                 <p className="text-[13px] font-medium text-gray-500 mb-3 flex items-center gap-2">
-                  Square Range <span className="text-gray-400 font-normal">from 0 to 100000</span>
+                  Square Range <span className="text-[#153e75] font-bold">up to {areaRange.toLocaleString()} Sq.Ft</span>
                 </p>
                 <input
                   type="range"
-                  min={0}
+                  min={100}
                   max={100000}
-                  defaultValue={100000}
+                  step={100}
+                  value={areaRange}
+                  onChange={(e) => setAreaRange(Number(e.target.value))}
                   className="w-full accent-[#153e75]"
                 />
                 <div className="flex justify-between text-[11px] text-gray-400 mt-1">
-                  <span>0</span>
-                  <span>100000</span>
+                  <span>100 Sq.Ft</span>
+                  <span>100,000 Sq.Ft</span>
                 </div>
               </div>
             </div>
 
             {/* Amenities */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-5 gap-x-4 mt-2">
-              {[
-                "Wifi",
-                "Swimming pool",
-                "Security",
-                "Garden",
-                "Balcony",
-                "Air Conditioning",
-                "Fitness center",
-                "Car Parking",
-                "Bike Parking",
-              ].map((amenity) => (
+              {amenityList.map((amenity) => (
                 <label key={amenity} className="flex items-center gap-2.5 cursor-pointer group">
                   <input
                     type="checkbox"
+                    checked={selectedAmenities.includes(amenity)}
+                    onChange={() => {
+                      setSelectedAmenities((prev) =>
+                        prev.includes(amenity)
+                          ? prev.filter((a) => a !== amenity)
+                          : [...prev, amenity]
+                      );
+                    }}
                     className="w-[15px] h-[15px] rounded-[3px] border-gray-300 text-[#153e75] focus:ring-[#153e75] accent-[#153e75]"
                   />
                   <span className="text-[13px] text-gray-500 font-medium group-hover:text-gray-800 transition-colors">{amenity}</span>
@@ -254,7 +436,7 @@ export default function PropertySearch() {
           <button
             key={cat.id}
             type="button"
-            onClick={() => setActiveCategory(cat.id)}
+            onClick={() => handleCategoryNavClick(cat.id)}
             className={cn(
               "pb-1.5 text-[15px] font-medium border-b-[2.5px] transition-all duration-200 whitespace-nowrap",
               activeCategory === cat.id

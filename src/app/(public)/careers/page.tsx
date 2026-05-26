@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion, Variants } from "framer-motion"
@@ -11,57 +12,12 @@ import {
   MapPin,
   Clock,
   CreditCard,
-  Mail,
+  Briefcase,
+  AlertCircle,
 } from "lucide-react"
-
-// ── Mock data (replace with API fetch) ───────────────────────────────────────
-const openings = [
-  {
-    id: 1,
-    name: "Customer Relationship Management",
-    location: "Chennai",
-    salary: "₹25,000",
-    postedAt: "Apr 12, 2025",
-    description:
-      "Customer Relationship Management (CRM) refers to the strategies, tools, and technologies used by a c...",
-  },
-  {
-    id: 2,
-    name: "Manager Sales",
-    location: "Chennai",
-    salary: "₹35,000",
-    postedAt: "Apr 21, 2025",
-    description:
-      "The Sales Manager is responsible for leading the sales team, driving revenue growth, and achieving c...",
-  },
-  {
-    id: 3,
-    name: "Marketing Manager",
-    location: "Chennai",
-    salary: "₹25,000",
-    postedAt: "Jul 01, 2025",
-    description:
-      "The Marketing Manager is responsible for planning, executing, and optimizing marketing strategies th...",
-  },
-  {
-    id: 4,
-    name: "Tele Marketing",
-    location: "Chennai",
-    salary: "₹20,000",
-    postedAt: "Jul 01, 2025",
-    description:
-      "The Telemarketing Executive is responsible for contacting potential customers, understanding their p...",
-  },
-  {
-    id: 5,
-    name: "Sales Executives",
-    location: "Chennai",
-    salary: "₹20,000",
-    postedAt: "Jul 10, 2025",
-    description:
-      "The Sales Executive is responsible for generating leads, conducting site visits, and converting pros...",
-  },
-]
+import { getCareers } from "@/lib/api"
+import { formatDate } from "@/lib/utils"
+import type { Career } from "@/types/career"
 
 const whyUs = [
   {
@@ -97,32 +53,44 @@ const stagger: Variants = {
   show: { opacity: 1, transition: { staggerChildren: 0.15 } },
 }
 
+// Helper to format salary
+function formatSalary(min: number | string | null | undefined, max: number | string | null | undefined): string {
+  if (!min) return "Competitive"
+  const minNum = Number(min)
+  const maxNum = max ? Number(max) : null
+  
+  if (maxNum && minNum !== maxNum) {
+    return `₹${minNum.toLocaleString("en-IN")} - ₹${maxNum.toLocaleString("en-IN")}`
+  }
+  return `₹${minNum.toLocaleString("en-IN")}`
+}
+
 // ── Job Card ─────────────────────────────────────────────────────────────────
-function JobCard({ job }: { job: (typeof openings)[0] }) {
+function JobCard({ job }: { job: Career }) {
   return (
     <motion.div variants={fadeUp}>
       <Link
         href={`/careers/${job.id}`}
-        className="block bg-white rounded-lg border border-gray-200 shadow-sm p-5 hover:shadow-md transition-shadow duration-300"
+        className="block bg-white rounded-lg border border-gray-200 shadow-sm p-5 hover:shadow-md hover:border-brand/40 transition-all duration-300 h-full"
       >
         {/* Title */}
-        <h3 className="text-[1rem] font-bold text-ink mb-2 leading-snug">
-          {job.name}
+        <h3 className="text-[1rem] font-bold text-ink mb-2 leading-snug hover:text-brand transition-colors">
+          {job.title}
         </h3>
 
-        {/* Meta row — exactly like the image */}
+        {/* Meta row */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.82rem] text-gray-500 mb-3">
           <span className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5 text-[#4f8bd3]" />
-            {job.postedAt}
+            {formatDate(job.createdAt)}
           </span>
           <span className="flex items-center gap-1">
             <MapPin className="w-3.5 h-3.5 text-[#4f8bd3]" />
-            {job.location}
+            {job.location || "Chennai"}
           </span>
           <span className="flex items-center gap-1">
             <CreditCard className="w-3.5 h-3.5 text-[#4f8bd3]" />
-            {job.salary}
+            {formatSalary(job.salaryMin, job.salaryMax)}
           </span>
         </div>
 
@@ -151,6 +119,31 @@ function WhyCard({ item }: { item: (typeof whyUs)[0] }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function CareersPage() {
+  const [openings, setOpenings] = useState<Career[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function loadCareers() {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const res = await getCareers()
+        if (res.success) {
+          setOpenings(res.data || [])
+        } else {
+          setError("Failed to load career listings.")
+        }
+      } catch (err: any) {
+        console.error("Failed to load openings:", err)
+        setError(err.message || "An unexpected error occurred.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadCareers()
+  }, [])
+
   return (
     <div className="bg-surface text-ink overflow-hidden pb-16">
       {/* ── HERO ── */}
@@ -253,17 +246,64 @@ export default function CareersPage() {
             Current <span className="text-brand">Openings</span>
           </motion.h2>
 
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            variants={stagger}
-            className="grid md:grid-cols-2 gap-6"
-          >
-            {openings.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
-          </motion.div>
+          {/* Error State */}
+          {error && (
+            <div className="flex flex-col items-center justify-center text-center py-10 bg-white border border-red-100 rounded-lg p-6 max-w-xl mx-auto shadow-sm">
+              <AlertCircle size={40} className="text-red-500 mb-3" />
+              <h3 className="text-lg font-bold text-gray-800 mb-1">Failed to Load Positions</h3>
+              <p className="text-gray-600 mb-4 text-sm">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-5 py-2 bg-brand text-white font-semibold rounded-md hover:bg-brand-700 transition-colors text-sm"
+              >
+                Reload
+              </button>
+            </div>
+          )}
+
+          {/* Loading Skeleton */}
+          {isLoading && !error && (
+            <div className="grid md:grid-cols-2 gap-6">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div key={idx} className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm animate-pulse flex flex-col gap-3">
+                  <div className="h-5 bg-gray-200 rounded w-2/3" />
+                  <div className="flex gap-4">
+                    <div className="h-4 bg-gray-200 rounded w-20" />
+                    <div className="h-4 bg-gray-200 rounded w-20" />
+                    <div className="h-4 bg-gray-200 rounded w-20" />
+                  </div>
+                  <div className="h-4 bg-gray-200 rounded w-full mt-2" />
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty Openings State */}
+          {!isLoading && !error && openings.length === 0 && (
+            <div className="flex flex-col items-center justify-center text-center py-12 bg-white border border-gray-100 rounded-lg p-8 max-w-xl mx-auto shadow-sm">
+              <Briefcase size={40} className="text-brand mb-3 opacity-40" />
+              <h3 className="text-lg font-bold text-gray-800 mb-1">No Positions Available</h3>
+              <p className="text-gray-600 text-sm">
+                We don't have any open opportunities right now, but we are always looking for great talent. Send us your resume!
+              </p>
+            </div>
+          )}
+
+          {/* Job Openings Grid */}
+          {!isLoading && !error && openings.length > 0 && (
+            <motion.div
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              variants={stagger}
+              className="grid md:grid-cols-2 gap-6"
+            >
+              {openings.map((job) => (
+                <JobCard key={job.id} job={job} />
+              ))}
+            </motion.div>
+          )}
         </div>
 
         {/* CTA / Email */}
@@ -272,7 +312,7 @@ export default function CareersPage() {
           whileInView="show"
           viewport={{ once: true }}
           variants={fadeUp}
-          className="bg-white p-8 flex flex-col sm:flex-row items-center gap-6"
+          className="bg-white p-8 flex flex-col sm:flex-row items-center gap-6 rounded-lg border border-gray-100 shadow-sm"
         >
           <div>
             <h3 className="font-bold text-xl text-ink mb-1">

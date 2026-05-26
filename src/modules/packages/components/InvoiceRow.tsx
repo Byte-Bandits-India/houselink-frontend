@@ -1,3 +1,0 @@
-export default function InvoiceRow() {
-  return <div>{/* InvoiceRow */}</div>;
-}

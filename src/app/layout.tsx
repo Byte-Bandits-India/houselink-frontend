@@ -53,11 +53,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${hankenGrotesk.variable} font-sans antialiased`}>
         <Providers>
-          <SmoothScroll>
-            <Header />
-            {children}
-            <Footer />
-          </SmoothScroll>
+          <Header />
+          {children}
+          <Footer />
         </Providers>
       </body>
     </html>

@@ -88,6 +88,7 @@ export default function PropertyGallery({ images }: { images: GalleryImage[] }) 
                                         sizes={isCenter ? "50vw" : "25vw"}
                                         className="object-cover"
                                         priority={offset === 0}
+                                        unoptimized={true}
                                     />
                                 </div>
                             </div>

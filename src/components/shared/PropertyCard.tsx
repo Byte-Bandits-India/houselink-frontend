@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { getImageUrl } from '@/lib/api';
 
 export interface PropertyCardProps {
   id: string;
@@ -73,9 +74,10 @@ export default function PropertyCard(props: PropertyCardProps) {
         <div className="property-image-container image-anime">
           <div className="property-image">
             <Image
-              src={props.image || '/assets/blur.png'}
+              src={getImageUrl(props.image)}
               alt={props.name}
               fill
+              unoptimized={true}
               className="object-cover"
             />
             <Link href={url} className="property-link"></Link>

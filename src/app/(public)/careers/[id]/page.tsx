@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound, useParams } from "next/navigation"
@@ -11,101 +12,12 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronRight,
+  AlertCircle,
+  Briefcase,
 } from "lucide-react"
-
-// ── Mock data ─────────────────────────────────────────────────────────────────
-// Replace with your API call: `fetch(`/api/careers/${id}`)`
-const allJobs = [
-  {
-    id: 1,
-    name: "Senior Property Consultant",
-    location: "Chennai, Tamil Nadu",
-    salary: "₹6,00,000 – ₹9,00,000 p.a.",
-    postedAt: "May 01, 2026",
-    description: `<p>We are looking for an experienced <strong>Senior Property Consultant</strong> to join our growing team at Houselink360°.</p>
-    <p>In this role, you will consult residential and commercial clients, guide them through the entire property-buying journey, and build a strong referral network.</p>`,
-    content: `<h4>Key Responsibilities</h4>
-    <ul>
-      <li>Manage end-to-end property sales cycle for assigned accounts.</li>
-      <li>Conduct site visits, negotiations and closures.</li>
-      <li>Maintain CRM records and weekly performance reports.</li>
-      <li>Collaborate with the marketing team on lead-generation campaigns.</li>
-    </ul>
-    <h4>Requirements</h4>
-    <ul>
-      <li>3+ years of experience in real estate sales.</li>
-      <li>Strong communication and negotiation skills.</li>
-      <li>Proficiency in any CRM tool.</li>
-      <li>Valid Tamil Nadu real-estate broker license preferred.</li>
-    </ul>`,
-  },
-  {
-    id: 2,
-    name: "Digital Marketing Executive",
-    location: "Chennai, Tamil Nadu",
-    salary: "₹3,50,000 – ₹5,50,000 p.a.",
-    postedAt: "Apr 22, 2026",
-    description: `<p>We are hiring a results-driven <strong>Digital Marketing Executive</strong> to own our online growth channels at Houselink360°.</p>
-    <p>You will plan, execute and optimise SEO, SEM and social-media campaigns that generate qualified property leads.</p>`,
-    content: `<h4>Key Responsibilities</h4>
-    <ul>
-      <li>Manage Google Ads, Meta Ads and LinkedIn campaigns.</li>
-      <li>Improve organic search rankings through on-page and off-page SEO.</li>
-      <li>Create monthly performance dashboards and present insights.</li>
-      <li>Coordinate with content writers and designers.</li>
-    </ul>
-    <h4>Requirements</h4>
-    <ul>
-      <li>2+ years of digital marketing experience.</li>
-      <li>Hands-on experience with Google Analytics 4 and Search Console.</li>
-      <li>Certified in Google Ads or Meta Blueprint (preferred).</li>
-    </ul>`,
-  },
-  {
-    id: 3,
-    name: "Full-Stack Developer",
-    location: "Remote / Chennai",
-    salary: "₹8,00,000 – ₹14,00,000 p.a.",
-    postedAt: "Apr 15, 2026",
-    description: `<p>We're looking for a talented <strong>Full-Stack Developer</strong> to build and maintain the Houselink360° platform.</p>
-    <p>You'll work across the entire stack — from crafting pixel-perfect Next.js UIs to designing robust Node.js APIs.</p>`,
-    content: `<h4>Key Responsibilities</h4>
-    <ul>
-      <li>Develop new features using Next.js (App Router) and Node.js / Express.</li>
-      <li>Optimise database queries in PostgreSQL via Prisma ORM.</li>
-      <li>Write unit and integration tests; maintain CI/CD pipelines.</li>
-      <li>Participate in code reviews and architecture discussions.</li>
-    </ul>
-    <h4>Requirements</h4>
-    <ul>
-      <li>3+ years of full-stack development experience.</li>
-      <li>Strong knowledge of TypeScript, React and REST / GraphQL APIs.</li>
-      <li>Familiarity with Docker, GitHub Actions and cloud hosting.</li>
-    </ul>`,
-  },
-  {
-    id: 4,
-    name: "Customer Success Manager",
-    location: "Chennai, Tamil Nadu",
-    salary: "₹4,00,000 – ₹6,00,000 p.a.",
-    postedAt: "Apr 10, 2026",
-    description: `<p>We are seeking a proactive <strong>Customer Success Manager</strong> to onboard and nurture our growing base of property partners.</p>
-    <p>You will act as the primary liaison between Houselink360° and key accounts, ensuring they get maximum value from the platform.</p>`,
-    content: `<h4>Key Responsibilities</h4>
-    <ul>
-      <li>Own the onboarding experience for new partner accounts.</li>
-      <li>Conduct regular check-ins and quarterly business reviews.</li>
-      <li>Identify upsell and cross-sell opportunities.</li>
-      <li>Relay product feedback to the engineering team.</li>
-    </ul>
-    <h4>Requirements</h4>
-    <ul>
-      <li>2+ years in a customer-facing role (SaaS / PropTech preferred).</li>
-      <li>Excellent verbal and written communication in English and Tamil.</li>
-      <li>Proficiency with Freshdesk or similar helpdesk tools.</li>
-    </ul>`,
-  },
-]
+import { getCareers, getCareer } from "@/lib/api"
+import { formatDate } from "@/lib/utils"
+import type { Career } from "@/types/career"
 
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
@@ -118,25 +30,37 @@ const stagger: Variants = {
   show: { opacity: 1, transition: { staggerChildren: 0.15 } },
 }
 
+// Helper to format salary
+function formatSalary(min: number | string | null | undefined, max: number | string | null | undefined): string {
+  if (!min) return "Competitive salary"
+  const minNum = Number(min)
+  const maxNum = max ? Number(max) : null
+  
+  if (maxNum && minNum !== maxNum) {
+    return `₹${minNum.toLocaleString("en-IN")} – ₹${maxNum.toLocaleString("en-IN")} p.a.`
+  }
+  return `₹${minNum.toLocaleString("en-IN")} p.a.`
+}
+
 // ── Related Job Card ──────────────────────────────────────────────────────────
-function RelatedCard({ job }: { job: (typeof allJobs)[0] }) {
+function RelatedCard({ job }: { job: Career }) {
   return (
     <motion.div
       variants={fadeUp}
       className="bg-white rounded-xl shadow-sm border border-surface-tertiary p-5 flex flex-col gap-3 hover:shadow-md transition-all duration-300 group"
     >
       <h4 className="font-bold text-ink group-hover:text-brand transition-colors">
-        <Link href={`/careers/${job.id}`}>{job.name}</Link>
+        <Link href={`/careers/${job.id}`}>{job.title}</Link>
       </h4>
       <div className="flex flex-wrap gap-3 text-sm text-ink-secondary">
         <span className="flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5 text-brand" /> {job.postedAt}
+          <Clock className="w-3.5 h-3.5 text-brand" /> {formatDate(job.createdAt)}
         </span>
         <span className="flex items-center gap-1.5">
-          <MapPin className="w-3.5 h-3.5 text-brand" /> {job.location}
+          <MapPin className="w-3.5 h-3.5 text-brand" /> {job.location || "Chennai"}
         </span>
         <span className="flex items-center gap-1.5">
-          <Banknote className="w-3.5 h-3.5 text-brand" /> {job.salary}
+          <Banknote className="w-3.5 h-3.5 text-brand" /> {formatSalary(job.salaryMin, job.salaryMax)}
         </span>
       </div>
       <Link
@@ -152,11 +76,97 @@ function RelatedCard({ job }: { job: (typeof allJobs)[0] }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function CareerDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const job = allJobs.find((j) => j.id === Number(id))
+  
+  const [job, setJob] = useState<Career | null>(null)
+  const [related, setRelated] = useState<Career[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!job) notFound()
+  useEffect(() => {
+    if (!id) return
 
-  const related = allJobs.filter((j) => j.id !== job.id).slice(0, 2)
+    async function loadJobDetails() {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const jobId = Number(id)
+        if (isNaN(jobId)) {
+          setError("Invalid job ID.")
+          return
+        }
+
+        // Fetch selected job
+        const res = await getCareer(jobId)
+        if (res.success && res.data) {
+          setJob(res.data)
+          
+          // Fetch all jobs for related openings
+          try {
+            const allRes = await getCareers()
+            if (allRes.success && allRes.data) {
+              const filtered = allRes.data.filter((j) => j.id !== jobId).slice(0, 2)
+              setRelated(filtered)
+            }
+          } catch (err) {
+            console.error("Failed to load related careers:", err)
+          }
+        } else {
+          setError("Career opening not found.")
+        }
+      } catch (err: any) {
+        console.error("Failed to load career details:", err)
+        setError(err.message || "An unexpected error occurred.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadJobDetails()
+  }, [id])
+
+  if (isLoading) {
+    return (
+      <div className="bg-surface text-ink pb-16 min-h-screen">
+        <div className="relative h-[300px] w-full bg-gray-200 animate-pulse flex items-center justify-center">
+          <Briefcase className="w-12 h-12 text-gray-400" />
+        </div>
+        <div className="container mx-auto px-4 mt-12 max-w-4xl animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-24 mb-6" />
+          <div className="h-8 bg-gray-200 rounded w-2/3 mb-4" />
+          <div className="flex gap-4 mb-8">
+            <div className="h-4 bg-gray-200 rounded w-28" />
+            <div className="h-4 bg-gray-200 rounded w-28" />
+            <div className="h-4 bg-gray-200 rounded w-28" />
+          </div>
+          <div className="h-4 bg-gray-200 rounded w-full mb-3" />
+          <div className="h-4 bg-gray-200 rounded w-full mb-3" />
+          <div className="h-4 bg-gray-200 rounded w-5/6 mb-3" />
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-10" />
+          
+          <div className="h-24 bg-gray-200 rounded-2xl w-full" />
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !job) {
+    return (
+      <div className="bg-surface text-ink pb-16 min-h-screen flex items-center justify-center p-4">
+        <div className="flex flex-col items-center justify-center text-center py-12 bg-white border border-red-100 rounded-xl p-8 max-w-lg shadow-sm">
+          <AlertCircle size={48} className="text-red-500 mb-4" />
+          <h3 className="text-xl font-bold text-gray-800 mb-2">Job Opening Not Found</h3>
+          <p className="text-gray-600 mb-6 text-sm">
+            {error || "The position you are looking for does not exist or has already been filled."}
+          </p>
+          <Link
+            href="/careers"
+            className="px-6 py-2.5 bg-brand text-white font-semibold rounded-md hover:bg-brand-700 transition-colors inline-flex items-center gap-2 text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Careers
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-surface text-ink overflow-hidden pb-16">
@@ -164,7 +174,7 @@ export default function CareerDetailPage() {
       <div className="relative h-[500px] w-full">
         <Image
           src="/assets/images/footer/career_image.png"
-          alt={job.name}
+          alt={job.title}
           fill
           className="object-cover"
           priority
@@ -176,7 +186,7 @@ export default function CareerDetailPage() {
             transition={{ duration: 0.6 }}
             className="text-3xl md:text-4xl font-bold mb-4 max-w-2xl"
           >
-            {job.name}
+            {job.title}
           </motion.h1>
           <motion.nav
             initial={{ opacity: 0, y: 20 }}
@@ -229,7 +239,7 @@ export default function CareerDetailPage() {
             variants={fadeUp}
             className="text-[2.2rem] font-bold mb-4"
           >
-            {job.name}
+            {job.title}
           </motion.h2>
 
           <motion.div
@@ -237,38 +247,42 @@ export default function CareerDetailPage() {
             className="flex flex-wrap gap-5 text-sm text-ink-secondary"
           >
             <span className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-brand" /> Posted {job.postedAt}
+              <Clock className="w-4 h-4 text-brand" /> Posted {formatDate(job.createdAt)}
             </span>
             <span className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-brand" /> {job.location}
+              <MapPin className="w-4 h-4 text-brand" /> {job.location || "Chennai"}
             </span>
             <span className="flex items-center gap-2">
-              <Banknote className="w-4 h-4 text-brand" /> {job.salary}
+              <Banknote className="w-4 h-4 text-brand" /> {formatSalary(job.salaryMin, job.salaryMax)}
             </span>
           </motion.div>
         </motion.div>
 
         {/* Description */}
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-          variants={fadeUp}
-          className="prose prose-neutral max-w-none mb-8 text-ink-secondary text-[0.97rem] leading-[1.85]"
-          dangerouslySetInnerHTML={{ __html: job.description }}
-        />
+        {job.description && (
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            variants={fadeUp}
+            className="prose prose-neutral max-w-none mb-8 text-ink-secondary text-[0.97rem] leading-[1.85]"
+            dangerouslySetInnerHTML={{ __html: job.description }}
+          />
+        )}
 
         {/* Requirements / Content */}
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-          variants={fadeUp}
-          className="prose prose-neutral max-w-none mb-14 text-ink-secondary text-[0.97rem] leading-[1.85]
-            [&_h4]:text-ink [&_h4]:font-bold [&_h4]:text-[1.1rem] [&_h4]:mt-6 [&_h4]:mb-3
-            [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-1"
-          dangerouslySetInnerHTML={{ __html: job.content }}
-        />
+        {job.content && (
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            variants={fadeUp}
+            className="prose prose-neutral max-w-none mb-14 text-ink-secondary text-[0.97rem] leading-[1.85]
+              [&_h4]:text-ink [&_h4]:font-bold [&_h4]:text-[1.1rem] [&_h4]:mt-6 [&_h4]:mb-3
+              [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-1"
+            dangerouslySetInnerHTML={{ __html: job.content }}
+          />
+        )}
 
         {/* Apply CTA */}
         <motion.div
@@ -291,7 +305,7 @@ export default function CareerDetailPage() {
                 support@houselink360.com
               </a>{" "}
               with the subject line{" "}
-              <em>&quot;Application – {job.name}&quot;</em>.
+              <em>&quot;Application – {job.title}&quot;</em>.
             </p>
           </div>
           <a
@@ -310,7 +324,7 @@ export default function CareerDetailPage() {
               whileInView="show"
               viewport={{ once: true }}
               variants={fadeUp}
-              className="text-[2rem] font-bold mb-8"
+              className="text-[2.2rem] font-bold mb-8"
             >
               Related <span className="text-brand">Openings</span>
             </motion.h2>

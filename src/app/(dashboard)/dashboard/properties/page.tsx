@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Pencil, Trash2, Plus } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PropertyCharts from "@/components/shared/PropertyCharts";
+import { useAuth } from "@/context/AuthContext";
+import { getUserProperties, deleteProperty } from "@/lib/api";
 
 /* ── Types ───────────────────────────────────────────────── */
-type Purpose = "sell" | "rent";
+type Purpose = "sell" | "rent_lease";
 type OwnerType = "owner" | "builder" | "consultant";
 
 interface Property {
@@ -23,41 +25,6 @@ interface Property {
   ownerType: OwnerType;
 }
 
-/* ── Mock data from properties.blade.php ─────────────────── */
-const properties: Property[] = [
-  // ── Sell · Owner ──────────────────────────────────────────
-  { id: 101, name: "Greenwood Heights Apartment", state: "Karnataka", views: 142, expiredAt: "15-06-2026", createdAt: "10-03-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "owner" },
-  { id: 102, name: "Sunrise Villa", state: "Karnataka", views: 87, expiredAt: "20-07-2026", createdAt: "05-04-2026", status: "Selling", moderationStatus: "pending", purpose: "sell", ownerType: "owner" },
-  { id: 107, name: "Blue Horizon 3BHK", state: "Tamil Nadu", views: 193, expiredAt: "12-08-2026", createdAt: "18-03-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "owner" },
-  { id: 108, name: "Palm Grove Residency", state: "Kerala", views: 64, expiredAt: "01-09-2026", createdAt: "02-04-2026", status: "Selling", moderationStatus: "rejected", purpose: "sell", ownerType: "owner" },
-  { id: 109, name: "Silver Oaks Villa", state: "Andhra Pradesh", views: 115, expiredAt: "28-06-2026", createdAt: "14-03-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "owner" },
-
-  // ── Sell · Builder ─────────────────────────────────────────
-  { id: 103, name: "Metro Studio Flat", state: "Karnataka", views: 210, expiredAt: "01-05-2026", createdAt: "12-02-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "builder" },
-  { id: 110, name: "Prestige Skyline Tower", state: "Maharashtra", views: 320, expiredAt: "30-09-2026", createdAt: "01-01-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "builder" },
-  { id: 111, name: "Golden Gate Towers", state: "Karnataka", views: 178, expiredAt: "15-10-2026", createdAt: "20-02-2026", status: "Selling", moderationStatus: "pending", purpose: "sell", ownerType: "builder" },
-  { id: 112, name: "Emerald Isle Apartments", state: "Tamil Nadu", views: 245, expiredAt: "05-11-2026", createdAt: "11-03-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "builder" },
-  { id: 113, name: "Phoenix Grand Residences", state: "Telangana", views: 99, expiredAt: "22-07-2026", createdAt: "03-04-2026", status: "Selling", moderationStatus: "rejected", purpose: "sell", ownerType: "builder" },
-
-  // ── Sell · Consultant ──────────────────────────────────────
-  { id: 104, name: "Coastal Dream Villa", state: "Karnataka", views: 55, expiredAt: "10-04-2026", createdAt: "22-01-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "consultant" },
-  { id: 114, name: "Royal Heritage Bungalow", state: "Rajasthan", views: 132, expiredAt: "25-08-2026", createdAt: "07-03-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "consultant" },
-  { id: 115, name: "City Center Penthouse", state: "Maharashtra", views: 76, expiredAt: "18-09-2026", createdAt: "28-02-2026", status: "Selling", moderationStatus: "pending", purpose: "sell", ownerType: "consultant" },
-  { id: 116, name: "Meadow Walk Duplex", state: "Gujarat", views: 41, expiredAt: "12-05-2026", createdAt: "15-04-2026", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "consultant" },
-
-  // ── Rent · Owner ───────────────────────────────────────────
-  { id: 105, name: "Tranquil Nest 2BHK", state: "Karnataka", views: 98, expiredAt: "N/A", createdAt: "01-04-2026", status: "Renting", moderationStatus: "approved", purpose: "rent", ownerType: "owner" },
-  { id: 106, name: "Park View Flat", state: "Maharashtra", views: 44, expiredAt: "N/A", createdAt: "15-03-2026", status: "Renting", moderationStatus: "pending", purpose: "rent", ownerType: "owner" },
-  { id: 117, name: "Lake Side Studio", state: "Karnataka", views: 67, expiredAt: "N/A", createdAt: "20-03-2026", status: "Renting", moderationStatus: "approved", purpose: "rent", ownerType: "owner" },
-  { id: 118, name: "Garden View 1BHK", state: "Tamil Nadu", views: 51, expiredAt: "N/A", createdAt: "08-04-2026", status: "Renting", moderationStatus: "rejected", purpose: "rent", ownerType: "owner" },
-
-  // ── Rent · Consultant ──────────────────────────────────────
-  { id: 119, name: "Urban Loft Studio", state: "Maharashtra", views: 112, expiredAt: "N/A", createdAt: "25-03-2026", status: "Renting", moderationStatus: "approved", purpose: "rent", ownerType: "consultant" },
-  { id: 120, name: "Downtown 2BHK Suite", state: "Karnataka", views: 89, expiredAt: "N/A", createdAt: "10-04-2026", status: "Renting", moderationStatus: "pending", purpose: "rent", ownerType: "consultant" },
-  { id: 121, name: "Hill View Cottage", state: "Himachal Pradesh", views: 37, expiredAt: "N/A", createdAt: "03-04-2026", status: "Renting", moderationStatus: "approved", purpose: "rent", ownerType: "consultant" },
-  { id: 122, name: "Beachside Bungalow", state: "Goa", views: 156, expiredAt: "N/A", createdAt: "17-03-2026", status: "Renting", moderationStatus: "approved", purpose: "rent", ownerType: "consultant" },
-];
-
 const moderationBadge: Record<string, string> = {
   approved: "bg-blue-100 text-blue-700",
   pending: "bg-amber-100 text-amber-700",
@@ -67,12 +34,113 @@ const moderationBadge: Record<string, string> = {
 const statusBadge: Record<string, string> = {
   Selling: "bg-cyan-100 text-cyan-700",
   Renting: "bg-purple-100 text-purple-700",
+  Leasing: "bg-emerald-100 text-emerald-700",
 };
 
 export default function PropertiesPage() {
   const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
+  
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [purpose, setPurpose] = useState<Purpose>("sell");
   const [ownerType, setOwnerType] = useState<OwnerType>("owner");
+
+  const loadProperties = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await getUserProperties(Number(user.id));
+      if (res.success && Array.isArray(res.data)) {
+        const mapped: Property[] = res.data.map((p: any) => {
+          // purpose: Map backend propertyFor ('sell', 'rent', 'lease') to Purpose ('sell', 'rent_lease')
+          const purposeVal: Purpose = p.propertyFor === "sell" ? "sell" : "rent_lease";
+          
+          // ownerType: Map backend propertyOwnership ('owner', 'builder', 'consultant')
+          const ownerTypeVal: OwnerType = (p.propertyOwnership?.toLowerCase() ?? "owner") as OwnerType;
+
+          // state
+          const stateName = p.state?.name || p.state || "N/A";
+
+          // expiredAt
+          let expiredAt = "N/A";
+          if (p.expiredAt) {
+            try {
+              expiredAt = new Date(p.expiredAt).toLocaleDateString("en-GB").replace(/\//g, "-");
+            } catch {
+              expiredAt = "N/A";
+            }
+          }
+
+          // createdAt
+          let createdAt = "N/A";
+          if (p.createdAt) {
+            try {
+              createdAt = new Date(p.createdAt).toLocaleDateString("en-GB").replace(/\//g, "-");
+            } catch {
+              createdAt = "N/A";
+            }
+          }
+
+          // status
+          const status = p.propertyFor === "sell" ? "Selling" : p.propertyFor === "rent" ? "Renting" : "Leasing";
+
+          return {
+            id: p.id,
+            name: p.name || "Untitled Property",
+            state: stateName,
+            views: p.views ?? 0,
+            expiredAt,
+            createdAt,
+            status,
+            moderationStatus: p.moderationStatus || "pending",
+            purpose: purposeVal,
+            ownerType: ownerTypeVal,
+          };
+        });
+        setProperties(mapped);
+      } else {
+        setError("Failed to parse user properties from API response.");
+      }
+    } catch (err: any) {
+      console.error("Error fetching properties:", err);
+      setError(err?.message || "An unexpected error occurred while fetching properties.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (user) {
+        loadProperties();
+      } else {
+        setIsLoading(false);
+        setProperties([]);
+      }
+    }
+  }, [user, authLoading]);
+
+  const handleDelete = async (id: number, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const res = await deleteProperty(id);
+      if (res.success) {
+        loadProperties();
+      } else {
+        alert(res.message || "Failed to delete the property listing.");
+      }
+    } catch (err: any) {
+      console.error("Error deleting property:", err);
+      alert(err?.message || "An unexpected error occurred while deleting the property.");
+    }
+  };
 
   const ownerTypeTabs: { key: OwnerType; label: string }[] = [
     { key: "owner", label: "Owner" },
@@ -83,6 +151,33 @@ export default function PropertiesPage() {
   const filtered = properties.filter(
     (p) => p.purpose === purpose && p.ownerType === ownerType && p.moderationStatus !== "archived"
   );
+
+  if (authLoading || isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="w-10 h-10 text-brand animate-spin" />
+        <p className="text-sm font-semibold text-ink-muted animate-pulse">Loading properties...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center bg-red-50/50 rounded-2xl border border-red-100 max-w-lg mx-auto">
+        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4">
+          <AlertCircle className="w-6 h-6" />
+        </div>
+        <h3 className="text-lg font-bold text-ink mb-2">Failed to load properties</h3>
+        <p className="text-sm text-ink-muted mb-6">{error}</p>
+        <button
+          onClick={loadProperties}
+          className="px-5 py-2.5 bg-brand text-white font-semibold text-sm rounded-xl hover:bg-brand/90 transition-colors shadow-sm"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -101,7 +196,7 @@ export default function PropertiesPage() {
 
       {/* Sell / Rent-Lease toggle */}
       <div className="flex gap-2">
-        {(["sell", "rent"] as const).map((f) => (
+        {(["sell", "rent_lease"] as const).map((f) => (
           <button
             key={f}
             onClick={() => { setPurpose(f); setOwnerType("owner"); }}
@@ -201,7 +296,10 @@ export default function PropertiesPage() {
                           <Pencil className="w-3 h-3" /> Edit
                         </button>
                       )}
-                      <button className="flex items-center gap-1 text-xs font-semibold border border-red-400 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white transition-colors w-full justify-center">
+                      <button 
+                        onClick={() => handleDelete(p.id, p.name)}
+                        className="flex items-center gap-1 text-xs font-semibold border border-red-400 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white transition-colors w-full justify-center"
+                      >
                         <Trash2 className="w-3 h-3" /> Delete
                       </button>
                     </div>
@@ -215,3 +313,4 @@ export default function PropertiesPage() {
     </div>
   );
 }
+

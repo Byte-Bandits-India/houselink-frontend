@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import HeroSlider from "@/components/home/HeroSlider";
 import PropertySearch from "@/components/shared/PropertySearch";
 import FeaturedProperties from "@/components/home/FeaturedProperties";
@@ -22,7 +23,9 @@ export default function HomePage() {
 
         <div className="absolute -bottom-20 left-0 right-0 translate-y-1/2 z-20 pointer-events-none">
           <div className="container mx-auto px-4 pointer-events-auto">
-            <PropertySearch />
+            <Suspense fallback={null}>
+              <PropertySearch />
+            </Suspense>
           </div>
         </div>
       </section>

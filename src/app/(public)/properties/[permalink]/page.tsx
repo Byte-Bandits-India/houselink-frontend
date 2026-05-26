@@ -1,7 +1,7 @@
-import { mockProperties } from "@/data/mockProperties";
+import { getPropertyByPermalink, getImageUrl } from "@/lib/api";
 import PropertyGallery from "@/components/shared/PropertyGallery";
+import PropertyEnquirySidebar from "@/components/shared/PropertyEnquirySidebar";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import {
   Heart,
   Calendar,
@@ -13,8 +13,6 @@ import {
   Ruler,
   CheckCircle,
   Lock,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 
 export default async function PropertyDetailPage({
@@ -23,23 +21,70 @@ export default async function PropertyDetailPage({
   params: Promise<{ permalink: string }>;
 }) {
   const { permalink } = await params;
-  const property = mockProperties.find((p) => p.permalink === permalink);
+
+  let property: any = null;
+  try {
+    const res = await getPropertyByPermalink(permalink);
+    property = res.data;
+  } catch (err) {
+    console.error("Error fetching property by permalink:", err);
+  }
 
   if (!property) return notFound();
 
-  const images =
-    property.images && property.images.length > 0
-      ? property.images
-      : [{ image_url: property.image }];
+  const images = property.images && property.images.length > 0
+    ? property.images.map((img: any) => ({ image_url: getImageUrl(img.image) }))
+    : [{ image_url: "/assets/blur.png" }];
 
   const priceFormatted =
-    typeof property.price === "number"
+    typeof property.price === "number" || typeof property.price === "string"
       ? new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
         maximumFractionDigits: 0,
-      }).format(property.price)
-      : property.price;
+      }).format(Number(property.price))
+      : "Contact for Price";
+
+  const listedDate = property.createdAt
+    ? new Date(property.createdAt).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "Recently";
+
+  const categoryName = property.category?.name
+    ? property.category.name
+        .replace(/_/g, " ")
+        .split(" ")
+        .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ")
+    : "Apartment";
+
+  const areaVal = property.builtUpArea
+    ? `${property.builtUpArea} Sq.Ft`
+    : property.plotLandArea
+    ? `${property.plotLandArea} Sq.Ft`
+    : "—";
+
+  const formatHouseType = (t?: any) => {
+    if (t == null) return "";
+    return String(t).replace(/_/g, " ").toUpperCase();
+  };
+
+  const formatCapitalize = (s?: any) => {
+    if (s == null) return "";
+    return String(s).replace(/_/g, " ").split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  };
+
+  const formatConstructionAge = (a?: any) => {
+    if (a == null) return "";
+    return String(a).replace(/_/g, " ").replace("years ", "").replace(" plus", "+ years");
+  };
+
+  const features = (property.propertyFeatures || [])
+    .map((pf: any) => ({ name: pf.feature?.name }))
+    .filter((f: any) => !!f.name);
 
   return (
     <div className="min-h-screen bg-[#f5f4f0] pb-20">
@@ -62,11 +107,11 @@ export default async function PropertyDetailPage({
           <div className="flex flex-wrap items-center gap-5 mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
             <span className="flex items-center gap-1.5">
               <Calendar size={15} className="text-[#1a3c6b]" />
-              Listed: {property.created_at || "Recently"}
+              Listed: {listedDate}
             </span>
             <span className="flex items-center gap-1.5">
               <Tag size={15} className="text-[#1a3c6b]" />
-              {property.categoryName}
+              {categoryName}
             </span>
             <span className="flex items-center gap-1.5">
               <Eye size={15} className="text-[#1a3c6b]" />
@@ -75,11 +120,7 @@ export default async function PropertyDetailPage({
             <button className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors text-sm">
               <Heart
                 size={16}
-                className={
-                  property.isInWishlist
-                    ? "fill-red-500 text-red-500"
-                    : "text-gray-400"
-                }
+                className="text-gray-400"
               />
               Save
             </button>
@@ -107,14 +148,14 @@ export default async function PropertyDetailPage({
                 Overview
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {property.bedrooms !== undefined && (
+                {property.bedrooms !== undefined && property.bedrooms !== null && (
                   <OverviewCard
                     icon={<BedDouble size={18} className="text-[#1a3c6b]" />}
                     label="Bedrooms"
                     value={String(property.bedrooms)}
                   />
                 )}
-                {property.bathrooms !== undefined && (
+                {property.bathrooms !== undefined && property.bathrooms !== null && (
                   <OverviewCard
                     icon={<Bath size={18} className="text-[#1a3c6b]" />}
                     label="Bathrooms"
@@ -124,13 +165,13 @@ export default async function PropertyDetailPage({
                 <OverviewCard
                   icon={<Tag size={18} className="text-[#1a3c6b]" />}
                   label="Property type"
-                  value={property.categoryName || "—"}
+                  value={categoryName}
                   small
                 />
                 <OverviewCard
                   icon={<Ruler size={18} className="text-[#1a3c6b]" />}
                   label="Area"
-                  value={property.area || "—"}
+                  value={areaVal}
                   small
                 />
               </div>
@@ -144,31 +185,31 @@ export default async function PropertyDetailPage({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                 <DetailsColumn
                   rows={[
-                    property.house_type && ["House type", property.house_type],
-                    property.construction_age && [
+                    property.houseType && ["House type", formatHouseType(property.houseType)],
+                    property.constructionAge && [
                       "Construction age",
-                      property.construction_age,
+                      formatConstructionAge(property.constructionAge),
                     ],
-                    property.ownership_type && [
+                    property.ownershipType && [
                       "Ownership",
-                      property.ownership_type,
+                      formatCapitalize(property.ownershipType),
                     ],
                   ]}
                 />
                 <DetailsColumn
                   rows={[
-                    property.furnishing_type && [
+                    property.furnishingType && [
                       "Furnishing",
-                      property.furnishing_type,
+                      formatCapitalize(property.furnishingType),
                     ],
-                    property.water_supply && [
+                    property.waterSupply && [
                       "Water supply",
-                      property.water_supply,
+                      formatCapitalize(property.waterSupply),
                     ],
-                    property.parking_availability && [
+                    property.parkingAvailability && [
                       "Parking",
-                      `${property.parking_availability}${property.parking_slots_count
-                        ? ` (${property.parking_slots_count} slots)`
+                      `${formatCapitalize(property.parkingAvailability)}${property.parkingSlots
+                        ? ` (${property.parkingSlots} slots)`
                         : ""
                       }`,
                     ],
@@ -178,13 +219,13 @@ export default async function PropertyDetailPage({
             </div>
 
             {/* Amenities */}
-            {property.features && property.features.length > 0 && (
+            {features.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">
                   Amenities &amp; features
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {property.features.map((f, i) => (
+                  {features.map((f: any, i: number) => (
                     <div
                       key={i}
                       className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5 text-sm text-gray-800"
@@ -213,15 +254,15 @@ export default async function PropertyDetailPage({
             </div>
 
             {/* Brokerage */}
-            {property.brokerage_type && (
+            {property.brokerageType && (
               <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
                 <h2 className="text-base font-semibold text-gray-900 mb-3">
                   Brokerage details
                 </h2>
                 <span className="inline-block bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium px-4 py-2 rounded-lg">
-                  {property.brokerage_type === "no_brokerage"
+                  {property.brokerageType === "no_brokerage"
                     ? "No Brokerage"
-                    : property.brokerage_type}
+                    : formatCapitalize(property.brokerageType)}
                 </span>
               </div>
             )}
@@ -229,52 +270,7 @@ export default async function PropertyDetailPage({
 
           {/* ── Sidebar ── */}
           <div className="lg:sticky lg:top-16 h-fit">
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-              <h3 className="text-base font-semibold text-gray-900 mb-1">
-                Login/Signup to Request Info
-              </h3>
-
-              <p className="text-xs text-gray-400 mb-1 mt-3">Property Name</p>
-              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 mb-4">
-                <span className="text-xs text-gray-500 truncate flex-1">
-                  {property.name}
-                </span>
-                <Lock size={13} className="text-gray-400 shrink-0" />
-              </div>
-
-              <p className="text-xs text-gray-400 mb-2">Phone Number</p>
-              <div className="flex gap-2 mb-3">
-                <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">
-                  🇮🇳 +91
-                </div>
-                <input
-                  type="tel"
-                  placeholder="Enter 10-digit mobile number"
-                  className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-600 placeholder-gray-400 outline-none focus:border-[#1a3c6b] focus:bg-white transition-colors min-w-0"
-                />
-                <button className="bg-[#1a3c6b] hover:bg-[#142e52] text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors whitespace-nowrap">
-                  Send OTP
-                </button>
-              </div>
-
-              <div className="flex items-start gap-2 mb-4">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  className="mt-0.5 accent-[#1a3c6b]"
-                />
-                <label htmlFor="terms" className="text-xs text-gray-500 leading-relaxed">
-                  By clicking you agree to our{" "}
-                  <a href="#" className="text-[#1a3c6b] underline">
-                    Terms &amp; Conditions
-                  </a>
-                </label>
-              </div>
-
-              <button className="w-full bg-[#1a3c6b] hover:bg-[#142e52] text-white font-semibold py-3.5 rounded-xl transition-colors text-sm">
-                Verify and Enquire
-              </button>
-            </div>
+            <PropertyEnquirySidebar property={property} />
           </div>
         </div>
       </div>

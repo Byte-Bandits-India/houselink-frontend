@@ -22,6 +22,7 @@ import {
   LEASE_DURATIONS,
   MAINTENANCE_RESP,
   OWNERSHIP_TYPES,
+  getSchemaFields,
 } from "@/types/property";
 
 interface Props {
@@ -30,27 +31,27 @@ interface Props {
   disabled?: boolean;
 }
 
-const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-  <h3 className="text-sm font-semibold text-gray-800 mt-5 mb-2">{children}</h3>
-);
-
 const RadioPill = ({
   checked,
   label,
   onChange,
+  disabled = false,
 }: {
   checked: boolean;
   label: string;
   onChange: () => void;
+  disabled?: boolean;
 }) => (
   <button
     type="button"
+    disabled={disabled}
     onClick={onChange}
     className={cn(
       "px-5 py-2 rounded-full border text-sm font-medium transition-all duration-200",
       checked
         ? "bg-brand text-white border-brand shadow-sm"
-        : "bg-white text-gray-600 border-gray-300 hover:border-brand hover:text-brand"
+        : "bg-white text-gray-600 border-gray-300 hover:border-brand hover:text-brand",
+      disabled && "opacity-50 cursor-not-allowed hover:bg-white hover:text-gray-600 hover:border-gray-300"
     )}
   >
     {label}
@@ -61,19 +62,23 @@ const CheckPill = ({
   checked,
   label,
   onChange,
+  disabled = false,
 }: {
   checked: boolean;
   label: string;
   onChange: () => void;
+  disabled?: boolean;
 }) => (
   <button
     type="button"
+    disabled={disabled}
     onClick={onChange}
     className={cn(
       "px-4 py-1.5 rounded-full border text-sm font-medium transition-all duration-200",
       checked
-        ? "bg-brand text-white border-brand"
-        : "bg-white text-gray-600 border-gray-300 hover:border-brand"
+        ? "bg-brand text-white border-brand shadow-sm"
+        : "bg-white text-gray-600 border-gray-300 hover:border-brand",
+      disabled && "opacity-50 cursor-not-allowed hover:bg-white hover:text-gray-600"
     )}
   >
     {label}
@@ -84,12 +89,6 @@ function toggleArray(arr: string[], val: string): string[] {
   return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
 }
 
-function formatIndianPrice(val: string): string {
-  const raw = val.replace(/[^0-9]/g, "").slice(0, 12);
-  if (!raw) return "";
-  return Number(raw).toLocaleString("en-IN");
-}
-
 function priceToWords(n: number): string {
   if (!n) return "";
   if (n >= 10000000) return `${(n / 10000000).toFixed(2)} Crore`;
@@ -98,553 +97,1152 @@ function priceToWords(n: number): string {
   return String(n);
 }
 
-export default function Step2PropertyProfile({ data, onChange }: Props) {
-  const isRentLease = data.property_for === "rent_lease";
-  const isLand = ["plot", "land"].includes(data.property_subtype || "");
-  const isCommercial = ["shop", "building", "godown", "warehouse", "office_space", "land"].includes(
-    data.property_subtype || ""
-  );
-  const showResidentialFields = !isLand && !isCommercial;
-  const showParkingCard = true;
+function formatNumberWithCommas(val: string | number): string {
+  if (!val) return "";
+  const numStr = String(val).replace(/,/g, "");
+  const parts = numStr.split(".");
+  let integerPart = parts[0];
+  const decimalPart = parts.length > 1 ? "." + parts[1] : "";
+  
+  let lastThree = integerPart.substring(integerPart.length - 3);
+  const otherDigits = integerPart.substring(0, integerPart.length - 3);
+  if (otherDigits !== "") {
+    lastThree = "," + lastThree;
+  }
+  const formattedInteger = otherDigits.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+  return formattedInteger + decimalPart;
+}
+
+function convertNumberToWords(num: number | string): string {
+  const value = typeof num === 'string' ? parseFloat(num.replace(/,/g, '')) : num;
+  if (isNaN(value) || value <= 0) return "";
+  
+  const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+  
+  function helper(n: number): string {
+    if (n < 20) return ones[n];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + ones[n % 10] : "");
+    return ones[Math.floor(n / 100)] + " Hundred" + (n % 100 !== 0 ? " and " + helper(n % 100) : "");
+  }
+
+  let temp = Math.floor(value);
+  let str = "";
+  
+  const crore = Math.floor(temp / 10000000);
+  temp %= 10000000;
+  
+  const lakh = Math.floor(temp / 100000);
+  temp %= 100000;
+  
+  const thousand = Math.floor(temp / 1000);
+  temp %= 1000;
+  
+  if (crore > 0) {
+    str += helper(crore) + " Crore ";
+  }
+  if (lakh > 0) {
+    str += helper(lakh) + " Lakh ";
+  }
+  if (thousand > 0) {
+    str += helper(thousand) + " Thousand ";
+  }
+  if (temp > 0) {
+    str += helper(temp);
+  }
+  
+  const trimmed = str.trim();
+  if (!trimmed) return "";
+  return trimmed + " Rupees Only";
+}
+
+export default function Step2PropertyProfile({ data, onChange, disabled = false }: Props) {
+  const subtype = data.property_subtype || "";
+  const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
+
   const tenantPrefs = data.tenant_preference || [];
   const parkingTypes = data.parking_type || [];
 
-  return (
-    <div className="space-y-1">
-      {/* Property Name */}
-      <SectionTitle>
-        Property Name <span className="text-red-500">*</span>
-      </SectionTitle>
-      <Input
-        value={data.name}
-        onChange={(e) => {
-          const name = e.target.value;
-          const slug = name
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9\s-]/g, "")
-            .replace(/\s+/g, "-");
-          onChange({ name, permalink: slug });
-        }}
-        placeholder="e.g. Greenwood Heights Apartment"
-      />
+  const handleNumberInput = (field: keyof PropertyFormData, value: string) => {
+    const clean = value.replace(/[^0-9]/g, "");
+    onChange({ [field]: clean });
+  };
 
-      {/* Permalink */}
-      <SectionTitle>
-        Permalink <span className="text-red-500">*</span>
-      </SectionTitle>
-      <div className="flex items-center rounded-lg border border-gray-300 overflow-hidden">
-        <span className="bg-gray-100 px-3 py-2 text-xs text-gray-500 border-r border-gray-300 whitespace-nowrap">
-          houselink360.com/properties/
-        </span>
-        <Input
-          className="border-0 rounded-none focus-visible:ring-0"
-          value={data.permalink}
-          onChange={(e) => onChange({ permalink: e.target.value })}
-          placeholder="your-property-slug"
-        />
+  const handleDecimalInput = (field: keyof PropertyFormData, value: string) => {
+    const clean = value.replace(/[^0-9.]/g, "");
+    const parts = clean.split(".");
+    const sanitized = parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : clean;
+    onChange({ [field]: sanitized });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* ─── SECTION 1: BASIC DETAILS (Name, Slug, Description) ─── */}
+      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+        {allowedFields.name && (
+          <div className="space-y-1.5">
+            <Label className="text-gray-700 font-medium">
+              Property Title <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              disabled={disabled}
+              value={data.name}
+              onChange={(e) => {
+                const name = e.target.value;
+                const slug = name
+                  .toLowerCase()
+                  .trim()
+                  .replace(/[^a-z0-9\s-]/g, "")
+                  .replace(/\s+/g, "-");
+                onChange({ name, permalink: slug });
+              }}
+              placeholder="e.g. Greenwood Heights Apartment"
+              className="rounded-xl border-gray-200 focus-visible:ring-brand"
+            />
+          </div>
+        )}
+
+        {allowedFields.permalink && (
+          <div className="space-y-1.5">
+            <Label className="text-gray-700 font-medium">
+              Permalink
+            </Label>
+            <div className="flex items-center rounded-xl border border-gray-200 overflow-hidden shadow-sm focus-within:ring-1 focus-within:ring-brand focus-within:border-brand">
+              <span className="bg-gray-50 px-3.5 py-2 text-xs font-semibold text-gray-500 border-r border-gray-200 whitespace-nowrap select-none">
+                houselink360.com/properties/
+              </span>
+              <Input
+                disabled={disabled}
+                className="border-0 rounded-none focus-visible:ring-0 shadow-none h-9 py-1 px-3 text-sm"
+                value={data.permalink}
+                onChange={(e) => onChange({ permalink: e.target.value })}
+                placeholder="your-property-slug"
+              />
+            </div>
+          </div>
+        )}
+
+        {allowedFields.description && (
+          <div className="space-y-1.5">
+            <Label className="text-gray-700 font-medium">
+              Description <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              disabled={disabled}
+              rows={4}
+              value={data.description}
+              onChange={(e) => onChange({ description: e.target.value })}
+              placeholder="Provide a detailed description of the property, key selling points, neighborhood highlights, etc..."
+              className="resize-none rounded-xl border-gray-200 focus-visible:ring-brand"
+            />
+          </div>
+        )}
       </div>
 
-      {/* Description */}
-      <SectionTitle>
-        Description <span className="text-red-500">*</span>
-      </SectionTitle>
-      <Textarea
-        rows={4}
-        value={data.description}
-        onChange={(e) => onChange({ description: e.target.value })}
-        placeholder="Describe your property..."
-        className="resize-none"
-      />
+      {/* ─── SECTION 2: SPECIFICATIONS (Grid Layout) ─── */}
+      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+        <h4 className="text-sm font-semibold text-gray-800 mb-4 border-b border-gray-50 pb-2">
+          Property Specifications
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {allowedFields.house_type && (
+            <div className="space-y-1.5">
+              <Label className="text-gray-700 font-medium">
+                House Type <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                disabled={disabled}
+                value={data.house_type || ""}
+                onValueChange={(v) => onChange({ house_type: v })}
+              >
+                <SelectTrigger className="rounded-xl border-gray-200">
+                  <SelectValue placeholder="Select Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {HOUSE_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-      {/* Residential-only fields */}
-      {showResidentialFields && (
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="space-y-1">
-            <Label>
-              House Type <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={data.house_type || ""}
-              onValueChange={(v) => onChange({ house_type: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Type" />
-              </SelectTrigger>
-              <SelectContent>
-                {HOUSE_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label>Construction Age</Label>
-            <Select
-              value={data.construction_age || ""}
-              onValueChange={(v) => onChange({ construction_age: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Age" />
-              </SelectTrigger>
-              <SelectContent>
-                {CONSTRUCTION_AGES.map((a) => (
-                  <SelectItem key={a} value={a}>{a}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label>
-              Bedrooms <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              type="number"
-              min={0}
-              value={data.bedrooms || ""}
-              onChange={(e) => onChange({ bedrooms: e.target.value })}
-              placeholder="e.g. 3"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label>
-              Bathrooms <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              type="number"
-              min={0}
-              value={data.bathrooms || ""}
-              onChange={(e) => onChange({ bathrooms: e.target.value })}
-              placeholder="e.g. 2"
-            />
-          </div>
-        </div>
-      )}
+          {allowedFields.construction_age && (
+            <div className="space-y-1.5">
+              <Label className="text-gray-700 font-medium">Construction Age</Label>
+              <Select
+                disabled={disabled}
+                value={data.construction_age || ""}
+                onValueChange={(v) => onChange({ construction_age: v })}
+              >
+                <SelectTrigger className="rounded-xl border-gray-200">
+                  <SelectValue placeholder="Select Age" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CONSTRUCTION_AGES.map((a) => (
+                    <SelectItem key={a} value={a}>{a}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-      {/* Balcony */}
-      {showResidentialFields && (
-        <>
-          <SectionTitle>Balcony</SectionTitle>
-          <div className="flex gap-3">
-            {["Yes", "No"].map((v) => (
-              <RadioPill
-                key={v}
-                checked={data.balcony === v}
-                label={v}
-                onChange={() => onChange({ balcony: v as any })}
+          {allowedFields.bedrooms && (
+            <div className="space-y-1.5">
+              <Label className="text-gray-700 font-medium">
+                Bedrooms <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="number"
+                min={0}
+                disabled={disabled}
+                value={data.bedrooms || ""}
+                onChange={(e) => handleNumberInput("bedrooms", e.target.value)}
+                placeholder="e.g. 3"
+                className="rounded-xl border-gray-200 focus-visible:ring-brand"
               />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Villa-specific: Garden & Pool */}
-      {data.property_subtype === "villa" && (
-        <div className="grid grid-cols-2 gap-4 mt-2">
-          <div>
-            <SectionTitle>Garden / Lawn</SectionTitle>
-            <div className="flex gap-3">
-              {["Yes", "No"].map((v) => (
-                <RadioPill
-                  key={v}
-                  checked={data.garden === v}
-                  label={v}
-                  onChange={() => onChange({ garden: v as any })}
-                />
-              ))}
             </div>
-          </div>
-          <div>
-            <SectionTitle>Swimming Pool</SectionTitle>
-            <div className="flex gap-3">
-              {["Yes", "No"].map((v) => (
-                <RadioPill
-                  key={v}
-                  checked={data.swimming_pool === v}
-                  label={v}
-                  onChange={() => onChange({ swimming_pool: v as any })}
-                />
-              ))}
+          )}
+
+          {allowedFields.bathrooms && (
+            <div className="space-y-1.5">
+              <Label className="text-gray-700 font-medium">
+                Bathrooms <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="number"
+                min={0}
+                disabled={disabled}
+                value={data.bathrooms || ""}
+                onChange={(e) => handleNumberInput("bathrooms", e.target.value)}
+                placeholder="e.g. 2"
+                className="rounded-xl border-gray-200 focus-visible:ring-brand"
+              />
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Furnishing */}
-      {!isLand && (
-        <div className="mt-4 grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <Label>
-              Furnishing <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={data.furnishing_type || ""}
-              onValueChange={(v) => onChange({ furnishing_type: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                {FURNISHING_TYPES.map((f) => (
-                  <SelectItem key={f} value={f}>{f}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {allowedFields.furnishing_type && (
+            <div className="space-y-1.5">
+              <Label className="text-gray-700 font-medium">
+                Furnishing {["apartment", "villa", "individual_house"].includes(subtype) && <span className="text-red-500">*</span>}
+              </Label>
+              <Select
+                disabled={disabled}
+                value={data.furnishing_type || ""}
+                onValueChange={(v) => onChange({ furnishing_type: v })}
+              >
+                <SelectTrigger className="rounded-xl border-gray-200">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FURNISHING_TYPES.map((f) => (
+                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-          {showResidentialFields && (
-            <>
-              <div className="space-y-1">
-                <Label>Water Supply</Label>
-                <Select
-                  value={data.water_supply || ""}
-                  onValueChange={(v) => onChange({ water_supply: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {WATER_SUPPLY_OPTIONS.map((w) => (
-                      <SelectItem key={w} value={w}>{w}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>
-                  Food Preference <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={data.food_preference || ""}
-                  onValueChange={(v) => onChange({ food_preference: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FOOD_PREF_OPTIONS.map((f) => (
-                      <SelectItem key={f} value={f}>{f}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
+          {allowedFields.water_supply && (
+            <div className="space-y-1.5">
+              <Label className="text-gray-700 font-medium">Water Supply</Label>
+              <Select
+                disabled={disabled}
+                value={data.water_supply || ""}
+                onValueChange={(v) => onChange({ water_supply: v })}
+              >
+                <SelectTrigger className="rounded-xl border-gray-200">
+                  <SelectValue placeholder="Select Source" />
+                </SelectTrigger>
+                <SelectContent>
+                  {WATER_SUPPLY_OPTIONS.map((w) => (
+                    <SelectItem key={w} value={w}>{w}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {allowedFields.food_preference && (
+            <div className="space-y-1.5">
+              <Label className="text-gray-700 font-medium">
+                Food Preference <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                disabled={disabled}
+                value={data.food_preference || ""}
+                onValueChange={(v) => onChange({ food_preference: v })}
+              >
+                <SelectTrigger className="rounded-xl border-gray-200">
+                  <SelectValue placeholder="Select Preference" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FOOD_PREF_OPTIONS.map((f) => (
+                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {allowedFields.ownership_type && (
+            <div className="space-y-1.5">
+              <Label className="text-gray-700 font-medium">
+                Ownership Type <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                disabled={disabled}
+                value={data.ownership_type || ""}
+                onValueChange={(v) => onChange({ ownership_type: v })}
+              >
+                <SelectTrigger className="rounded-xl border-gray-200">
+                  <SelectValue placeholder="Select Ownership" />
+                </SelectTrigger>
+                <SelectContent>
+                  {OWNERSHIP_TYPES.map((o) => (
+                    <SelectItem key={o} value={o}>{o}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {allowedFields.property_suitable_for && (
+            <div className="space-y-1.5">
+              <Label className="text-gray-700 font-medium">
+                Suitable For {(data.property_for === "rent_lease" || subtype === "office_space") && <span className="text-red-500">*</span>}
+              </Label>
+              <Input
+                disabled={disabled}
+                value={data.property_suitable_for || ""}
+                onChange={(e) => onChange({ property_suitable_for: e.target.value })}
+                placeholder="e.g. Office, Clinic, Restaurant, Gym"
+                className="rounded-xl border-gray-200 focus-visible:ring-brand"
+              />
+            </div>
           )}
         </div>
-      )}
-
-      {/* Pet Policy (residential only) */}
-      {showResidentialFields && (
-        <>
-          <SectionTitle>
-            Pet Policy <span className="text-red-500">*</span>
-          </SectionTitle>
-          <div className="flex gap-3">
-            {["Allowed", "Not Allowed"].map((v) => (
-              <RadioPill
-                key={v}
-                checked={data.pet_policy === v}
-                label={v}
-                onChange={() => onChange({ pet_policy: v as any })}
-              />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Tenant Preference (rent only) */}
-      {isRentLease && (
-        <>
-          <SectionTitle>
-            Tenant Preference <span className="text-red-500">*</span>
-          </SectionTitle>
-          <div className="flex gap-2 flex-wrap">
-            {(isCommercial
-              ? ["Individual", "Company", "Any"]
-              : ["Family", "Bachelor", "Students", "Working Professionals", "Any"]
-            ).map((t) => (
-              <CheckPill
-                key={t}
-                checked={tenantPrefs.includes(t)}
-                label={t}
-                onChange={() =>
-                  onChange({ tenant_preference: toggleArray(tenantPrefs, t) })
-                }
-              />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Parking */}
-      <SectionTitle>
-        Parking Availability <span className="text-red-500">*</span>
-      </SectionTitle>
-      <div className="flex gap-3">
-        {["Yes", "No"].map((v) => (
-          <RadioPill
-            key={v}
-            checked={data.parking_availability === v}
-            label={v}
-            onChange={() =>
-              onChange({ parking_availability: v as any })
-            }
-          />
-        ))}
       </div>
-      {data.parking_availability === "Yes" && (
-        <div className="mt-3 grid grid-cols-2 gap-4">
-          <div>
-            <Label className="mb-2 block">Parking Type</Label>
-            <div className="flex gap-3">
-              {["Bike", "Car"].map((t) => (
-                <CheckPill
-                  key={t}
-                  checked={parkingTypes.includes(t)}
-                  label={t}
-                  onChange={() =>
-                    onChange({ parking_type: toggleArray(parkingTypes, t) })
-                  }
-                />
-              ))}
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label>No. of Slots</Label>
-            <Input
-              type="number"
-              value={data.parking_slots_count || ""}
-              onChange={(e) => onChange({ parking_slots_count: e.target.value })}
-              placeholder="e.g. 2"
-            />
-          </div>
-        </div>
-      )}
 
-      {/* Rent/Lease specific */}
-      {isRentLease && (
-        <div className="mt-4 p-4 rounded-xl border border-gray-200 bg-gray-50">
-          <SectionTitle>
-            Are you going to… <span className="text-red-500">*</span>
-          </SectionTitle>
-          <div className="flex gap-3">
-            {["rent", "lease"].map((v) => (
-              <RadioPill
-                key={v}
-                checked={data.rent_lease_type === v}
-                label={v.charAt(0).toUpperCase() + v.slice(1)}
-                onChange={() => onChange({ rent_lease_type: v as any })}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* ─── SECTION 3: FEATURES & AMENITIES (Booleans / Pills) ─── */}
+      {(allowedFields.balcony ||
+        allowedFields.garden ||
+        allowedFields.swimming_pool ||
+        allowedFields.corner_property ||
+        allowedFields.compound_wall ||
+        allowedFields.utility_area ||
+        allowedFields.pantry_area ||
+        allowedFields.loading_unloading_facility ||
+        allowedFields.pet_policy ||
+        allowedFields.tenant_preference ||
+        allowedFields.parking_availability) && (
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+            <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2 mb-2">
+              Features & Preferences
+            </h4>
 
-      {/* Pricing */}
-      {(!isRentLease || data.rent_lease_type) && (
-        <div className="mt-4 rounded-xl border border-gray-200 overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b font-semibold text-sm text-gray-700">
-            Pricing Details
-          </div>
-          <div className="p-4 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>
-                  {isRentLease
-                    ? data.rent_lease_type === "lease"
-                      ? "Lease Amount"
-                      : "Rent Amount"
-                    : "Price"}{" "}
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  value={data.price || ""}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 12);
-                    onChange({ price: raw });
-                  }}
-                  placeholder="Enter amount"
-                />
-                {data.price && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {priceToWords(Number(data.price))}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Security Deposit (rent only) */}
-            {isRentLease && data.rent_lease_type === "rent" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>
-                    Security Deposit <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    value={data.security_deposit || ""}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 12);
-                      onChange({ security_deposit: raw });
-                    }}
-                    placeholder="Enter amount"
-                  />
-                </div>
-                <div>
-                  <Label className="mb-2 block">Deposit Type</Label>
-                  <div className="flex gap-3">
-                    {["Fixed", "Negotiable"].map((v) => (
+            {/* Toggle button specs */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {allowedFields.balcony && (
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium block">Has Balcony?</Label>
+                  <div className="flex gap-2">
+                    {["Yes", "No"].map((v) => (
                       <RadioPill
                         key={v}
-                        checked={data.security_deposit_type === v}
+                        disabled={disabled}
+                        checked={data.balcony === v}
                         label={v}
-                        onChange={() => onChange({ security_deposit_type: v as any })}
+                        onChange={() => onChange({ balcony: v as any })}
                       />
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Maintenance */}
-            {isRentLease && data.rent_lease_type === "rent" && (
-              <div>
-                <Label className="mb-2 block">
-                  Maintenance Charge <span className="text-red-500">*</span>
+              {allowedFields.garden && (
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium block">Garden / Lawn?</Label>
+                  <div className="flex gap-2">
+                    {["Yes", "No"].map((v) => (
+                      <RadioPill
+                        key={v}
+                        disabled={disabled}
+                        checked={data.garden === v}
+                        label={v}
+                        onChange={() => onChange({ garden: v as any })}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {allowedFields.swimming_pool && (
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium block">Swimming Pool?</Label>
+                  <div className="flex gap-2">
+                    {["Yes", "No"].map((v) => (
+                      <RadioPill
+                        key={v}
+                        disabled={disabled}
+                        checked={data.swimming_pool === v}
+                        label={v}
+                        onChange={() => onChange({ swimming_pool: v as any })}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {allowedFields.corner_property && (
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium block">Corner Property?</Label>
+                  <div className="flex gap-2">
+                    {["Yes", "No"].map((v) => (
+                      <RadioPill
+                        key={v}
+                        disabled={disabled}
+                        checked={data.corner_property === v}
+                        label={v}
+                        onChange={() => onChange({ corner_property: v as any })}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {allowedFields.compound_wall && (
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium block">Compound Wall?</Label>
+                  <div className="flex gap-2">
+                    {["Yes", "No"].map((v) => (
+                      <RadioPill
+                        key={v}
+                        disabled={disabled}
+                        checked={data.compound_wall === v}
+                        label={v}
+                        onChange={() => onChange({ compound_wall: v as any })}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {allowedFields.utility_area && (
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium block">Utility Area?</Label>
+                  <div className="flex gap-2">
+                    {["Yes", "No"].map((v) => (
+                      <RadioPill
+                        key={v}
+                        disabled={disabled}
+                        checked={data.utility_area === v}
+                        label={v}
+                        onChange={() => onChange({ utility_area: v as any })}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {allowedFields.pantry_area && (
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium block">Pantry Area?</Label>
+                  <div className="flex gap-2">
+                    {["Yes", "No"].map((v) => (
+                      <RadioPill
+                        key={v}
+                        disabled={disabled}
+                        checked={data.pantry_area === v}
+                        label={v}
+                        onChange={() => onChange({ pantry_area: v as any })}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {allowedFields.loading_unloading_facility && (
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium block">
+                    Loading/Unloading Facility? {data.property_for === "rent_lease" && (subtype === "godown" || subtype === "warehouse") && <span className="text-red-500">*</span>}
+                  </Label>
+                  <div className="flex gap-2">
+                    {["Yes", "No"].map((v) => (
+                      <RadioPill
+                        key={v}
+                        disabled={disabled}
+                        checked={data.loading_unloading_facility === v}
+                        label={v}
+                        onChange={() => onChange({ loading_unloading_facility: v as any })}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {allowedFields.pet_policy && (
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium block">
+                    Pet Policy <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="flex gap-2">
+                    {["Allowed", "Not Allowed"].map((v) => (
+                      <RadioPill
+                        key={v}
+                        disabled={disabled}
+                        checked={data.pet_policy === v}
+                        label={v}
+                        onChange={() => onChange({ pet_policy: v as any })}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Tenant Preferences (checkboxes) */}
+            {allowedFields.tenant_preference && (
+              <div className="space-y-2 pt-2">
+                <Label className="text-gray-700 font-medium block">
+                  Tenant Preference <span className="text-red-500">*</span>
                 </Label>
-                <div className="flex gap-3 mb-2">
-                  {["Yes", "No"].map((v) => (
-                    <RadioPill
-                      key={v}
-                      checked={data.maintenance_charge_status === v}
-                      label={v}
-                      onChange={() => onChange({ maintenance_charge_status: v as any })}
+                <div className="flex gap-2 flex-wrap">
+                  {(["shop", "building", "godown", "warehouse", "office_space", "land"].includes(subtype)
+                    ? ["Individual", "Company", "Any"]
+                    : ["Family", "Bachelor", "Students", "Working Professionals", "Any"]
+                  ).map((t) => (
+                    <CheckPill
+                      key={t}
+                      disabled={disabled}
+                      checked={tenantPrefs.includes(t)}
+                      label={t}
+                      onChange={() =>
+                        onChange({ tenant_preference: toggleArray(tenantPrefs, t) })
+                      }
                     />
                   ))}
                 </div>
-                {data.maintenance_charge_status === "Yes" && (
-                  <Input
-                    value={data.maintenance_charge_amount || ""}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 12);
-                      onChange({ maintenance_charge_amount: raw });
-                    }}
-                    placeholder="Enter amount"
-                  />
+              </div>
+            )}
+
+            {/* Parking Availability Details */}
+            {allowedFields.parking_availability && (
+              <div className="space-y-3 pt-2 border-t border-gray-50">
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium block">
+                    Parking Availability {(data.property_for === "rent_lease" || ["apartment", "villa", "individual_house"].includes(subtype) || subtype === "office_space") && <span className="text-red-500">*</span>}
+                  </Label>
+                  <div className="flex gap-2">
+                    {["Yes", "No"].map((v) => (
+                      <RadioPill
+                        key={v}
+                        disabled={disabled}
+                        checked={data.parking_availability === v}
+                        label={v}
+                        onChange={() =>
+                          onChange({
+                            parking_availability: v as any,
+                            parking_type: v === "No" ? [] : data.parking_type,
+                            parking_slots_count: v === "No" ? "" : data.parking_slots_count,
+                          })
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {data.parking_availability === "Yes" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                    <div className="space-y-2">
+                      <Label className="text-gray-700 font-medium block">Parking Type</Label>
+                      <div className="flex gap-2">
+                        {["Bike", "Car"].map((t) => (
+                          <CheckPill
+                            key={t}
+                            disabled={disabled}
+                            checked={parkingTypes.includes(t)}
+                            label={t}
+                            onChange={() =>
+                              onChange({ parking_type: toggleArray(parkingTypes, t) })
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-gray-700 font-medium">No. of Slots</Label>
+                      <Input
+                        type="number"
+                        disabled={disabled}
+                        value={data.parking_slots_count || ""}
+                        onChange={(e) => handleNumberInput("parking_slots_count", e.target.value)}
+                        placeholder="e.g. 2"
+                        className="rounded-xl border-gray-200 focus-visible:ring-brand"
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
             )}
+          </div>
+        )}
 
-            {/* Lease specific */}
-            {isRentLease && data.rent_lease_type === "lease" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>
-                    Lease Duration <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={data.lease_duration || ""}
-                    onValueChange={(v) => onChange({ lease_duration: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Duration" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LEASE_DURATIONS.map((d) => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>
-                    Maintenance Responsibility <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={data.maintenance_responsibility || ""}
-                    onValueChange={(v) => onChange({ maintenance_responsibility: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MAINTENANCE_RESP.map((r) => (
-                        <SelectItem key={r} value={r}>{r}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
+      {/* ─── SECTION 4: AGREEMENTS & TERMS (Rent / Lease Selection) ─── */}
+      {allowedFields.rent_lease_type && (
+        <div className="bg-brand/5 p-5 rounded-2xl border border-brand/10 space-y-3">
+          <Label className="text-brand font-semibold text-sm block">
+            Agreement Type <span className="text-red-500">*</span>
+          </Label>
+          <div className="flex gap-3">
+            {["rent", "lease"].map((v) => (
+              <RadioPill
+                key={v}
+                disabled={disabled}
+                checked={data.rent_lease_type === v}
+                label={v.charAt(0).toUpperCase() + v.slice(1)}
+                onChange={() =>
+                  onChange({
+                    rent_lease_type: v as any,
+                    price: "",
+                    security_deposit: "",
+                    maintenance_charge_amount: "",
+                  })
+                }
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
-            {/* Notice Period & Availability */}
-            {isRentLease && data.rent_lease_type === "rent" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>Notice Period</Label>
-                  <Select
-                    value={data.notice_period || ""}
-                    onValueChange={(v) => onChange({ notice_period: v })}
+      {/* ─── SECTION 5: KEY SPECIFICATIONS ─── */}
+      {allowedFields.key_specifications && (
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+          <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2">
+            Key Specifications <span className="text-gray-400 font-normal text-xs ml-1">(Highlight key features of your shop)</span>
+          </h4>
+          <div className="space-y-3">
+            {(data.key_specifications && data.key_specifications.length > 0 ? data.key_specifications : [""]).map((spec, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <Input
+                  disabled={disabled}
+                  value={spec}
+                  onChange={(e) => {
+                    const currentSpecs = data.key_specifications && data.key_specifications.length > 0
+                      ? [...data.key_specifications]
+                      : [""];
+                    currentSpecs[index] = e.target.value;
+                    onChange({ key_specifications: currentSpecs });
+                  }}
+                  placeholder="e.g. Double-height entrance, High ceiling, Heavy load bearing floor"
+                  className="rounded-xl border-gray-200 focus-visible:ring-brand flex-1"
+                />
+                {((data.key_specifications || []).length > 1 || index > 0) && (
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => {
+                      const currentSpecs = [...(data.key_specifications || [])];
+                      const nextSpecs = currentSpecs.filter((_, i) => i !== index);
+                      onChange({ key_specifications: nextSpecs.length > 0 ? nextSpecs : [""] });
+                    }}
+                    className="p-2.5 rounded-xl border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 transition-all duration-200"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Period" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {NOTICE_PERIODS.map((p) => (
-                        <SelectItem key={p} value={p}>{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>
-                    Availability <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={data.availability_status || "Ready to occupy"}
-                    onValueChange={(v) => onChange({ availability_status: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Ready to occupy">Ready to Occupy</SelectItem>
-                      <SelectItem value="Available From">Available From</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {data.availability_status === "Available From" && (
-                    <Input
-                      type="date"
-                      className="mt-2"
-                      value={data.availability_date || ""}
-                      onChange={(e) => onChange({ availability_date: e.target.value })}
-                    />
-                  )}
-                </div>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3 6h18" />
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                    </svg>
+                  </button>
+                )}
               </div>
+            ))}
+            {!disabled && (
+              <button
+                type="button"
+                onClick={() => {
+                  const currentSpecs = data.key_specifications && data.key_specifications.length > 0
+                    ? [...data.key_specifications]
+                    : [""];
+                  onChange({ key_specifications: [...currentSpecs, ""] });
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-dashed border-brand/40 bg-brand/5 text-brand text-xs font-semibold hover:bg-brand/10 hover:border-brand/60 transition-all duration-200"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14" />
+                  <path d="M12 5v14" />
+                </svg>
+                Add Key Specification
+              </button>
             )}
           </div>
         </div>
       )}
 
-      {/* Ownership (commercial) */}
-      {isCommercial && (
-        <div className="mt-4 space-y-1">
-          <Label>
-            Ownership <span className="text-red-500">*</span>
-          </Label>
-          <Select
-            value={data.ownership_type || ""}
-            onValueChange={(v) => onChange({ ownership_type: v })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent>
-              {OWNERSHIP_TYPES.map((o) => (
-                <SelectItem key={o} value={o}>{o}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* ─── SECTION 6: PRICING DETAILS ─── */}
+      {allowedFields.price && (!allowedFields.rent_lease_type || data.rent_lease_type) && (
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+          <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2">
+            Pricing Details
+          </h4>
+
+          {data.property_for === "rent_lease" ? (
+            <div className="space-y-6">
+              {/* Rent / Lease Amount row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                <div className="space-y-1.5">
+                  <Label className="text-gray-700 font-medium">
+                    {data.rent_lease_type === "lease" ? "Lease Amount" : "Rent Amount"}{" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    disabled={disabled}
+                    value={formatNumberWithCommas(data.price || "")}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/,/g, "");
+                      handleDecimalInput("price", rawValue);
+                    }}
+                    placeholder="Enter amount (₹)"
+                    className="rounded-xl border-gray-200 focus-visible:ring-brand font-medium"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-gray-500 font-medium">Amount in Words</Label>
+                  <Input
+                    disabled
+                    value={convertNumberToWords(data.price || "")}
+                    placeholder="Rupees in words"
+                    className="rounded-xl border-gray-200 bg-gray-50 text-gray-500 font-medium cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              {/* Lease-Specific Fields: Lease Duration & Maintenance Paid By */}
+              {data.rent_lease_type === "lease" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                  {allowedFields.lease_duration && (
+                    <div className="space-y-1.5">
+                      <Label className="text-gray-700 font-medium">
+                        Lease Duration <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        disabled={disabled}
+                        value={data.lease_duration || ""}
+                        onValueChange={(v) => onChange({ lease_duration: v })}
+                      >
+                        <SelectTrigger className="rounded-xl border-gray-200">
+                          <SelectValue placeholder="Select Duration" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LEASE_DURATIONS.map((d) => (
+                            <SelectItem key={d} value={d}>{d}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {allowedFields.maintenance_responsibility && (
+                    <div className="space-y-1.5">
+                      <Label className="text-gray-700 font-medium">
+                        Maintenance Paid By <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        disabled={disabled}
+                        value={data.maintenance_responsibility || ""}
+                        onValueChange={(v) => onChange({ maintenance_responsibility: v })}
+                      >
+                        <SelectTrigger className="rounded-xl border-gray-200">
+                          <SelectValue placeholder="Select Party" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MAINTENANCE_RESP.map((r) => (
+                            <SelectItem key={r} value={r}>{r}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Security Deposit (Rent Only) */}
+              {data.rent_lease_type === "rent" && allowedFields.security_deposit && (
+                <div className="space-y-4 pt-2 border-t border-gray-50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                    <div className="space-y-1.5">
+                      <Label className="text-gray-700 font-medium">
+                        Security Deposit <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        disabled={disabled}
+                        value={formatNumberWithCommas(data.security_deposit || "")}
+                        onChange={(e) => {
+                          const rawValue = e.target.value.replace(/,/g, "");
+                          handleDecimalInput("security_deposit", rawValue);
+                        }}
+                        placeholder="Enter deposit (₹)"
+                        className="rounded-xl border-gray-200 focus-visible:ring-brand font-medium"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-gray-500 font-medium">Amount in Words</Label>
+                      <Input
+                        disabled
+                        value={convertNumberToWords(data.security_deposit || "")}
+                        placeholder="Rupees in words"
+                        className="rounded-xl border-gray-200 bg-gray-50 text-gray-500 font-medium cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  {allowedFields.security_deposit_type && (
+                    <div className="flex gap-2">
+                      {["Fixed", "Negotiable"].map((v) => (
+                        <RadioPill
+                          key={v}
+                          disabled={disabled}
+                          checked={data.security_deposit_type === v}
+                          label={v}
+                          onChange={() => onChange({ security_deposit_type: v as any })}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Maintenance Charge (Rent Only) */}
+              {data.rent_lease_type === "rent" && allowedFields.maintenance_charge_status && (
+                <div className="space-y-4 pt-2 border-t border-gray-50">
+                  <div className="space-y-2">
+                    <Label className="text-gray-700 font-medium block">
+                      Maintenance Charge <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="flex gap-2">
+                      {["Yes", "No"].map((v) => (
+                        <RadioPill
+                          key={v}
+                          disabled={disabled}
+                          checked={data.maintenance_charge_status === v}
+                          label={v}
+                          onChange={() =>
+                            onChange({
+                              maintenance_charge_status: v as any,
+                              maintenance_charge_amount: v === "No" ? "" : data.maintenance_charge_amount,
+                            })
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {data.maintenance_charge_status === "Yes" && allowedFields.maintenance_charge_amount && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                      <div className="space-y-1.5">
+                        <Input
+                          disabled={disabled}
+                          value={formatNumberWithCommas(data.maintenance_charge_amount || "")}
+                          onChange={(e) => {
+                            const rawValue = e.target.value.replace(/,/g, "");
+                            handleDecimalInput("maintenance_charge_amount", rawValue);
+                          }}
+                          placeholder="Enter amount (₹)"
+                          className="rounded-xl border-gray-200 focus-visible:ring-brand font-medium"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-gray-500 font-medium">Amount in Words</Label>
+                        <Input
+                          disabled
+                          value={convertNumberToWords(data.maintenance_charge_amount || "")}
+                          placeholder="Rupees in words"
+                          className="rounded-xl border-gray-200 bg-gray-50 text-gray-500 font-medium cursor-not-allowed"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Notice Period & Availability Dates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                {allowedFields.notice_period && (
+                  <div className="space-y-1.5">
+                    <Label className="text-gray-700 font-medium">Notice Period</Label>
+                    <Select
+                      disabled={disabled}
+                      value={data.notice_period || ""}
+                      onValueChange={(v) => onChange({ notice_period: v })}
+                    >
+                      <SelectTrigger className="rounded-xl border-gray-200">
+                        <SelectValue placeholder="Select Notice" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {NOTICE_PERIODS.map((p) => (
+                          <SelectItem key={p} value={p}>{p}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {allowedFields.availability_status && (
+                  <div className="space-y-1.5">
+                    <Label className="text-gray-700 font-medium">
+                      Availability <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      disabled={disabled}
+                      value={data.availability_status || "Ready to Occupy"}
+                      onValueChange={(v) => onChange({ availability_status: v })}
+                    >
+                      <SelectTrigger className="rounded-xl border-gray-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Ready to Occupy">Ready to Occupy</SelectItem>
+                        <SelectItem value="Available From">Available From</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {data.availability_status === "Available From" && allowedFields.availability_date && (
+                      <Input
+                        type="date"
+                        disabled={disabled}
+                        className="rounded-xl border-gray-200 mt-2 focus-visible:ring-brand"
+                        value={data.availability_date || ""}
+                        onChange={(e) => onChange({ availability_date: e.target.value })}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Selling Price Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                <div className="space-y-1.5">
+                  <Label className="text-gray-700 font-medium">
+                    Selling Price <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    disabled={disabled}
+                    value={formatNumberWithCommas(data.price || "")}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/,/g, "");
+                      handleDecimalInput("price", rawValue);
+                    }}
+                    placeholder="Enter amount (₹)"
+                    className="rounded-xl border-gray-200 focus-visible:ring-brand font-medium"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-gray-500 font-medium">Amount in Words</Label>
+                  <Input
+                    disabled
+                    value={convertNumberToWords(data.price || "")}
+                    placeholder="Rupees in words"
+                    className="rounded-xl border-gray-200 bg-gray-50 text-gray-500 font-medium cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              {/* Availability Status for Sell */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                {allowedFields.availability_status && (
+                  <div className="space-y-1.5">
+                    <Label className="text-gray-700 font-medium">
+                      Availability <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      disabled={disabled}
+                      value={data.availability_status || "Ready to Occupy"}
+                      onValueChange={(v) => onChange({ availability_status: v })}
+                    >
+                      <SelectTrigger className="rounded-xl border-gray-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Ready to Occupy">Ready to Occupy</SelectItem>
+                        <SelectItem value="Available From">Available From</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {data.availability_status === "Available From" && allowedFields.availability_date && (
+                      <Input
+                        type="date"
+                        disabled={disabled}
+                        className="rounded-xl border-gray-200 mt-2 focus-visible:ring-brand"
+                        value={data.availability_date || ""}
+                        onChange={(e) => onChange({ availability_date: e.target.value })}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+
+      {/* ─── SECTION 7: PROPERTY IMAGES ─── */}
+      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+        <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2">
+          Property Images <span className="text-gray-400 font-normal text-xs ml-1">(Max 2MB each, up to 15)</span>
+        </h4>
+
+        {data.images && data.images.length > 0 ? (
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+            {data.images.map((imgUrl, idx) => (
+              <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={imgUrl} alt={`Property ${idx + 1}`} className="w-full h-full object-cover" />
+                {!disabled && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange({ images: data.images?.filter((_, i) => i !== idx) });
+                    }}
+                    className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md opacity-90 transition-opacity"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          disabled && (
+            <div className="border border-dashed border-gray-200 rounded-xl p-8 text-center bg-gray-50/50">
+              <p className="text-sm text-gray-400 font-medium">No images uploaded for this listing.</p>
+            </div>
+          )
+        )}
+
+        {!disabled && (
+          <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center bg-gray-50/50 hover:border-brand/40 transition-colors cursor-pointer relative">
+            <p className="text-sm text-gray-600 font-medium">
+              Click or drag images here
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Accepted: JPG, JPEG, PNG only
+            </p>
+            <label className="mt-3 inline-block cursor-pointer">
+              <input
+                type="file"
+                multiple
+                accept="image/jpeg,image/jpg,image/png"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files) {
+                    const filesArray = Array.from(e.target.files);
+                    const newImages = filesArray.map(file => URL.createObjectURL(file));
+                    onChange({ images: [...(data.images || []), ...newImages] });
+                  }
+                }}
+              />
+              <span className="px-4 py-2 bg-brand text-white text-sm font-semibold rounded-lg hover:bg-brand/90 transition-colors">
+                Browse Files
+              </span>
+            </label>
+          </div>
+        )}
+      </div>
+
+      {/* ─── SECTION: AUTO-RENEWAL OPTIONS ─── */}
+      {data.property_for === "sell" && (
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+          <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2">
+            Auto-Renewal Options <span className="text-gray-400 font-normal text-xs ml-1">(Optional)</span>
+          </h4>
+          <div className="flex flex-col sm:flex-row gap-4 pt-1">
+            <div
+              onClick={() => {
+                if (disabled) return;
+                const nextVal = !data.renew_24_hours;
+                onChange({
+                  renew_24_hours: nextVal,
+                  renew_30_days: false,
+                });
+              }}
+              className={cn(
+                "flex items-start gap-3 p-3.5 rounded-xl border transition-all duration-200 cursor-pointer select-none flex-1",
+                data.renew_24_hours
+                  ? "bg-brand/5 border-brand/40 shadow-sm"
+                  : "bg-gray-50/50 border-gray-100 hover:bg-gray-50 hover:border-gray-200",
+                disabled && "opacity-60 cursor-not-allowed"
+              )}
+            >
+              <div className={cn(
+                "w-4 h-4 rounded-full border flex items-center justify-center mt-0.5 transition-colors duration-200 flex-shrink-0",
+                data.renew_24_hours
+                  ? "border-brand bg-brand"
+                  : "border-gray-300 bg-white"
+              )}>
+                {data.renew_24_hours && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                )}
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-sm font-semibold text-gray-700">Renew every 24 Hours</span>
+              </div>
+            </div>
+
+            <div
+              onClick={() => {
+                if (disabled) return;
+                const nextVal = !data.renew_30_days;
+                onChange({
+                  renew_30_days: nextVal,
+                  renew_24_hours: false,
+                });
+              }}
+              className={cn(
+                "flex items-start gap-3 p-3.5 rounded-xl border transition-all duration-200 cursor-pointer select-none flex-1",
+                data.renew_30_days
+                  ? "bg-brand/5 border-brand/40 shadow-sm"
+                  : "bg-gray-50/50 border-gray-100 hover:bg-gray-50 hover:border-gray-200",
+                disabled && "opacity-60 cursor-not-allowed"
+              )}
+            >
+              <div className={cn(
+                "w-4 h-4 rounded-full border flex items-center justify-center mt-0.5 transition-colors duration-200 flex-shrink-0",
+                data.renew_30_days
+                  ? "border-brand bg-brand"
+                  : "border-gray-300 bg-white"
+              )}>
+                {data.renew_30_days && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                )}
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-sm font-semibold text-gray-700">Renew every 30 Days</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

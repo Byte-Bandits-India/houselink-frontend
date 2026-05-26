@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { X, Plus } from "lucide-react";
-import { PropertyFormData, AMENITIES_LIST } from "@/types/property";
+import { Trash2, Plus } from "lucide-react";
+import { PropertyFormData, getSchemaFields } from "@/types/property";
+import { getFeatures, getFacilities } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Props {
   data: PropertyFormData;
@@ -13,112 +21,242 @@ interface Props {
   disabled?: boolean;
 }
 
-function toggleItem(arr: string[], val: string): string[] {
-  return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
-}
+const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+  <h3 className="text-sm font-semibold text-gray-800 mt-6 mb-3">{children}</h3>
+);
 
-export default function Step4Amenities({ data, onChange }: Props) {
-  const [tagInput, setTagInput] = useState("");
-  const amenities = data.amenities || [];
-  const tags = data.tags || [];
+const STATIC_FEATURES = [
+  { id: 1, name: "Wifi" },
+  { id: 2, name: "Swimming pool" },
+  { id: 3, name: "Security" },
+  { id: 4, name: "Garden" },
+  { id: 5, name: "Balcony" },
+  { id: 6, name: "Air Conditioning" },
+  { id: 7, name: "Fitness center" },
+  { id: 8, name: "Car Parking" },
+  { id: 9, name: "Bike Parking" }
+];
 
-  const addTag = () => {
-    const val = tagInput.trim();
-    if (val && !tags.includes(val)) {
-      onChange({ tags: [...tags, val] });
+const STATIC_FACILITIES = [
+  { id: 1, name: "School" },
+  { id: 2, name: "Hospital" },
+  { id: 3, name: "Railway Station" },
+  { id: 4, name: "Metro Station" },
+  { id: 5, name: "Shopping Mall" },
+  { id: 6, name: "Supermarket" },
+  { id: 7, name: "Park" },
+  { id: 8, name: "Bank / ATM" }
+];
+
+const DIRECTIONS = [
+  { value: "north", label: "North" },
+  { value: "south", label: "South" },
+  { value: "east", label: "East" },
+  { value: "west", label: "West" },
+  { value: "north_east", label: "North East" },
+  { value: "north_west", label: "North West" },
+  { value: "south_east", label: "South East" },
+  { value: "south_west", label: "South West" },
+];
+
+export default function Step4Amenities({ data, onChange, disabled = false }: Props) {
+  const subtype = data.property_subtype || "";
+  const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
+
+  const isDirectionRequired =
+    data.property_for === "sell" &&
+    (data.owner_type === "Builder" || data.owner_type === "Consultant") &&
+    subtype === "plot";
+
+  const [dbFeatures, setDbFeatures] = useState<Array<{ id: number; name: string }>>([]);
+  const [dbFacilities, setDbFacilities] = useState<Array<{ id: number; name: string }>>([]);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const featuresRes = await getFeatures();
+        if (featuresRes.success && featuresRes.data) {
+          setDbFeatures(featuresRes.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch features:", err);
+      }
+      try {
+        const facilitiesRes = await getFacilities();
+        if (facilitiesRes.success && facilitiesRes.data) {
+          setDbFacilities(facilitiesRes.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch facilities:", err);
+      }
     }
-    setTagInput("");
+    loadData();
+  }, []);
+
+  const featuresList = dbFeatures.length > 0 ? dbFeatures : STATIC_FEATURES;
+  const facilitiesList = dbFacilities.length > 0 ? dbFacilities : STATIC_FACILITIES;
+
+  const selectedFeatures = data.features || [];
+  const selectedFacilities = data.facilities || [];
+
+  const handleToggleFeature = (featureId: number) => {
+    if (disabled) return;
+    const exists = selectedFeatures.some((f) => f.featureId === featureId);
+    let updated;
+    if (exists) {
+      updated = selectedFeatures.filter((f) => f.featureId !== featureId);
+    } else {
+      updated = [...selectedFeatures, { featureId }];
+    }
+    onChange({ features: updated });
+  };
+
+  const handleAddFacility = () => {
+    if (disabled) return;
+    const defaultId = facilitiesList[0]?.id || 1;
+    onChange({
+      facilities: [...selectedFacilities, { facilityId: defaultId, facilityValue: "" }]
+    });
+  };
+
+  const handleUpdateFacility = (index: number, patch: Partial<{ facilityId: number; facilityValue: string }>) => {
+    if (disabled) return;
+    const updated = selectedFacilities.map((f, idx) => {
+      if (idx === index) {
+        return { ...f, ...patch };
+      }
+      return f;
+    });
+    onChange({ facilities: updated });
+  };
+
+  const handleRemoveFacility = (index: number) => {
+    if (disabled) return;
+    const updated = selectedFacilities.filter((_, idx) => idx !== index);
+    onChange({ facilities: updated });
   };
 
   return (
     <div className="space-y-6">
-      {/* Amenities */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-3">
-          Amenities
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {AMENITIES_LIST.map((a) => {
-            const checked = amenities.includes(a);
+      {/* Nearby Key Facilities */}
+      <div className="space-y-1">
+        <h3 className="text-sm font-bold text-gray-800 mt-2 mb-3">Nearby Key Facilities</h3>
+        <div className="space-y-3">
+          {selectedFacilities.map((fac, index) => {
+            const currentVal = fac.facilityValue || "";
             return (
-              <button
-                key={a}
-                type="button"
-                onClick={() => onChange({ amenities: toggleItem(amenities, a) })}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all duration-200 text-left",
-                  checked
-                    ? "bg-brand/10 border-brand text-brand"
-                    : "bg-white border-gray-200 text-gray-600 hover:border-brand/50"
-                )}
-              >
-                <span
+              <div key={index} className="flex items-center gap-3">
+                <div className="flex-1 min-w-[200px]">
+                  <Select
+                    value={String(fac.facilityId)}
+                    onValueChange={(v) => handleUpdateFacility(index, { facilityId: Number(v) })}
+                    disabled={disabled}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select Facility" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {facilitiesList.map((f) => (
+                        <SelectItem key={f.id} value={String(f.id)}>
+                          {f.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-[2] relative">
+                  <Input
+                    value={currentVal}
+                    onChange={(e) => handleUpdateFacility(index, { facilityValue: e.target.value })}
+                    placeholder="Distance (E.g: 200m , 1km..) from here"
+                    maxLength={50}
+                    disabled={disabled}
+                    className="pr-16"
+                  />
+                  <span className="absolute right-3 top-2.5 text-xs text-gray-400">
+                    {currentVal.length}/50
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFacility(index)}
+                  disabled={disabled}
                   className={cn(
-                    "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors",
-                    checked ? "bg-brand border-brand" : "border-gray-300"
+                    "p-2.5 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors bg-white",
+                    disabled && "cursor-not-allowed opacity-50"
                   )}
                 >
-                  {checked && (
-                    <svg viewBox="0 0 10 8" className="w-3 h-2.5 text-white fill-current">
-                      <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </span>
-                {a}
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={handleAddFacility}
+            disabled={disabled}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-sm",
+              disabled && "cursor-not-allowed opacity-50 hover:bg-white"
+            )}
+          >
+            <Plus className="w-4 h-4" /> Add Facility
+          </button>
+        </div>
+      </div>
+
+      {/* Features / Amenities */}
+      <div>
+        <SectionTitle>Features</SectionTitle>
+        <div className="flex flex-wrap gap-2">
+          {featuresList.map((f) => {
+            const checked = selectedFeatures.some((sf) => sf.featureId === f.id);
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => handleToggleFeature(f.id)}
+                disabled={disabled}
+                className={cn(
+                  "px-5 py-2.5 rounded-full border text-sm font-semibold transition-all duration-200",
+                  checked
+                    ? "bg-brand/10 border-brand text-brand shadow-sm shadow-brand/5"
+                    : "bg-white border-gray-200 text-gray-600 hover:border-brand/50",
+                  disabled && "cursor-not-allowed opacity-60"
+                )}
+              >
+                {f.name}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Tags */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-3">
-          Property Tags
-        </h3>
-        <div className="flex gap-2 mb-3">
-          <Input
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addTag();
-              }
-            }}
-            placeholder="Add a tag and press Enter"
-            className="flex-1"
-          />
-          <button
-            type="button"
-            onClick={addTag}
-            className="flex items-center gap-1 px-4 py-2 bg-brand text-white text-sm font-semibold rounded-lg hover:bg-brand/90 transition-colors"
+      {/* Direction Facing */}
+      {allowedFields.direction_facing && (
+        <div className="space-y-1">
+          <SectionTitle>
+            Direction Facing {isDirectionRequired && <span className="text-red-500">*</span>}
+          </SectionTitle>
+          <Select
+            value={data.direction_facing || ""}
+            onValueChange={(v) => onChange({ direction_facing: v })}
+            disabled={disabled}
           >
-            <Plus className="w-4 h-4" /> Add
-          </button>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Direction" />
+            </SelectTrigger>
+            <SelectContent>
+              {DIRECTIONS.map((dir) => (
+                <SelectItem key={dir.value} value={dir.value}>
+                  {dir.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="flex items-center gap-1.5 bg-brand/10 text-brand text-xs font-semibold px-3 py-1.5 rounded-full"
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() =>
-                    onChange({ tags: tags.filter((t) => t !== tag) })
-                  }
-                  className="hover:text-red-500 transition-colors"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }

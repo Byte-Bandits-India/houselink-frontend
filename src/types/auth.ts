@@ -24,6 +24,9 @@ export interface Customer {
   state: string;
   city: string;
   status: "active" | "inactive" | "suspended";
+  creditPointsOwner?: number;
+  creditPointsBuilder?: number;
+  creditPointsConsultant?: number;
   createdAt: string;
 }
 

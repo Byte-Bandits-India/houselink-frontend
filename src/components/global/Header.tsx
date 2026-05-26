@@ -204,7 +204,7 @@ export default function Header() {
 
           {/* ── LOGO ───────────────────────────────────────────────────────── */}
           <Link href="/" className="z-50 flex-shrink-0">
-            <Image src="/assets/logo.svg" alt="HouseLink360" width={160} height={44} priority />
+            <Image src="/assets/logo.svg" alt="HouseLink360" width={160} height={44} style={{ height: "auto" }} priority />
           </Link>
 
           {/* ── DESKTOP NAV ─────────────────────────────────────────────────── */}

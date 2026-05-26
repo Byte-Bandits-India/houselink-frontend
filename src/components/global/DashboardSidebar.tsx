@@ -15,7 +15,6 @@ import {
   LogOut,
   Menu,
   X,
-  UserCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

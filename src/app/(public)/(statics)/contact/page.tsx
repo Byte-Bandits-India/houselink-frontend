@@ -6,6 +6,8 @@ import Link from "next/link"
 import { motion, Variants } from "framer-motion"
 import { Form, Input, Button, message } from "antd"
 import { Phone, Mail, Home, ArrowRight } from "lucide-react"
+import { createContactMessage } from "@/lib/api"
+
 
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
@@ -53,16 +55,22 @@ export default function ContactPage() {
   async function onFinish(values: Record<string, string>) {
     setSubmitting(true)
     try {
-      // Replace with your API call: await fetch("/api/contact", { method: "POST", body: JSON.stringify(values) })
-      await new Promise((r) => setTimeout(r, 800))
+      await createContactMessage({
+        name: values.name.trim(),
+        email: values.email.trim(),
+        phone: values.phone.trim(),
+        message: values.message?.trim() || "",
+      })
       message.success("Your message has been sent! We'll get back to you soon.")
       form.resetFields()
-    } catch {
-      message.error("Something went wrong. Please try again.")
+    } catch (err: any) {
+      console.error(err)
+      message.error(err.message || "Something went wrong. Please try again.")
     } finally {
       setSubmitting(false)
     }
   }
+
 
   return (
     <div className="bg-surface text-ink overflow-hidden pb-16">

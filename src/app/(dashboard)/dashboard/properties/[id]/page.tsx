@@ -1,84 +1,12 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PropertyFormWizard from "@/components/property-form/PropertyFormWizard";
 import { PropertyFormData } from "@/types/property";
-
-/* ─── Mock pre-filled data (same source as edit page) ─────── */
-const MOCK_DATA: Record<number, Partial<PropertyFormData>> = {
-  101: {
-    property_for: "sell",
-    owner_type: "Owner",
-    property_main_type: "residential",
-    property_subtype: "apartment",
-    super_builtup_area: "1450",
-    builtup_unit: "1",
-    carpet_area: "1200",
-    total_floors: "12",
-    property_on_floor: "7",
-    name: "Greenwood Heights Apartment",
-    permalink: "greenwood-heights-apartment",
-    description:
-      "A beautiful 3BHK apartment in the heart of Bengaluru with modern amenities, great connectivity, and scenic views. Close to major tech parks and schools.",
-    house_type: "3BHK",
-    construction_age: "3-5 years",
-    bedrooms: "3",
-    bathrooms: "2",
-    balcony: "Yes",
-    furnishing_type: "Semi-Furnished",
-    water_supply: "Corporation",
-    food_preference: "No Restrictions",
-    pet_policy: "Allowed",
-    parking_availability: "Yes",
-    parking_type: ["Car"],
-    parking_slots_count: "1",
-    price: "8500000",
-    state: "Karnataka",
-    city: "Bengaluru",
-    area: "Whitefield",
-    address: "12, Greenwood Layout, Whitefield",
-    pincode: "560066",
-    amenities: ["Lift", "Power Backup", "Security", "CCTV", "Gym", "Club House"],
-    tags: ["Apartment", "Bengaluru", "Whitefield", "3BHK"],
-  },
-  102: {
-    property_for: "sell",
-    owner_type: "Owner",
-    property_main_type: "residential",
-    property_subtype: "villa",
-    super_builtup_area: "3200",
-    builtup_unit: "1",
-    name: "Sunrise Villa",
-    permalink: "sunrise-villa",
-    description:
-      "Luxurious standalone villa with a private garden, swimming pool, and dedicated parking. Ideal for families seeking premium living.",
-    house_type: "4BHK",
-    construction_age: "New Construction",
-    bedrooms: "4",
-    bathrooms: "4",
-    garden: "Yes",
-    swimming_pool: "Yes",
-    furnishing_type: "Furnished",
-    parking_availability: "Yes",
-    price: "22000000",
-    state: "Karnataka",
-    city: "Bengaluru",
-    area: "Sarjapur Road",
-    address: "45, Palm Grove, Sarjapur",
-    pincode: "560035",
-    amenities: ["Swimming Pool", "Garden", "Security", "Power Backup", "CCTV"],
-    tags: ["Villa", "Luxury", "Sarjapur"],
-  },
-};
-
-const moderationStatus: Record<number, string> = {
-  101: "approved",
-  102: "pending",
-  103: "approved",
-};
+import { getProperty, mapApiPayloadToFormData } from "@/lib/api";
 
 const moderationBadge: Record<string, string> = {
   approved: "bg-blue-100 text-blue-700",
@@ -95,8 +23,67 @@ export default function PropertyDetailPage({
   const router = useRouter();
   const propertyId = Number(id);
 
-  const data = MOCK_DATA[propertyId] ?? MOCK_DATA[101];
-  const modStatus = moderationStatus[propertyId] ?? "approved";
+  const [data, setData] = useState<PropertyFormData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [modStatus, setModStatus] = useState<string>("pending");
+
+  useEffect(() => {
+    async function loadProperty() {
+      if (isNaN(propertyId)) {
+        setError("Invalid property ID.");
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await getProperty(propertyId);
+        if (res.success && res.data) {
+          const mapped = mapApiPayloadToFormData(res.data);
+          setData(mapped);
+          setModStatus(res.data.moderationStatus || "pending");
+        } else {
+          setError("Failed to fetch property details.");
+        }
+      } catch (err: any) {
+        console.error("Error loading property:", err);
+        setError(err?.message || "An unexpected error occurred while loading property details.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadProperty();
+  }, [propertyId]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="w-10 h-10 text-brand animate-spin" />
+        <p className="text-sm font-semibold text-ink-muted animate-pulse">Loading property details...</p>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center bg-red-50/50 rounded-2xl border border-red-100 max-w-lg mx-auto">
+        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4">
+          <AlertCircle className="w-6 h-6" />
+        </div>
+        <h3 className="text-lg font-bold text-ink mb-2">Failed to load property details</h3>
+        <p className="text-sm text-ink-muted mb-6">{error || "Property not found."}</p>
+        <button
+          onClick={() => router.back()}
+          className="px-5 py-2.5 bg-brand text-white font-semibold text-sm rounded-xl hover:bg-brand/90 transition-colors shadow-sm"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
   const isPending = modStatus === "pending";
 
   return (
@@ -123,7 +110,7 @@ export default function PropertyDetailPage({
         <div className="flex items-center gap-2">
           <span className={cn(
             "text-xs font-semibold px-3 py-1 rounded-full capitalize",
-            moderationBadge[modStatus]
+            moderationBadge[modStatus] || "bg-gray-100 text-gray-700"
           )}>
             {modStatus}
           </span>
@@ -145,3 +132,4 @@ export default function PropertyDetailPage({
     </div>
   );
 }
+
