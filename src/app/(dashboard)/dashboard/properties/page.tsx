@@ -48,10 +48,13 @@ export default function PropertiesPage() {
   const [purpose, setPurpose] = useState<Purpose>("sell");
   const [ownerType, setOwnerType] = useState<OwnerType>("owner");
 
-  const loadProperties = async () => {
+  const loadProperties = async (showLoadingState: boolean | React.MouseEvent<any> = true) => {
     if (!user) return;
-    setIsLoading(true);
-    setError(null);
+    const shouldShow = showLoadingState === true || typeof showLoadingState !== "boolean";
+    if (shouldShow) {
+      setIsLoading(true);
+      setError(null);
+    }
     try {
       const res = await getUserProperties(Number(user.id));
       if (res.success && Array.isArray(res.data)) {
@@ -103,20 +106,32 @@ export default function PropertiesPage() {
         });
         setProperties(mapped);
       } else {
-        setError("Failed to parse user properties from API response.");
+        if (shouldShow) {
+          setError("Failed to parse user properties from API response.");
+        }
       }
     } catch (err: any) {
       console.error("Error fetching properties:", err);
-      setError(err?.message || "An unexpected error occurred while fetching properties.");
+      if (shouldShow) {
+        setError(err?.message || "An unexpected error occurred while fetching properties.");
+      }
     } finally {
-      setIsLoading(false);
+      if (shouldShow) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     if (!authLoading) {
       if (user) {
-        loadProperties();
+        loadProperties(true);
+
+        const interval = setInterval(() => {
+          loadProperties(false);
+        }, 5000);
+
+        return () => clearInterval(interval);
       } else {
         setIsLoading(false);
         setProperties([]);

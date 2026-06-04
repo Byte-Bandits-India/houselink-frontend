@@ -97,6 +97,7 @@ export default function PropertyCharts({ properties }: PropertyChartsProps) {
                 <CardContent>
                     <ChartContainer config={barConfig} className="h-[260px] w-full">
                         <BarChart
+                            key={JSON.stringify(viewsData)}
                             data={viewsData}
                             margin={{ top: 16, right: 8, left: -10, bottom: 0 }}
                         >
@@ -143,7 +144,7 @@ export default function PropertyCharts({ properties }: PropertyChartsProps) {
                 </CardHeader>
                 <CardContent className="flex flex-col items-center gap-4">
                     <ChartContainer config={pieConfig} className="h-[220px] w-full">
-                        <PieChart>
+                        <PieChart key={JSON.stringify(moderationData)}>
                             <ChartTooltip
                                 content={<ChartTooltipContent nameKey="status" hideLabel />}
                             />
