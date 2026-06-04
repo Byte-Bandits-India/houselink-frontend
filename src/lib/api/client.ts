@@ -87,6 +87,7 @@ async function request<T = unknown>(
     ...init,
     headers,
     body: body !== undefined ? (isFormData ? (body as FormData) : JSON.stringify(body)) : undefined,
+    cache: "no-store",
   });
 
   let json: unknown;

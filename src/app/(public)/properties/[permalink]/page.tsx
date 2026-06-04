@@ -2,6 +2,8 @@ import { getPropertyByPermalink, getImageUrl } from "@/lib/api";
 import PropertyGallery from "@/components/shared/PropertyGallery";
 import PropertyEnquirySidebar from "@/components/shared/PropertyEnquirySidebar";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 import {
   Heart,
   Calendar,

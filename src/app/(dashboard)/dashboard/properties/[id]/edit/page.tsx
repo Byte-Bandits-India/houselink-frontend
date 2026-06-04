@@ -162,6 +162,7 @@ export default function EditPropertyPage({
       setSubmitStep("success");
       await new Promise((r) => setTimeout(r, 800));
 
+      router.refresh();
       router.push("/dashboard/properties");
     } catch (err: any) {
       console.error("Submission failed:", err);

@@ -136,6 +136,7 @@ export default function AddPropertyPage() {
       setSubmitStep("success");
       await new Promise((r) => setTimeout(r, 800)); // allow user to feel success!
       
+      router.refresh();
       router.push("/dashboard/properties");
     } catch (err: any) {
       console.error("Submission failed:", err);
