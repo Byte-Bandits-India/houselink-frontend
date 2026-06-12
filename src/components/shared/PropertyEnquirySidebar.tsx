@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Lock, CheckCircle2, ChevronRight, AlertCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { sendOtp, verifyOtpLogin, ApiError } from "@/lib/api";
+import { sendOtp, verifyOtpLogin, ApiError, createLead } from "@/lib/api";
 
 interface PropertyEnquirySidebarProps {
   property: {
@@ -148,7 +148,7 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     }
   }, [isLoggedIn, user]);
 
-  const handleEnquireLoggedIn = (e: React.FormEvent) => {
+  const handleEnquireLoggedIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreedToTerms) {
       setFormError("You must agree to the Terms & Conditions.");
@@ -157,11 +157,24 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     setFormError("");
     setIsLoading(true);
 
-    // Mock enquiry submission
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await createLead({
+        property_id: property.id,
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        message: formData.message,
+      });
       setIsSubmitted(true);
-    }, 800);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setFormError(err.message);
+      } else {
+        setFormError("Failed to submit enquiry. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // ==========================================

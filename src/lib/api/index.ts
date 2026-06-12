@@ -88,6 +88,12 @@ export {
   createContactMessage,
 } from "./contacts";
 
+// Leads API
+export {
+  createLead,
+} from "./leads";
+
+
 
 
 
