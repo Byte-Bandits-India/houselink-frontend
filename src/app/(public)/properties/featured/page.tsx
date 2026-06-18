@@ -30,7 +30,6 @@ function FeaturedPropertiesListContent() {
       setError(null);
       try {
         const fetchParams: any = {
-          is_featured: "true",
           is_active: "true",
           moderation: "approved",
           page_size: "100",
@@ -167,6 +166,13 @@ function FeaturedPropertiesListContent() {
             );
           });
         }
+
+        // Sort: featured properties first
+        data.sort((a, b) => {
+          const aFeatured = a.isFeatured ? 1 : 0;
+          const bFeatured = b.isFeatured ? 1 : 0;
+          return bFeatured - aFeatured;
+        });
 
         // Map filtered backend properties to PropertyCardProps format
         const mapped = data.map(mapApiPropertyToCardProps);

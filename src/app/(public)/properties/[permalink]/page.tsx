@@ -36,7 +36,7 @@ export default async function PropertyDetailPage({
 
   const images = property.images && property.images.length > 0
     ? property.images.map((img: any) => ({ image_url: getImageUrl(img.image) }))
-    : [{ image_url: "/assets/blur.png" }];
+    : [{ image_url: "/assets/images/property_images/1746276498_pexels-kamo11235-667838.jpg" }];
 
   const priceFormatted =
     typeof property.price === "number" || typeof property.price === "string"
@@ -195,6 +195,16 @@ export default async function PropertyDetailPage({
                     property.ownershipType && [
                       "Ownership",
                       formatCapitalize(property.ownershipType),
+                    ],
+                    property.availabilityStatus && [
+                      "Possession status",
+                      property.availabilityStatus === "available_from" && property.availabilityDate
+                        ? `Available From ${new Date(property.availabilityDate).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}`
+                        : formatCapitalize(property.availabilityStatus),
                     ],
                   ]}
                 />

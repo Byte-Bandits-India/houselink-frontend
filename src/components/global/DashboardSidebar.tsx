@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { getImageUrl } from "@/lib/api";
 import {
   LayoutGrid,
   FileText,
@@ -32,6 +34,7 @@ const navItems = [
 /* ─── Sidebar inner content (shared between desktop and mobile drawer) ─── */
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   return (
     <div className="flex flex-col h-full">
@@ -39,15 +42,17 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       <div className="flex items-center gap-2.5 px-4 py-4 border-b border-gray-100">
         <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center shrink-0 overflow-hidden">
           <img
-            src="/assets/images/about-us/unknown.jpg"
+            src={user?.avatarImage ? getImageUrl(user.avatarImage) : "/assets/images/about-us/unknown.jpg"}
             alt="Avatar"
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
+              (e.currentTarget as HTMLImageElement).src = "/assets/images/about-us/unknown.jpg";
             }}
           />
         </div>
-        <span className="text-sm font-semibold text-ink truncate">Abraham</span>
+        <span className="text-sm font-semibold text-ink truncate">
+          {user ? `${user.firstName} ${user.lastName || ""}`.trim() : "Loading..."}
+        </span>
 
         {/* Close button — only visible inside the mobile drawer */}
         {onClose && (
@@ -90,7 +95,13 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
       {/* Logout */}
       <div className="border-t border-gray-100 p-3">
-        <button className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors duration-200">
+        <button
+          onClick={async () => {
+            await logout();
+            window.location.href = "/";
+          }}
+          className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors duration-200"
+        >
           <LogOut className="w-4 h-4" />
           Logout
         </button>

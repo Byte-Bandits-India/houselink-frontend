@@ -168,6 +168,13 @@ function PropertiesListContent() {
           });
         }
 
+        // Sort: featured properties first
+        data.sort((a, b) => {
+          const aFeatured = a.isFeatured ? 1 : 0;
+          const bFeatured = b.isFeatured ? 1 : 0;
+          return bFeatured - aFeatured;
+        });
+
         // Map filtered backend properties to PropertyCardProps format
         const mapped = data.map(mapApiPropertyToCardProps);
         setProperties(mapped);

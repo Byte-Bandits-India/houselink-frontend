@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { ArrowLeft, Loader2, AlertCircle, Sparkles, CheckCircle2 } from "lucide-react";
 import PropertyFormWizard from "@/components/property-form/PropertyFormWizard";
 import { PropertyFormData } from "@/types/property";

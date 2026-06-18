@@ -61,7 +61,6 @@ function FeaturedPropertiesContent() {
         const params: any = {
           is_active: "true",
           moderation: "approved",
-          is_featured: "true",
         };
 
         if (activeTab === "sell") {
@@ -97,52 +96,19 @@ function FeaturedPropertiesContent() {
           }
         }
 
-        // Fetch featured properties
+        // Fetch properties matching the query
         let res = await getProperties(params);
         let data = res.data || [];
 
         // Apply client-side filters
         let filteredData = applyFilters(data);
 
-        // Fallback: if no featured properties match, fetch all active approved properties matching filters
-        if (filteredData.length === 0) {
-          const fallbackParams: any = {
-            is_active: "true",
-            moderation: "approved",
-          };
-          if (activeTab === "sell") {
-            fallbackParams.property_for = "sell";
-          }
-          if (city) {
-            const cityId = await getCityIdByName(city);
-            if (cityId) {
-              fallbackParams.city_id = String(cityId);
-            }
-          }
-          if (maxPrice) {
-            fallbackParams.max_price = maxPrice;
-          }
-          if (keyword) {
-            fallbackParams.search = keyword;
-          } else if (location) {
-            fallbackParams.search = location;
-          }
-          if (activeCategory !== "all") {
-            if (activeCategory === "apartments") {
-              fallbackParams.categories_id = 1;
-            } else if (activeCategory === "villas") {
-              fallbackParams.categories_id = 2;
-            } else if (activeCategory === "house") {
-              fallbackParams.categories_id = 4;
-            } else if (activeCategory === "plots") {
-              fallbackParams.categories_id = activeTab === "sell" ? 3 : 5;
-            }
-          }
-
-          const fallbackRes = await getProperties(fallbackParams);
-          const fallbackData = fallbackRes.data || [];
-          filteredData = applyFilters(fallbackData);
-        }
+        // Sort: featured properties first
+        filteredData.sort((a, b) => {
+          const aFeatured = a.isFeatured ? 1 : 0;
+          const bFeatured = b.isFeatured ? 1 : 0;
+          return bFeatured - aFeatured;
+        });
 
         // Map backend properties to PropertyCardProps format
         const mapped = filteredData.map(mapApiPropertyToCardProps);

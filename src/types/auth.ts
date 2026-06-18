@@ -21,6 +21,7 @@ export interface Customer {
   username?: string | null;
   company?: string | null;
   dob?: string | null;
+  avatarImage?: string | null;
   state: string;
   city: string;
   status: "active" | "inactive" | "suspended";
