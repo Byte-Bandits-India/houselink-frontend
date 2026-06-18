@@ -218,12 +218,14 @@ export default async function PropertyDetailPage({
                       "Water supply",
                       formatCapitalize(property.waterSupply),
                     ],
-                    property.parkingAvailability && [
+                    property.parkingAvailability != null && [
                       "Parking",
-                      `${formatCapitalize(property.parkingAvailability)}${property.parkingSlots
-                        ? ` (${property.parkingSlots} slots)`
-                        : ""
-                      }`,
+                      property.parkingAvailability
+                        ? `${property.parkingType ? formatCapitalize(property.parkingType) : "Yes"}${property.parkingSlots
+                            ? ` (${property.parkingSlots} slots)`
+                            : ""
+                          }`
+                        : "No",
                     ],
                   ]}
                 />
