@@ -62,6 +62,45 @@ export interface PropertyCardProps {
   brokerage_fee?: number;
 }
 
+function getDefaultImage(categoryName?: string): string {
+  if (!categoryName) return "/assets/default.png";
+  const name = categoryName.toLowerCase().trim();
+  if (name.includes("apartment")) {
+    return "/assets/default_images/apartmentAvatar.jpg";
+  }
+  if (name.includes("villa")) {
+    return "/assets/default_images/villaAvatar.jpg";
+  }
+  if (name.includes("plot")) {
+    return "/assets/default_images/plotsAvatar.jpg";
+  }
+  if (name.includes("individual house") || name.includes("individual_house") || name.includes("house")) {
+    return "/assets/default_images/houseAvatar.jpg";
+  }
+  if (name.includes("land")) {
+    return "/assets/default_images/landAvatar.jpg";
+  }
+  if (name.includes("shop")) {
+    return "/assets/default_images/shopAvatar.jpg";
+  }
+  if (name.includes("building")) {
+    return "/assets/default_images/buildingAvatar.jpg";
+  }
+  if (name.includes("godown")) {
+    return "/assets/default_images/godownAvatar.jpg";
+  }
+  if (name.includes("warehouse")) {
+    return "/assets/default_images/warehouseAvatar.jpg";
+  }
+  if (name.includes("office")) {
+    return "/assets/default_images/officeAvatar.jpg";
+  }
+  if (name.includes("commercial")) {
+    return "/assets/default_images/commercialAvatar.jpg";
+  }
+  return "/assets/default.png";
+}
+
 export default function PropertyCard(props: PropertyCardProps) {
   const url = props.permalink ? `/properties/${props.permalink}` : `/properties/${props.id}`;
   const priceFormatted = typeof props.price === 'number'
@@ -74,7 +113,7 @@ export default function PropertyCard(props: PropertyCardProps) {
         <div className="property-image-container image-anime">
           <div className="property-image">
             <Image
-              src={getImageUrl(props.image)}
+              src={props.image && props.image !== "/assets/blur.png" ? getImageUrl(props.image) : getDefaultImage(props.categoryName)}
               alt={props.name}
               fill
               unoptimized={true}
