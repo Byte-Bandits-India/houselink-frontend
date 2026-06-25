@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion, AnimatePresence, Variants } from "framer-motion"
@@ -12,7 +12,11 @@ import {
   Ruler,
   Star,
   BookmarkX,
+  Loader2,
 } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
+import { useWishlist } from "@/context/WishlistContext"
+import { getWishlist, getImageUrl } from "@/lib/api"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Property {
@@ -31,111 +35,51 @@ interface Property {
   keyFeatures: string[]
 }
 
-// ── Mock data (replace with API / context) ────────────────────────────────────
-const INITIAL_WISHLIST: Property[] = [
-  {
-    id: 1,
-    name: "Prestige Lakeside Habitat",
-    permalink: "prestige-lakeside-habitat",
-    location: "Varthur, Bangalore",
-    price: 8500000,
-    image:
-      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80",
-    ownerType: "Builder",
-    categoryName: "Apartment",
-    isFeatured: true,
-    bedrooms: 3,
-    bathrooms: 2,
-    area: "1450 sq.ft",
-    keyFeatures: ["Swimming Pool", "Gym", "Club House"],
-  },
-  {
-    id: 2,
-    name: "Sobha Dream Acres",
-    permalink: "sobha-dream-acres",
-    location: "Panathur, Bangalore",
-    price: 6200000,
-    image:
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
-    ownerType: "Builder",
-    categoryName: "Villa",
-    isFeatured: false,
-    bedrooms: 2,
-    bathrooms: 2,
-    area: "1100 sq.ft",
-    keyFeatures: ["24/7 Security", "Park", "Power Backup"],
-  },
-  {
-    id: 3,
-    name: "Casagrand Winsworth",
-    permalink: "casagrand-winsworth",
-    location: "Perumbakkam, Chennai",
-    price: 4750000,
-    image:
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
-    ownerType: "Owner",
-    categoryName: "Apartment",
-    isFeatured: true,
-    bedrooms: 3,
-    bathrooms: 3,
-    area: "1780 sq.ft",
-    keyFeatures: ["Rooftop Garden", "EV Charging", "Concierge"],
-  },
-  {
-    id: 4,
-    name: "Brigade Cornerstone Utopia",
-    permalink: "brigade-cornerstone-utopia",
-    location: "Whitefield, Bangalore",
-    price: 11200000,
-    image:
-      "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=800&q=80",
-    ownerType: "Builder",
-    categoryName: "Independent House",
-    isFeatured: false,
-    bedrooms: 4,
-    bathrooms: 4,
-    area: "2800 sq.ft",
-    keyFeatures: ["Private Pool", "Home Theatre", "Smart Home"],
-  },
-  {
-    id: 5,
-    name: "Mahindra Eden",
-    permalink: "mahindra-eden",
-    location: "Kanakapura Road, Bangalore",
-    price: 5600000,
-    image:
-      "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=800&q=80",
-    ownerType: "Owner",
-    categoryName: "Apartment",
-    isFeatured: false,
-    bedrooms: 2,
-    bathrooms: 1,
-    area: "980 sq.ft",
-    keyFeatures: ["Jogging Track", "Children Play Area"],
-  },
-  {
-    id: 6,
-    name: "TVS Emerald Jardin",
-    permalink: "tvs-emerald-jardin",
-    location: "Anna Nagar, Chennai",
-    price: 9300000,
-    image:
-      "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?auto=format&fit=crop&w=800&q=80",
-    ownerType: "Builder",
-    categoryName: "Penthouse",
-    isFeatured: true,
-    bedrooms: 3,
-    bathrooms: 3,
-    area: "2200 sq.ft",
-    keyFeatures: ["Sky Deck", "Infinity Pool", "Valet Parking"],
-  },
-]
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatPrice(n: number) {
   if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(2)} Cr`
   if (n >= 100_000) return `₹${(n / 100_000).toFixed(2)} L`
   return `₹${n.toLocaleString("en-IN")}`
+}
+
+function mapBackendToWishlistProperty(p: any): Property {
+  const mainImage = p.images?.[0]?.image || "";
+  
+  let ownerTypeVal = "Owner";
+  if (p.propertyOwnership) {
+    const o = p.propertyOwnership.toLowerCase();
+    if (o === "builder") ownerTypeVal = "Builder";
+    else if (o === "consultant") ownerTypeVal = "Consultant";
+  }
+
+  const categoryNameVal = p.category?.name || "Apartment";
+
+  let areaVal = null;
+  if (p.builtUpArea) {
+    areaVal = `${p.builtUpArea} Sq.Ft`;
+  } else if (p.plotLandArea) {
+    areaVal = `${p.plotLandArea} Sq.Ft`;
+  }
+
+  const keyFeaturesVal = (p.propertyFeatures || [])
+    .map((pf: any) => pf.feature?.name)
+    .filter(Boolean);
+
+  return {
+    id: p.id,
+    name: p.name || "Untitled Property",
+    permalink: p.permalink || "",
+    location: p.location || "",
+    price: p.price ? Number(p.price) : 0,
+    image: mainImage ? getImageUrl(mainImage) : "/assets/blur.png",
+    ownerType: ownerTypeVal,
+    categoryName: categoryNameVal,
+    isFeatured: p.isFeatured || false,
+    bedrooms: p.bedrooms || null,
+    bathrooms: p.bathrooms || null,
+    area: areaVal,
+    keyFeatures: keyFeaturesVal,
+  };
 }
 
 // ── Animation variants ────────────────────────────────────────────────────────
@@ -148,8 +92,6 @@ const stagger: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.12 } },
 }
-
-// exit is inlined directly on motion.div to avoid Variants → TargetResolver widening
 
 // ── Property Card ─────────────────────────────────────────────────────────────
 function PropertyCard({
@@ -183,6 +125,7 @@ function PropertyCard({
             src={property.image}
             alt={property.name}
             fill
+            unoptimized={true}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
 
@@ -224,7 +167,7 @@ function PropertyCard({
 
           {/* Full-card link */}
           <Link
-            href={`/properties/${property.id}/${property.permalink}`}
+            href={`/properties/${property.permalink || property.id}`}
             className="absolute inset-0 z-[5]"
             aria-label={`View details for ${property.name}`}
           />
@@ -296,11 +239,39 @@ function PropertyCard({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function WishlistPage() {
-  const [wishlist, setWishlist] = useState<Property[]>(INITIAL_WISHLIST)
+  const { isLoggedIn, isLoading: authLoading } = useAuth()
+  const { toggleWishlist, wishlistIds } = useWishlist()
+  const [wishlist, setWishlist] = useState<Property[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchWishlist = useCallback(async () => {
+    if (!isLoggedIn) {
+      setWishlist([])
+      setLoading(false)
+      return
+    }
+    try {
+      const res = await getWishlist()
+      if (res.success && Array.isArray(res.data)) {
+        setWishlist(res.data.map(mapBackendToWishlistProperty))
+      }
+    } catch (err) {
+      console.error("Failed to load wishlist:", err)
+    } finally {
+      setLoading(false)
+    }
+  }, [isLoggedIn])
+
+  useEffect(() => {
+    fetchWishlist()
+  }, [fetchWishlist, wishlistIds])
 
   function handleRemove(id: number) {
+    toggleWishlist(id)
     setWishlist((prev) => prev.filter((p) => p.id !== id))
   }
+
+  const showLoading = authLoading || (isLoggedIn && loading)
 
   return (
     <div className="bg-surface text-ink overflow-hidden pb-16">
@@ -339,7 +310,6 @@ export default function WishlistPage() {
 
       {/* ── CONTENT ── */}
       <div className="container mx-auto px-4 mt-12 max-w-6xl">
-
         {/* Intro */}
         <motion.h2
           initial="hidden"
@@ -410,7 +380,7 @@ export default function WishlistPage() {
             <h2 className="text-[2rem] font-bold">
               Your <span className="text-brand">Wishlist</span>
             </h2>
-            {wishlist.length > 0 && (
+            {isLoggedIn && wishlist.length > 0 && (
               <span className="text-ink-secondary text-[0.95rem]">
                 {wishlist.length}{" "}
                 {wishlist.length === 1 ? "property" : "properties"} saved
@@ -418,51 +388,74 @@ export default function WishlistPage() {
             )}
           </motion.div>
 
-          {/* Grid / Empty state */}
-          <AnimatePresence mode="popLayout">
-            {wishlist.length === 0 ? (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center py-20 text-center"
+          {/* Grid / Empty / Logged-out state */}
+          {showLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-10 h-10 animate-spin text-brand mb-4" />
+              <p className="text-ink-secondary">Loading your wishlist...</p>
+            </div>
+          ) : !isLoggedIn ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <BookmarkX className="w-16 h-16 text-gray-300 mb-5" />
+              <h4 className="text-xl font-semibold text-ink mb-2">
+                Please log in to view your wishlist
+              </h4>
+              <p className="text-ink-secondary text-[1rem] mb-6 max-w-sm">
+                Log in to save your favorite listings and access them anytime.
+              </p>
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 bg-brand text-white font-semibold px-7 py-3 rounded-lg hover:bg-brand-700 transition-colors duration-200"
               >
-                <BookmarkX className="w-16 h-16 text-gray-300 mb-5" />
-                <h4 className="text-xl font-semibold text-ink mb-2">
-                  Add Wishlist to view here
-                </h4>
-                <p className="text-ink-secondary text-[1rem] mb-6 max-w-sm">
-                  Start browsing properties and add them to your wishlist to see
-                  them here.
-                </p>
-                <Link
-                  href="/properties"
-                  className="inline-flex items-center gap-2 bg-brand text-white font-semibold px-7 py-3 rounded-lg hover:bg-brand-700 transition-colors duration-200"
+                Log In
+              </Link>
+            </div>
+          ) : (
+            <AnimatePresence mode="popLayout">
+              {wishlist.length === 0 ? (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center py-20 text-center"
                 >
-                  Browse Properties
-                </Link>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="grid"
-                initial="hidden"
-                animate="show"
-                variants={stagger}
-                className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                <AnimatePresence mode="popLayout">
-                  {wishlist.map((property) => (
-                    <PropertyCard
-                      key={property.id}
-                      property={property}
-                      onRemove={handleRemove}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  <BookmarkX className="w-16 h-16 text-gray-300 mb-5" />
+                  <h4 className="text-xl font-semibold text-ink mb-2">
+                    Add Wishlist to view here
+                  </h4>
+                  <p className="text-ink-secondary text-[1rem] mb-6 max-w-sm">
+                    Start browsing properties and add them to your wishlist to see
+                    them here.
+                  </p>
+                  <Link
+                    href="/properties"
+                    className="inline-flex items-center gap-2 bg-brand text-white font-semibold px-7 py-3 rounded-lg hover:bg-brand-700 transition-colors duration-200"
+                  >
+                    Browse Properties
+                  </Link>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="grid"
+                  initial="hidden"
+                  animate="show"
+                  variants={stagger}
+                  className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                  <AnimatePresence mode="popLayout">
+                    {wishlist.map((property) => (
+                      <PropertyCard
+                        key={property.id}
+                        property={property}
+                        onRemove={handleRemove}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </div>
       </div>
     </div>

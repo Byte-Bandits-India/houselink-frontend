@@ -97,6 +97,14 @@ export {
   getMyEnquiries,
 } from "./leads";
 
+// Wishlist API
+export {
+  getWishlist,
+  getWishlistIds,
+  addToWishlist,
+  removeFromWishlist,
+} from "./wishlist";
+
 
 
 

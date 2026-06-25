@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { getCustomerInvoices, type UserInvoice } from "@/lib/api";
 
 type Filter = "sell" | "rent";
 
@@ -85,29 +86,85 @@ function CreditCard({ entry }: { entry: CreditEntry }) {
 export default function PackageDetailsPage() {
   const { user, refreshUser } = useAuth();
   const [filter, setFilter] = useState<Filter>("sell");
+  const [invoices, setInvoices] = useState<UserInvoice[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
         await refreshUser();
+        if (user?.id) {
+          const invs = await getCustomerInvoices(Number(user.id));
+          setInvoices(invs);
+        }
       } catch (err) {
-        console.error("Failed to refresh user profile:", err);
+        console.error("Failed to load dashboard data:", err);
       } finally {
         setLoading(false);
       }
     }
     loadData();
-  }, [refreshUser]);
+  }, [user?.id, refreshUser]);
+
+  // 1. Separate user credits by type
+  let ownerCreditsLeft = user?.creditPointsOwner ?? 0;
+  let builderCreditsLeft = user?.creditPointsBuilder ?? 0;
+  let consultantCreditsLeft = user?.creditPointsConsultant ?? 0;
+
+  // 2. Sort invoices by created_at desc (most recent first) to allocate points properly
+  const sortedInvoices = [...invoices].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  let ownerSellCredits = 0;
+  let builderSellCredits = 0;
+  let consultantSellCredits = 0;
+  let rentCredits = 0;
+
+  sortedInvoices.forEach((inv) => {
+    const type: "sell" | "rent" = inv.package_type === "rent" ? "rent" : "sell";
+    const userType = inv.user_type || "Owner";
+
+    let allocatedCredits = 0;
+    const totalPoints = inv.no_of_credit;
+
+    if (inv.status === "Paid") {
+      if (type === "rent") {
+        allocatedCredits = Math.min(totalPoints, ownerCreditsLeft);
+        ownerCreditsLeft -= allocatedCredits;
+        rentCredits += allocatedCredits;
+      } else {
+        const uType = userType.toLowerCase();
+        if (uType === "builder") {
+          allocatedCredits = Math.min(totalPoints, builderCreditsLeft);
+          builderCreditsLeft -= allocatedCredits;
+          builderSellCredits += allocatedCredits;
+        } else if (uType === "consultant") {
+          allocatedCredits = Math.min(totalPoints, consultantCreditsLeft);
+          consultantCreditsLeft -= allocatedCredits;
+          consultantSellCredits += allocatedCredits;
+        } else {
+          allocatedCredits = Math.min(totalPoints, ownerCreditsLeft);
+          ownerCreditsLeft -= allocatedCredits;
+          ownerSellCredits += allocatedCredits;
+        }
+      }
+    }
+  });
+
+  // Add any leftover credits (e.g. from manual admin adjustments)
+  ownerSellCredits += ownerCreditsLeft;
+  builderSellCredits += builderCreditsLeft;
+  consultantSellCredits += consultantCreditsLeft;
 
   const sellCards: CreditEntry[] = [
-    { title: "Owner Credit Points", credits: user?.creditPointsOwner ?? 0, expiry: null, buyHref: "/dashboard/credits?tab=owners", Icon: OwnerIcon },
-    { title: "Builder Credit Points", credits: user?.creditPointsBuilder ?? 0, expiry: "active", buyHref: "/dashboard/credits?tab=builders", Icon: BuilderIcon },
-    { title: "Consultant Credit Points", credits: user?.creditPointsConsultant ?? 0, expiry: "active", buyHref: "/dashboard/credits?tab=consultants", Icon: ConsultantIcon },
+    { title: "Owner Credit Points", credits: ownerSellCredits, expiry: null, buyHref: "/dashboard/credits?tab=owners", Icon: OwnerIcon },
+    { title: "Builder Credit Points", credits: builderSellCredits, expiry: "active", buyHref: "/dashboard/credits?tab=builders", Icon: BuilderIcon },
+    { title: "Consultant Credit Points", credits: consultantSellCredits, expiry: "active", buyHref: "/dashboard/credits?tab=consultants", Icon: ConsultantIcon },
   ];
 
   const rentCards: CreditEntry[] = [
-    { title: "Rent/Lease Credit Points", credits: user?.creditPointsOwner ?? 0, expiry: "active", buyHref: "/dashboard/credits?filter=rent", Icon: EnquiryIcon },
+    { title: "Rent/Lease Credit Points", credits: rentCredits, expiry: "active", buyHref: "/dashboard/credits?filter=rent", Icon: EnquiryIcon },
   ];
 
   const cards = filter === "sell" ? sellCards : rentCards;

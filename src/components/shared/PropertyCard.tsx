@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { getImageUrl } from '@/lib/api';
+import { useWishlist } from '@/context/WishlistContext';
 
 export interface PropertyCardProps {
   id: string;
@@ -107,6 +108,15 @@ export default function PropertyCard(props: PropertyCardProps) {
     ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(props.price)
     : props.price;
 
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const wishlisted = isWishlisted(Number(props.id));
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(Number(props.id));
+  };
+
   return (
     <div className="custom-property-card group">
       <div className="property-card-wrapper">
@@ -128,8 +138,12 @@ export default function PropertyCard(props: PropertyCardProps) {
                 {props.property_for && <span className="tag-sell">{props.property_for}</span>}
                 {!props.property_for && props.type && <span className="tag-sell capitalize">{props.type}</span>}
               </div>
-              <button className="property-wishlist-btn group/btn">
-                <i className={`${props.isInWishlist ? 'fa-solid' : 'fa-regular'} fa-heart text-[20px] text-black transition-colors group-hover/btn:font-black`}></i>
+              <button
+                onClick={handleWishlistClick}
+                className="property-wishlist-btn group/btn"
+                aria-label="Toggle Wishlist"
+              >
+                <i className={`${wishlisted ? 'fa-solid text-red-500 fill-red-500' : 'fa-regular'} fa-heart text-[20px] transition-colors group-hover/btn:font-black`}></i>
               </button>
             </div>
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
-import { getPackagesList, createCheckoutOrder, verifyCheckoutPayment, type Package } from "@/lib/api";
+import { getPackagesList, createCheckoutOrder, verifyCheckoutPayment, getCustomerInvoices, type Package, type UserInvoice } from "@/lib/api";
 
 type Filter = "sell" | "rent";
 type UserTab = "owners" | "builders" | "consultants";
@@ -21,6 +21,7 @@ function loadRazorpayScript() {
 export default function CreditsPage() {
   const { user, refreshUser } = useAuth();
   const [packages, setPackages] = useState<Package[]>([]);
+  const [invoices, setInvoices] = useState<UserInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("sell");
   const [userTab, setUserTab] = useState<UserTab>("owners");
@@ -29,12 +30,6 @@ export default function CreditsPage() {
   const loadPackages = async () => {
     try {
       setLoading(true);
-      // Load/refresh user credit details to get absolute latest values
-      try {
-        await refreshUser();
-      } catch (err) {
-        console.error("Failed to load active user profile", err);
-      }
       const data = await getPackagesList();
       setPackages(data);
     } catch (err) {
@@ -45,8 +40,86 @@ export default function CreditsPage() {
   };
 
   useEffect(() => {
-    loadPackages();
-  }, []);
+    async function init() {
+      try {
+        await refreshUser();
+      } catch (err) {
+        console.error("Failed to refresh user profile:", err);
+      }
+      loadPackages();
+    }
+    init();
+  }, [refreshUser]);
+
+  useEffect(() => {
+    async function loadUserInvoices() {
+      if (user?.id) {
+        try {
+          const invs = await getCustomerInvoices(Number(user.id));
+          setInvoices(invs);
+        } catch (err) {
+          console.error("Failed to load invoices:", err);
+        }
+      }
+    }
+    loadUserInvoices();
+  }, [user?.id]);
+
+  // 1. Separate user credits by type
+  let ownerCreditsLeft = user?.creditPointsOwner ?? 0;
+  let builderCreditsLeft = user?.creditPointsBuilder ?? 0;
+  let consultantCreditsLeft = user?.creditPointsConsultant ?? 0;
+
+  // 2. Sort invoices by created_at desc (most recent first) to allocate points properly
+  const sortedInvoices = [...invoices].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  let ownerSellCredits = 0;
+  let builderSellCredits = 0;
+  let consultantSellCredits = 0;
+  let rentCredits = 0;
+
+  sortedInvoices.forEach((inv) => {
+    const type: "sell" | "rent" = inv.package_type === "rent" ? "rent" : "sell";
+    const userType = inv.user_type || "Owner";
+
+    let allocatedCredits = 0;
+    const totalPoints = inv.no_of_credit;
+
+    if (inv.status === "Paid") {
+      if (type === "rent") {
+        allocatedCredits = Math.min(totalPoints, ownerCreditsLeft);
+        ownerCreditsLeft -= allocatedCredits;
+        rentCredits += allocatedCredits;
+      } else {
+        const uType = userType.toLowerCase();
+        if (uType === "builder") {
+          allocatedCredits = Math.min(totalPoints, builderCreditsLeft);
+          builderCreditsLeft -= allocatedCredits;
+          builderSellCredits += allocatedCredits;
+        } else if (uType === "consultant") {
+          allocatedCredits = Math.min(totalPoints, consultantCreditsLeft);
+          consultantCreditsLeft -= allocatedCredits;
+          consultantSellCredits += allocatedCredits;
+        } else {
+          allocatedCredits = Math.min(totalPoints, ownerCreditsLeft);
+          ownerCreditsLeft -= allocatedCredits;
+          ownerSellCredits += allocatedCredits;
+        }
+      }
+    }
+  });
+
+  // Add any leftover credits (e.g. from manual admin adjustments)
+  ownerSellCredits += ownerCreditsLeft;
+  builderSellCredits += builderCreditsLeft;
+  consultantSellCredits += consultantCreditsLeft;
+
+  const hasOwnerCredits = ownerSellCredits > 0;
+  const hasBuilderCredits = builderSellCredits > 0;
+  const hasConsultantCredits = consultantSellCredits > 0;
+  const hasRentCredits = rentCredits > 0;
 
   const handleBuyPackage = async (pkg: Package) => {
     if (!user) {
@@ -54,16 +127,12 @@ export default function CreditsPage() {
       return;
     }
 
-    const hasOwnerCredits = (user.creditPointsOwner ?? 0) > 0;
-    const hasBuilderCredits = (user.creditPointsBuilder ?? 0) > 0;
-    const hasConsultantCredits = (user.creditPointsConsultant ?? 0) > 0;
-
     const uType = pkg.userType?.toLowerCase();
     const alreadyHasCredits =
       (uType === "owner" && hasOwnerCredits) ||
       (uType === "builder" && hasBuilderCredits) ||
       (uType === "consultant" && hasConsultantCredits) ||
-      (pkg.type === "rent" && hasOwnerCredits);
+      (pkg.type === "rent" && hasRentCredits);
 
     if (alreadyHasCredits) {
       alert("You already have active credit points for this category. You cannot purchase another package until they are exhausted.");
@@ -181,10 +250,6 @@ export default function CreditsPage() {
     );
   }
 
-  // Pre-calculate credit status
-  const hasOwnerCredits = (user?.creditPointsOwner ?? 0) > 0;
-  const hasBuilderCredits = (user?.creditPointsBuilder ?? 0) > 0;
-  const hasConsultantCredits = (user?.creditPointsConsultant ?? 0) > 0;
 
   return (
     <div className="space-y-5">
@@ -246,7 +311,7 @@ export default function CreditsPage() {
               (uType === "owner" && hasOwnerCredits) ||
               (uType === "builder" && hasBuilderCredits) ||
               (uType === "consultant" && hasConsultantCredits) ||
-              (pkg.type === "rent" && hasOwnerCredits);
+              (pkg.type === "rent" && hasRentCredits);
 
             return (
               <div

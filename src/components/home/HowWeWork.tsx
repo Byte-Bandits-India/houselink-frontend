@@ -55,7 +55,7 @@ export default function WhatWeDo() {
                   Find your perfect rental space with ease, comfort, and verified listings
                 </p>
                 <Link
-                  href="/rent"
+                  href="/properties?property_purpose=rent"
                   className="inline-block self-start px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-300 bg-[#153e75] hover:bg-[#0d2a52] text-white"
                 >
                   Rent Now
@@ -86,7 +86,7 @@ export default function WhatWeDo() {
                   Find your perfect rental space with ease, comfort, and verified listings
                 </p>
                 <Link
-                  href="/partner"
+                  href="/partner-with-us"
                   className="inline-block self-start px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-300 bg-teal-600 hover:bg-teal-700 text-white"
                 >
                   Become a Partner
@@ -117,7 +117,7 @@ export default function WhatWeDo() {
                   Find your perfect rental space with ease, comfort, and verified listings
                 </p>
                 <Link
-                  href="/buy"
+                  href="/properties?property_purpose=sell"
                   className="inline-block self-start px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-300 bg-[#153e75] hover:bg-[#0d2a52] text-white"
                 >
                   Buy Now
