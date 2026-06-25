@@ -107,7 +107,7 @@ export default function PackageDetailsPage() {
   ];
 
   const rentCards: CreditEntry[] = [
-    { title: "Owner Credit Points", credits: user?.creditPointsOwner ?? 0, expiry: "active", buyHref: "/dashboard/credits?filter=rent", Icon: EnquiryIcon },
+    { title: "Rent/Lease Credit Points", credits: user?.creditPointsOwner ?? 0, expiry: "active", buyHref: "/dashboard/credits?filter=rent", Icon: EnquiryIcon },
   ];
 
   const cards = filter === "sell" ? sellCards : rentCards;

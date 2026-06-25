@@ -28,3 +28,17 @@ export interface LeadResponse {
 export async function createLead(data: LeadInput): Promise<LeadResponse> {
   return apiClient.post<LeadResponse>("/leads", data);
 }
+
+/**
+ * Fetch all property leads/enquiries from the backend.
+ */
+export async function getLeads(): Promise<LeadResponse> {
+  return apiClient.get<LeadResponse>("/leads");
+}
+
+/**
+ * Fetch enquiries submitted by the logged-in customer.
+ */
+export async function getMyEnquiries(): Promise<LeadResponse> {
+  return apiClient.get<LeadResponse>("/leads/my/enquiries");
+}

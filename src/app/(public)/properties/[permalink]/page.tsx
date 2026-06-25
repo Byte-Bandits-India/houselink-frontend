@@ -15,7 +15,65 @@ import {
   Ruler,
   CheckCircle,
   Lock,
+  GraduationCap,
+  Activity,
+  Train,
+  ShoppingBag,
+  ShoppingCart,
+  Trees,
+  Landmark,
+  Building2,
 } from "lucide-react";
+
+const getFacilityConfig = (name: string) => {
+  const norm = name.toLowerCase();
+  if (norm.includes("school") || norm.includes("college") || norm.includes("education")) {
+    return {
+      icon: <GraduationCap size={18} className="text-blue-600" />,
+      bg: "bg-blue-50 border-blue-100",
+    };
+  }
+  if (norm.includes("hospital") || norm.includes("clinic") || norm.includes("medical")) {
+    return {
+      icon: <Activity size={18} className="text-rose-600" />,
+      bg: "bg-rose-50 border-rose-100",
+    };
+  }
+  if (norm.includes("railway") || norm.includes("metro") || norm.includes("station") || norm.includes("train") || norm.includes("bus")) {
+    return {
+      icon: <Train size={18} className="text-purple-600" />,
+      bg: "bg-purple-50 border-purple-100",
+    };
+  }
+  if (norm.includes("mall") || norm.includes("shopping")) {
+    return {
+      icon: <ShoppingBag size={18} className="text-pink-600" />,
+      bg: "bg-pink-50 border-pink-100",
+    };
+  }
+  if (norm.includes("supermarket") || norm.includes("market") || norm.includes("grocery")) {
+    return {
+      icon: <ShoppingCart size={18} className="text-orange-600" />,
+      bg: "bg-orange-50 border-orange-100",
+    };
+  }
+  if (norm.includes("park") || norm.includes("garden") || norm.includes("playground")) {
+    return {
+      icon: <Trees size={18} className="text-emerald-600" />,
+      bg: "bg-emerald-50 border-emerald-100",
+    };
+  }
+  if (norm.includes("bank") || norm.includes("atm")) {
+    return {
+      icon: <Landmark size={18} className="text-amber-600" />,
+      bg: "bg-amber-50 border-amber-100",
+    };
+  }
+  return {
+    icon: <Building2 size={18} className="text-slate-600" />,
+    bg: "bg-slate-50 border-slate-100",
+  };
+};
 
 export default async function PropertyDetailPage({
   params,
@@ -266,6 +324,41 @@ export default async function PropertyDetailPage({
                 </p>
               </div>
             </div>
+
+            {/* Nearby Key Facilities */}
+            {property.propertyFacilities && property.propertyFacilities.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">
+                  Nearby Key Facilities
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {property.propertyFacilities.map((item: any, i: number) => {
+                    if (!item.facility) return null;
+                    const config = getFacilityConfig(item.facility.name);
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between p-3.5 bg-gray-50/50 hover:bg-gray-50 border border-gray-100 rounded-xl transition-all duration-200 group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-105 duration-200 ${config.bg}`}>
+                            {config.icon}
+                          </div>
+                          <span className="text-sm font-medium text-gray-800 group-hover:text-gray-900">
+                            {item.facility.name}
+                          </span>
+                        </div>
+                        {item.facilityValue && (
+                          <span className="inline-block px-3 py-1 bg-white border border-gray-200 text-gray-600 rounded-full text-xs font-semibold shadow-sm shrink-0">
+                            {item.facilityValue}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Brokerage */}
             {property.brokerageType && (

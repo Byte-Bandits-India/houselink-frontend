@@ -221,7 +221,7 @@ export default function Step4Amenities({ data, onChange, disabled = false }: Pro
                 className={cn(
                   "px-5 py-2.5 rounded-full border text-sm font-semibold transition-all duration-200",
                   checked
-                    ? "bg-brand/10 border-brand text-brand shadow-sm shadow-brand/5"
+                    ? "bg-brand text-white border-brand shadow-sm"
                     : "bg-white border-gray-200 text-gray-600 hover:border-brand/50",
                   disabled && "cursor-not-allowed opacity-60"
                 )}

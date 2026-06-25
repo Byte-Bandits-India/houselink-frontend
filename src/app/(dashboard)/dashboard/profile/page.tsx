@@ -5,7 +5,7 @@ import { Form, Input, DatePicker, Upload, Button } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuth } from "@/context/AuthContext";
-import { updateMe } from "@/lib/api";
+import { updateMe, getImageUrl } from "@/lib/api";
 
 type Tab = "update" | "password";
 
@@ -15,8 +15,27 @@ export default function ProfilePage() {
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMsg, setUpdateMsg] = useState({ type: "", text: "" });
+  const [previewUrl, setPreviewUrl] = useState<string>(
+    user?.avatarImage ? getImageUrl(user.avatarImage) : "/assets/images/about-us/unknown.jpg"
+  );
 
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (user?.avatarImage) {
+      setPreviewUrl(getImageUrl(user.avatarImage));
+    } else {
+      setPreviewUrl("/assets/images/about-us/unknown.jpg");
+    }
+  }, [user]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   useEffect(() => {
     if (user) {
@@ -58,7 +77,7 @@ export default function ProfilePage() {
           <Form
             form={form}
             layout="vertical"
-            className="space-y-5"
+            className="space-y-6"
             onFinish={async (values) => {
               setIsUpdating(true);
               setUpdateMsg({ type: "", text: "" });
@@ -87,6 +106,46 @@ export default function ProfilePage() {
               }
             }}
           >
+            {/* Circular Profile Photo Preview Header */}
+            <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-slate-50/50 rounded-2xl border border-gray-200/60 shadow-sm mb-6">
+              <div className="shrink-0 relative">
+                <img
+                  src={previewUrl || "/assets/images/about-us/unknown.jpg"}
+                  alt="Profile Preview"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-white shadow-md"
+                />
+              </div>
+              <div className="flex-grow text-center sm:text-left space-y-2">
+                <h4 className="text-base font-bold text-ink">Profile Photo</h4>
+                <p className="text-xs sm:text-sm text-ink-muted">Choose a square image for best appearance. Recommended formats: JPG, PNG.</p>
+                <Form.Item
+                  name="avatar"
+                  valuePropName="fileList"
+                  getValueFromEvent={(e: any) => (Array.isArray(e) ? e : e?.fileList)}
+                  extra={<span className="text-xs text-ink-muted block mt-1">* Image should be minimum 2MB</span>}
+                  className="mb-0 inline-block"
+                >
+                  <Upload
+                    beforeUpload={() => false}
+                    maxCount={1}
+                    accept="image/*"
+                    showUploadList={false}
+                    onChange={(info) => {
+                      const file = info.fileList[0]?.originFileObj;
+                      if (file) {
+                        const url = URL.createObjectURL(file);
+                        setPreviewUrl(url);
+                      } else {
+                        setPreviewUrl(user?.avatarImage ? getImageUrl(user.avatarImage) : "/assets/images/about-us/unknown.jpg");
+                      }
+                    }}
+                  >
+                    <Button icon={<UploadOutlined />} className="hover:border-brand hover:text-brand font-medium">Change Avatar</Button>
+                  </Upload>
+                </Form.Item>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* First Name */}
               <Form.Item
@@ -170,19 +229,7 @@ export default function ProfilePage() {
                 <Input size="large" readOnly className="bg-gray-50 cursor-not-allowed" />
               </Form.Item>
 
-              {/* Profile Image */}
-              <Form.Item
-                label="Profile Image"
-                name="avatar"
-                valuePropName="fileList"
-                getValueFromEvent={(e: any) => (Array.isArray(e) ? e : e?.fileList)}
-                extra="* image must be minimum 2MB"
-                className="mb-0"
-              >
-                <Upload beforeUpload={() => false} maxCount={1} accept="image/*">
-                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
-                </Upload>
-              </Form.Item>
+
             </div>
 
             {/* Submit */}

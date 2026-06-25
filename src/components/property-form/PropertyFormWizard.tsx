@@ -64,71 +64,142 @@ export default function PropertyFormWizard({
       }
       const showFloorDetails = ["apartment", "shop", "building", "godown", "warehouse", "office_space"].includes(subtype);
       const isFloorRequired = ["apartment", "building"].includes(subtype);
-      if (showFloorDetails && isFloorRequired) {
-        if (!data.total_floors || !data.property_on_floor) return false;
+      if (showFloorDetails) {
+        if (isFloorRequired && (!data.total_floors || !data.property_on_floor)) return false;
+        if (data.total_floors && data.property_on_floor) {
+          const total = parseInt(data.total_floors, 10);
+          const onFloor = parseInt(data.property_on_floor, 10);
+          if (!isNaN(total) && !isNaN(onFloor) && onFloor > total) return false;
+        }
       }
       return true;
     }
 
     if (stepIndex === 1) {
       const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
-      if (allowedFields.name && !data.name) return false;
-      if (allowedFields.description && !data.description) return false;
-      if (allowedFields.house_type && !data.house_type) return false;
-      if (allowedFields.bedrooms && !data.bedrooms) return false;
-      if (allowedFields.bathrooms && !data.bathrooms) return false;
+      if (allowedFields.name && !data.name) {
+        console.log("Validation failed: name is empty", data.name);
+        return false;
+      }
+      if (allowedFields.description && !data.description) {
+        console.log("Validation failed: description is empty", data.description);
+        return false;
+      }
+      if (allowedFields.house_type && !data.house_type) {
+        console.log("Validation failed: house_type is empty", data.house_type);
+        return false;
+      }
+      if (allowedFields.bedrooms && !data.bedrooms) {
+        console.log("Validation failed: bedrooms is empty", data.bedrooms);
+        return false;
+      }
+      if (allowedFields.bathrooms && !data.bathrooms) {
+        console.log("Validation failed: bathrooms is empty", data.bathrooms);
+        return false;
+      }
       
       if (allowedFields.furnishing_type) {
         const isFurnishingRequired = ["apartment", "villa", "individual_house"].includes(subtype);
-        if (isFurnishingRequired && !data.furnishing_type) return false;
+        if (isFurnishingRequired && !data.furnishing_type) {
+          console.log("Validation failed: furnishing_type is empty", data.furnishing_type);
+          return false;
+        }
       }
       
-      if (allowedFields.food_preference && !data.food_preference) return false;
-      if (allowedFields.ownership_type && !data.ownership_type) return false;
+      if (allowedFields.food_preference && !data.food_preference) {
+        console.log("Validation failed: food_preference is empty", data.food_preference);
+        return false;
+      }
+      if (allowedFields.ownership_type && !data.ownership_type) {
+        console.log("Validation failed: ownership_type is empty", data.ownership_type);
+        return false;
+      }
       
       if (allowedFields.property_suitable_for) {
         const isSuitableRequired = data.property_for === "rent_lease" || subtype === "office_space";
-        if (isSuitableRequired && !data.property_suitable_for) return false;
+        if (isSuitableRequired && !data.property_suitable_for) {
+          console.log("Validation failed: property_suitable_for is empty", data.property_suitable_for);
+          return false;
+        }
       }
       
       if (allowedFields.loading_unloading_facility) {
         const isLoadingRequired = data.property_for === "rent_lease" && ["godown", "warehouse"].includes(subtype);
-        if (isLoadingRequired && !data.loading_unloading_facility) return false;
+        if (isLoadingRequired && !data.loading_unloading_facility) {
+          console.log("Validation failed: loading_unloading_facility is empty", data.loading_unloading_facility);
+          return false;
+        }
       }
       
-      if (allowedFields.pet_policy && !data.pet_policy) return false;
+      if (allowedFields.pet_policy && !data.pet_policy) {
+        console.log("Validation failed: pet_policy is empty", data.pet_policy);
+        return false;
+      }
       
       if (allowedFields.tenant_preference) {
-        if (!data.tenant_preference || data.tenant_preference.length === 0) return false;
+        if (!data.tenant_preference || data.tenant_preference.length === 0) {
+          console.log("Validation failed: tenant_preference is empty or 0 length", data.tenant_preference);
+          return false;
+        }
       }
       
       if (allowedFields.parking_availability) {
         const isParkingRequired = data.property_for === "rent_lease" || ["apartment", "villa", "individual_house"].includes(subtype) || subtype === "office_space";
-        if (isParkingRequired && !data.parking_availability) return false;
+        if (isParkingRequired && !data.parking_availability) {
+          console.log("Validation failed: parking_availability is empty", data.parking_availability);
+          return false;
+        }
       }
       
-      if (allowedFields.rent_lease_type && !data.rent_lease_type) return false;
+      if (allowedFields.rent_lease_type && !data.rent_lease_type) {
+        console.log("Validation failed: rent_lease_type is empty", data.rent_lease_type);
+        return false;
+      }
       
       if (allowedFields.price) {
-        if (data.property_for === "rent_lease" && !data.rent_lease_type) return false;
-        if (!data.price) return false;
+        if (data.property_for === "rent_lease" && !data.rent_lease_type) {
+          console.log("Validation failed: price: rent_lease_type is empty for rent_lease", data.rent_lease_type);
+          return false;
+        }
+        if (!data.price) {
+          console.log("Validation failed: price is empty", data.price);
+          return false;
+        }
       }
       
       if (data.rent_lease_type === "lease") {
-        if (allowedFields.lease_duration && !data.lease_duration) return false;
-        if (allowedFields.maintenance_responsibility && !data.maintenance_responsibility) return false;
+        if (allowedFields.lease_duration && !data.lease_duration) {
+          console.log("Validation failed: lease_duration is empty", data.lease_duration);
+          return false;
+        }
+        if (allowedFields.maintenance_responsibility && !data.maintenance_responsibility) {
+          console.log("Validation failed: maintenance_responsibility is empty", data.maintenance_responsibility);
+          return false;
+        }
       }
       
       if (data.rent_lease_type === "rent") {
-        if (allowedFields.security_deposit && !data.security_deposit) return false;
+        if (allowedFields.security_deposit && !data.security_deposit) {
+          console.log("Validation failed: security_deposit is empty", data.security_deposit);
+          return false;
+        }
         if (allowedFields.maintenance_charge_status) {
-          if (!data.maintenance_charge_status) return false;
+          if (!data.maintenance_charge_status) {
+            console.log("Validation failed: maintenance_charge_status is empty", data.maintenance_charge_status);
+            return false;
+          }
         }
       }
       
       if (allowedFields.availability_status) {
-        if (!data.availability_status) return false;
-        if (data.availability_status === "Available From" && allowedFields.availability_date && !data.availability_date) return false;
+        if (!data.availability_status) {
+          console.log("Validation failed: availability_status is empty", data.availability_status);
+          return false;
+        }
+        if (data.availability_status === "Available From" && allowedFields.availability_date && !data.availability_date) {
+          console.log("Validation failed: availability_date is empty for Available From", data.availability_date);
+          return false;
+        }
       }
       
       return true;

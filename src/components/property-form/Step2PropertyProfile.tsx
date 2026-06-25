@@ -172,6 +172,12 @@ export default function Step2PropertyProfile({ data, onChange, disabled = false 
     const clean = value.replace(/[^0-9.]/g, "");
     const parts = clean.split(".");
     const sanitized = parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : clean;
+    if (field === "price") {
+      const sanitizedParts = sanitized.split(".");
+      if (sanitizedParts[0].length > 10) {
+        return;
+      }
+    }
     onChange({ [field]: sanitized });
   };
 
@@ -248,7 +254,7 @@ export default function Step2PropertyProfile({ data, onChange, disabled = false 
           {allowedFields.house_type && (
             <div className="space-y-1.5">
               <Label className="text-gray-700 font-medium">
-                House Type <span className="text-red-500">*</span>
+                BHK Configuration (House Type) <span className="text-red-500">*</span>
               </Label>
               <Select
                 disabled={disabled}
@@ -399,7 +405,7 @@ export default function Step2PropertyProfile({ data, onChange, disabled = false 
                   <SelectValue placeholder="Select Ownership" />
                 </SelectTrigger>
                 <SelectContent>
-                  {OWNERSHIP_TYPES.map((o) => (
+                  {OWNERSHIP_TYPES.filter((o) => o !== "Company Owned" || data.property_main_type === "commercial").map((o) => (
                     <SelectItem key={o} value={o}>{o}</SelectItem>
                   ))}
                 </SelectContent>
@@ -719,7 +725,14 @@ export default function Step2PropertyProfile({ data, onChange, disabled = false 
       {allowedFields.key_specifications && (
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
           <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2">
-            Key Specifications <span className="text-gray-400 font-normal text-xs ml-1">(Highlight key features of your shop)</span>
+            Key Specifications{" "}
+            <span className="text-gray-400 font-normal text-xs ml-1">
+              ({subtype === "shop" ? "Highlight key features of your shop" : 
+                subtype === "office_space" ? "Highlight key features of your office" :
+                ["godown", "warehouse"].includes(subtype) ? "Highlight key features of your warehouse" :
+                ["plot", "land"].includes(subtype) ? "Highlight key features of your land" :
+                "Highlight key features of your property"})
+            </span>
           </h4>
           <div className="space-y-3">
             {(data.key_specifications && data.key_specifications.length > 0 ? data.key_specifications : [""]).map((spec, index) => (

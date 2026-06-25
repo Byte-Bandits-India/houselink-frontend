@@ -129,7 +129,7 @@ export default function Step3Location({ data, onChange, disabled = false }: Prop
 
       <div className="space-y-1">
         <Label>
-          Address / Street <span className="text-red-500">*</span>
+          Location<span className="text-red-500">*</span>
         </Label>
         <Input
           value={data.address || ""}

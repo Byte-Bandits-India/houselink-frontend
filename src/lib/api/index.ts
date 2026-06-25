@@ -33,6 +33,7 @@ export {
   getFacilities,
   uploadFiles,
   getUserProperties,
+  getUserPropertiesWithParams,
   deleteProperty,
   getProperty,
   getPropertyByPermalink,
@@ -63,8 +64,9 @@ export {
   getPackagesList,
   createCheckoutOrder,
   verifyCheckoutPayment,
+  getCustomerInvoices,
 } from "./packages";
-export type { Package, CheckoutResponse } from "./packages";
+export type { Package, CheckoutResponse, UserInvoice } from "./packages";
 
 // Ads API
 export {
@@ -91,6 +93,8 @@ export {
 // Leads API
 export {
   createLead,
+  getLeads,
+  getMyEnquiries,
 } from "./leads";
 
 

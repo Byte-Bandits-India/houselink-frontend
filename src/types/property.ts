@@ -189,6 +189,7 @@ export const defaultFormData: PropertyFormData = {
   images: [],
   renew_24_hours: false,
   renew_30_days: false,
+  availability_status: "Ready to Occupy",
 };
 
 export function getSchemaFields(
@@ -218,6 +219,9 @@ export function getSchemaFields(
     fields.construction_age = true;
   }
   fields.direction_facing = true;
+  if (subtype && ["land", "shop", "building", "godown", "warehouse", "office_space"].includes(subtype)) {
+    fields.key_specifications = true;
+  }
 
   // SEO fields are allowed in all except consultant
   if (!isConsultant) {

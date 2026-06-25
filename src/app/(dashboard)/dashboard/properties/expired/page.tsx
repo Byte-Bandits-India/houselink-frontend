@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { getUserPropertiesWithParams, deleteProperty } from "@/lib/api/properties";
+import { message } from "antd";
 
 type Purpose = "sell" | "rent";
 type OwnerType = "owner" | "builder" | "consultant";
@@ -22,18 +25,11 @@ interface Property {
   ownerType: OwnerType;
 }
 
-/* Mock data from ex_properties.blade.php */
-const expiredProperties: Property[] = [
-  { id: 201, name: "Old Greenwood Apartment", city: "Bengaluru", state: "Karnataka", views: 320, expiredAt: "01-03-2026", createdAt: "01-12-2025", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "owner" },
-  { id: 202, name: "Faded Sunrise Villa",     city: "Mysuru",    state: "Karnataka", views: 180, expiredAt: "15-02-2026", createdAt: "15-11-2025", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "builder" },
-  { id: 203, name: "Expired Studio Flat",     city: "Mangaluru", state: "Karnataka", views: 90,  expiredAt: "20-01-2026", createdAt: "20-10-2025", status: "Selling", moderationStatus: "approved", purpose: "sell", ownerType: "consultant" },
-  { id: 204, name: "Stale Rental Nest",       city: "Bengaluru", state: "Karnataka", views: 60,  expiredAt: "expired",    createdAt: "05-11-2025", status: "Renting", moderationStatus: "approved", purpose: "rent", ownerType: "owner" },
-];
-
 const moderationBadge: Record<string, string> = {
   approved: "bg-blue-100 text-blue-700",
   pending:  "bg-amber-100 text-amber-700",
   rejected: "bg-red-100 text-red-700",
+  expired:  "bg-gray-100 text-gray-700",
 };
 
 const statusBadge: Record<string, string> = {
@@ -43,8 +39,76 @@ const statusBadge: Record<string, string> = {
 
 export default function ExpiredPropertiesPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  
   const [purpose,   setPurpose]   = useState<Purpose>("sell");
   const [ownerType, setOwnerType] = useState<OwnerType>("owner");
+  const [propertiesList, setPropertiesList] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const userId = user?.id;
+    if (!userId) return;
+    async function loadProperties() {
+      try {
+        setLoading(true);
+        const res = await getUserPropertiesWithParams(Number(userId), { moderation: "expired" });
+        if (res.success && Array.isArray(res.data)) {
+          const mapped: Property[] = res.data.map((p: any) => {
+            const dateObj = p.createdAt ? new Date(p.createdAt) : new Date();
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const year = dateObj.getFullYear();
+            const createdStr = `${day}-${month}-${year}`;
+
+            const expDateObj = p.expiredAt ? new Date(p.expiredAt) : null;
+            const expStr = expDateObj
+              ? `${String(expDateObj.getDate()).padStart(2, '0')}-${String(expDateObj.getMonth() + 1).padStart(2, '0')}-${expDateObj.getFullYear()}`
+              : "expired";
+
+            return {
+              id: p.id,
+              name: p.name,
+              city: p.city || "-",
+              state: p.state || "-",
+              views: p.views ?? 0,
+              expiredAt: expStr,
+              createdAt: createdStr,
+              status: p.propertyFor === "sell" ? "Selling" : "Renting",
+              moderationStatus: p.moderationStatus || "expired",
+              purpose: p.propertyFor === "sell" ? "sell" : "rent",
+              ownerType: p.propertyOwnership ? p.propertyOwnership.toLowerCase() as OwnerType : "owner",
+            };
+          });
+          setPropertiesList(mapped);
+        } else {
+          message.error("Failed to load expired properties.");
+        }
+      } catch (err: any) {
+        console.error("Failed to fetch expired properties:", err);
+        message.error("Error loading expired properties. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProperties();
+  }, [user?.id]);
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this property listing?")) return;
+    try {
+      const res = await deleteProperty(id);
+      if (res.success) {
+        message.success("Property deleted successfully.");
+        setPropertiesList((prev) => prev.filter((p) => p.id !== id));
+      } else {
+        message.error(res.message || "Failed to delete property.");
+      }
+    } catch (err: any) {
+      console.error("Error deleting property:", err);
+      message.error("An error occurred while deleting the property.");
+    }
+  };
 
   const ownerTypeTabs: { key: OwnerType; label: string }[] = [
     { key: "owner", label: "Owner" },
@@ -52,9 +116,17 @@ export default function ExpiredPropertiesPage() {
     { key: "consultant", label: "Consultant" },
   ];
 
-  const filtered = expiredProperties.filter(
+  const filtered = propertiesList.filter(
     (p) => p.purpose === purpose && p.ownerType === ownerType && p.moderationStatus !== "archived"
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -145,7 +217,10 @@ export default function ExpiredPropertiesPage() {
                       >
                         <Pencil className="w-3 h-3" /> Edit
                       </button>
-                      <button className="flex items-center gap-1 text-xs font-semibold border border-red-400 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white transition-colors w-full justify-center">
+                      <button 
+                        onClick={() => handleDelete(p.id)}
+                        className="flex items-center gap-1 text-xs font-semibold border border-red-400 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white transition-colors w-full justify-center"
+                      >
                         <Trash2 className="w-3 h-3" /> Delete
                       </button>
                     </div>

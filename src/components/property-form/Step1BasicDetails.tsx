@@ -113,6 +113,10 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
 
   const showAdditionalDetails = ["plot", "land"].includes(subtype);
 
+  const totalFloorsNum = data.total_floors ? parseInt(data.total_floors, 10) : NaN;
+  const propertyOnFloorNum = data.property_on_floor ? parseInt(data.property_on_floor, 10) : NaN;
+  const isFloorInvalid = !isNaN(totalFloorsNum) && !isNaN(propertyOnFloorNum) && propertyOnFloorNum > totalFloorsNum;
+
   const isResidential = data.property_main_type === "residential";
   const showResidential =
     isResidential
@@ -131,6 +135,28 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
     const parts = clean.split(".");
     const sanitized = parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : clean;
     onChange({ [field]: sanitized });
+  };
+
+  const handleTotalFloorsChange = (val: string) => {
+    const total = parseInt(val, 10);
+    const onFloor = parseInt(data.property_on_floor || "", 10);
+    const patch: Partial<PropertyFormData> = { total_floors: val };
+    
+    if (!isNaN(total) && !isNaN(onFloor) && onFloor > total) {
+      patch.property_on_floor = val;
+    }
+    onChange(patch);
+  };
+
+  const handlePropertyOnFloorChange = (val: string) => {
+    const onFloor = parseInt(val, 10);
+    const total = parseInt(data.total_floors || "", 10);
+    const patch: Partial<PropertyFormData> = { property_on_floor: val };
+    
+    if (!isNaN(onFloor) && !isNaN(total) && onFloor > total) {
+      patch.total_floors = val;
+    }
+    onChange(patch);
   };
 
   return (
@@ -204,7 +230,13 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           checked={data.property_main_type === "residential"}
           label="Residential"
           disabled={disabled}
-          onChange={() => onChange({ property_main_type: "residential", property_subtype: "" })}
+          onChange={() => {
+            const patch: Partial<PropertyFormData> = { property_main_type: "residential", property_subtype: "" };
+            if (data.ownership_type === "Company Owned") {
+              patch.ownership_type = "";
+            }
+            onChange(patch);
+          }}
         />
         <RadioPill
           name="main_type"
@@ -367,8 +399,9 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                     type="number"
                     disabled={disabled}
                     value={data.total_floors || ""}
-                    onChange={(e) => onChange({ total_floors: e.target.value })}
+                    onChange={(e) => handleTotalFloorsChange(e.target.value)}
                     placeholder="e.g. 10"
+                    className={cn(isFloorInvalid && "border-red-500 focus-visible:ring-red-500 text-red-500")}
                   />
                 </div>
                 <div className="space-y-1">
@@ -379,11 +412,17 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                     type="number"
                     disabled={disabled}
                     value={data.property_on_floor || ""}
-                    onChange={(e) => onChange({ property_on_floor: e.target.value })}
+                    onChange={(e) => handlePropertyOnFloorChange(e.target.value)}
                     placeholder="e.g. 3"
+                    className={cn(isFloorInvalid && "border-red-500 focus-visible:ring-red-500 text-red-500")}
                   />
                 </div>
               </div>
+              {isFloorInvalid && (
+                <p className="text-red-500 text-xs font-semibold mt-1">
+                  Property Floor cannot be greater than Total Floors.
+                </p>
+              )}
 
               {/* UDS Area (Optional, Apartment only) */}
               {showUdsArea && (

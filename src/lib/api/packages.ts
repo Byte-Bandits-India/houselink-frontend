@@ -52,3 +52,33 @@ export async function verifyCheckoutPayment(payload: {
     payload
   );
 }
+
+export interface UserInvoice {
+  id: number;
+  package_id: string;
+  name: string;
+  package_type: "buy" | "rent";
+  user_type: "Owner" | "Builder" | "Consultant" | null;
+  total_days_limit: number | null;
+  no_of_credit: number;
+  amount: string | number;
+  status: string;
+  created_at: string;
+}
+
+export interface CustomerProfile {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  invoices: UserInvoice[];
+}
+
+/** GET /customers/:id */
+export async function getCustomerInvoices(customerId: number): Promise<UserInvoice[]> {
+  const res = await apiClient.get<{ success: boolean; data: CustomerProfile }>(
+    `/customers/${customerId}`
+  );
+  return res.data?.invoices || [];
+}

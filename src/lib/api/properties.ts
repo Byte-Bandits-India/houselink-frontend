@@ -164,14 +164,24 @@ export function mapFormDataToApiPayload(
     propertyOwnership = "owner";
   }
 
-  // Build clean location string
+  // Build clean location string without duplicates
   const locationParts = [
     formData.address,
     formData.area,
     formData.city,
     formData.state,
-  ].filter(Boolean);
-  const location = locationParts.join(", ") || "India";
+  ].filter((part): part is string => !!part);
+
+  const uniqueParts: string[] = [];
+  locationParts.forEach((part) => {
+    part.split(",").forEach((subPart) => {
+      const trimmed = subPart.trim();
+      if (trimmed && !uniqueParts.includes(trimmed)) {
+        uniqueParts.push(trimmed);
+      }
+    });
+  });
+  const location = uniqueParts.join(", ") || "India";
 
   let subtypeRaw = formData.property_subtype ? formData.property_subtype.toLowerCase() : "apartment";
   let categoriesId = CATEGORY_ID_MAP[subtypeRaw as PropertySubtype] || 1;
@@ -633,6 +643,24 @@ export async function getUserProperties(customerId: number): Promise<{ success: 
 }
 
 /**
+ * Fetch all properties for a specific customer with additional parameters (e.g. moderation status)
+ */
+export async function getUserPropertiesWithParams(customerId: number, params?: Record<string, any>): Promise<{ success: boolean; data: any[] }> {
+  let query = `?customer_id=${customerId}`;
+  if (params) {
+    const cleanParams: Record<string, string> = {};
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        cleanParams[key] = String(value);
+      }
+    });
+    const searchParams = new URLSearchParams(cleanParams);
+    query += `&${searchParams.toString()}`;
+  }
+  return apiClient.get<{ success: boolean; data: any[] }>(`/properties${query}`);
+}
+
+/**
  * Delete a property listing by ID
  */
 export async function deleteProperty(id: number): Promise<{ success: boolean; message: string }> {
@@ -743,11 +771,26 @@ export function mapApiPayloadToFormData(p: any): PropertyFormData {
   // Parse location
   let address = "";
   let area = "";
+  const state = p.state?.name || "";
+  const city = p.city?.name || "";
+
   if (p.location) {
     const parts = p.location.split(",").map((s: string) => s.trim());
-    address = parts[0] || "";
-    if (parts.length >= 2) {
-      area = parts[1] || "";
+    const cleanParts = parts.filter(
+      (part: string) =>
+        part.toLowerCase() !== state.toLowerCase() &&
+        part.toLowerCase() !== city.toLowerCase()
+    );
+    const cleanAddress = cleanParts.join(", ");
+
+    if (state && city) {
+      address = `${state}, ${city}, ${cleanAddress}`;
+    } else {
+      address = p.location;
+    }
+
+    if (cleanParts.length >= 2) {
+      area = cleanParts[1] || "";
     }
   }
 
