@@ -13,6 +13,7 @@ import {
   X,
   Mail,
   Phone,
+  Home,
 } from "lucide-react"
 
 import {
@@ -209,6 +210,15 @@ export default function Header() {
 
           {/* ── DESKTOP NAV ─────────────────────────────────────────────────── */}
           <nav className="hidden lg:flex items-center gap-1">
+
+            {/* Home */}
+            <Link
+              href="/"
+              className="flex flex-col items-center gap-1 px-5 py-2 rounded-xl hover:bg-blue-50 text-[#1a3a6b] transition-colors"
+            >
+              <Home size={20} strokeWidth={1.5} className="text-[#1a3a6b]" />
+              <span className="text-sm font-semibold">Home</span>
+            </Link>
 
             {/* Listings ▾ */}
             <HoverDropdown

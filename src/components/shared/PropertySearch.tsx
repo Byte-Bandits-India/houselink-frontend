@@ -35,8 +35,11 @@ const defaultAmenities = [
 ];
 
 const propertyCategories = [
-  { value: "residential", label: "Residential" },
-  { value: "commercial", label: "Commercial" },
+  { value: "plots", label: "Plots" },
+  { value: "apartments", label: "Apartments" },
+  { value: "villas", label: "Villas" },
+  { value: "house", label: "Individual House" },
+  { value: "commercial", label: "Commercial Properties" },
 ];
 
 /* ── Controlled select ── */
@@ -327,8 +330,8 @@ export default function PropertySearch() {
             <NativeSelect
               options={propertyCategories}
               placeholder="Select Category"
-              value={categoryType}
-              onChange={setCategoryType}
+              value={activeCategory === "all" ? "" : activeCategory}
+              onChange={setActiveCategory}
             />
           </Field>
 

@@ -160,11 +160,6 @@ export default function AddPropertyPage() {
     }
   };
 
-  const creditPointsOwner = user?.creditPointsOwner ?? 0;
-  const creditPointsBuilder = user?.creditPointsBuilder ?? 0;
-  const creditPointsConsultant = user?.creditPointsConsultant ?? 0;
-  const hasAnyCredits = creditPointsOwner > 0 || creditPointsBuilder > 0 || creditPointsConsultant > 0;
-
   // If user auth state is still loading
   if (authLoading) {
     return (
@@ -174,8 +169,6 @@ export default function AddPropertyPage() {
       </div>
     );
   }
-
-
 
   return (
     <div className="space-y-6 relative">
