@@ -40,6 +40,9 @@ function FeaturedPropertiesContent() {
   const handleTabChange = (newTab: "sell" | "rent") => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("property_purpose", newTab);
+    if (newTab !== "sell" && activeCategory === "plots") {
+      params.delete("category");
+    }
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
@@ -293,7 +296,7 @@ function FeaturedPropertiesContent() {
           variants={fadeUp}
           className="flex justify-center flex-wrap gap-6 mb-12"
         >
-          {categories.map((cat) => (
+          {categories.filter(cat => activeTab === "sell" || cat.id !== "plots").map((cat) => (
             <button
               key={cat.id}
               onClick={() => handleCategoryChange(cat.id)}

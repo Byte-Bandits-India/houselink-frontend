@@ -1,6 +1,7 @@
 import { getPropertyByPermalink, getImageUrl } from "@/lib/api";
 import PropertyGallery from "@/components/shared/PropertyGallery";
 import PropertyEnquirySidebar from "@/components/shared/PropertyEnquirySidebar";
+import PropertySaveButton from "@/components/shared/PropertySaveButton";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -177,13 +178,7 @@ export default async function PropertyDetailPage({
               <Eye size={15} className="text-[#1a3c6b]" />
               {property.views ?? 0} Views
             </span>
-            <button className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors text-sm">
-              <Heart
-                size={16}
-                className="text-gray-400"
-              />
-              Save
-            </button>
+            <PropertySaveButton propertyId={Number(property.id)} />
           </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
@@ -272,7 +267,7 @@ export default async function PropertyDetailPage({
                       "Furnishing",
                       formatCapitalize(property.furnishingType),
                     ],
-                    property.waterSupply && [
+                    property.category?.type?.toLowerCase() !== "commercial" && property.waterSupply && [
                       "Water supply",
                       formatCapitalize(property.waterSupply),
                     ],
@@ -361,7 +356,7 @@ export default async function PropertyDetailPage({
             )}
 
             {/* Brokerage */}
-            {property.brokerageType && (
+            {property.propertyOwnership?.toLowerCase() === "consultant" && property.brokerageType && (
               <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
                 <h2 className="text-base font-semibold text-gray-900 mb-3">
                   Brokerage details
@@ -369,6 +364,10 @@ export default async function PropertyDetailPage({
                 <span className="inline-block bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium px-4 py-2 rounded-lg">
                   {property.brokerageType === "no_brokerage"
                     ? "No Brokerage"
+                    : property.brokerageType === "fixed" && property.brokerageFee != null
+                    ? `Fixed: ₹${new Intl.NumberFormat("en-IN").format(Number(property.brokerageFee))}`
+                    : property.brokerageType === "percentage" && property.brokeragePercentage != null
+                    ? `Percentage: ${property.brokeragePercentage}%`
                     : formatCapitalize(property.brokerageType)}
                 </span>
               </div>

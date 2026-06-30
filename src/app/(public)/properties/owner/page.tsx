@@ -75,8 +75,10 @@ function OwnerPropertiesListContent() {
 
         // Apply client-side filters
         
-        // 1. Property Purpose (Rent/Lease)
-        if (propertyPurpose === "rent") {
+        // 1. Property Purpose (Sell vs Rent/Lease)
+        if (propertyPurpose === "sell") {
+          data = data.filter((p) => p.propertyFor === "sell");
+        } else if (propertyPurpose === "rent") {
           data = data.filter(
             (p) => p.propertyFor === "rent" || p.propertyFor === "lease"
           );

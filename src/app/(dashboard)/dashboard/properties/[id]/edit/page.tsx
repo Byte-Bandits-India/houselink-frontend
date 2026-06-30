@@ -67,6 +67,23 @@ export default function EditPropertyPage({
       return;
     }
 
+    if (data.property_for === "sell") {
+      const ownership = data.owner_type?.toLowerCase();
+      let credits = 0;
+      if (ownership === "owner") {
+        credits = user.creditPointsOwner ?? 0;
+      } else if (ownership === "builder") {
+        credits = user.creditPointsBuilder ?? 0;
+      } else if (ownership === "consultant") {
+        credits = user.creditPointsConsultant ?? 0;
+      }
+
+      if (credits <= 0) {
+        setErrorMsg(`You do not have active credit points to update listing as a "${data.owner_type}". Please purchase a package first.`);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setErrorMsg(null);
 

@@ -182,7 +182,7 @@ export default function Step5Final({ data, onChange, isEditMode, disabled = fals
                         <label className="mt-2 inline-block cursor-pointer">
                           <input
                             type="file"
-                            accept="image/jpeg,image/jpg,image/png"
+                            accept="image/jpeg,image/jpg,image/png,image/webp"
                             className="hidden"
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
@@ -250,7 +250,7 @@ export default function Step5Final({ data, onChange, isEditMode, disabled = fals
                       <label className="mt-2 inline-block cursor-pointer">
                         <input
                           type="file"
-                          accept="image/jpeg,image/jpg,image/png"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
                           className="hidden"
                           onChange={(e) => {
                             if (e.target.files && e.target.files[0]) {

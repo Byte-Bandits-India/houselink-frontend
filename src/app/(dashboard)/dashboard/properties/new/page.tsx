@@ -22,23 +22,7 @@ export default function AddPropertyPage() {
       return;
     }
 
-    // Pre-validate package credit matching the owner type selection (only if propertyFor is sell)
-    if (data.property_for === "sell") {
-      const ownership = data.owner_type?.toLowerCase();
-      let credits = 0;
-      if (ownership === "owner") {
-        credits = user.creditPointsOwner ?? 0;
-      } else if (ownership === "builder") {
-        credits = user.creditPointsBuilder ?? 0;
-      } else if (ownership === "consultant") {
-        credits = user.creditPointsConsultant ?? 0;
-      }
 
-      if (credits <= 0) {
-        setErrorMsg(`You do not have active credit points to list as a "${data.owner_type}". Please purchase a package for "${data.owner_type}" first.`);
-        return;
-      }
-    }
 
     setIsSubmitting(true);
     setErrorMsg(null);

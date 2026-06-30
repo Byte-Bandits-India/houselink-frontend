@@ -408,6 +408,9 @@ export function mapFormDataToApiPayload(
 
     const deposit = parseOptionalFloat(formData.security_deposit) || 0;
     payload.securityDeposit = deposit > 0 ? deposit : 1000;
+    if (formData.security_deposit_type) {
+      payload.securityDepositType = formData.security_deposit_type;
+    }
 
     payload.maintenanceChargeStatus = formData.maintenance_charge_status === "Yes";
     if (formData.maintenance_charge_amount) {

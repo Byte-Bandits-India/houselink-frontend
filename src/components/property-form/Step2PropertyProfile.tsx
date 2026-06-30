@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { message } from "antd";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -162,6 +164,18 @@ export default function Step2PropertyProfile({ data, onChange, disabled = false 
 
   const tenantPrefs = data.tenant_preference || [];
   const parkingTypes = data.parking_type || [];
+
+  const isConsultant = data.owner_type === "Consultant";
+  const imageLimit = isConsultant ? 5 : 15;
+
+  const currentImagesCount = data.images?.length || 0;
+  useEffect(() => {
+    if (data.images && data.images.length > imageLimit) {
+      const truncated = data.images.slice(0, imageLimit);
+      onChange({ images: truncated });
+      message.warning(`Number of images limited to ${imageLimit} for ${data.owner_type || "Owner"}.`);
+    }
+  }, [currentImagesCount, imageLimit, data.owner_type, onChange, data.images]);
 
   const handleNumberInput = (field: keyof PropertyFormData, value: string) => {
     const clean = value.replace(/[^0-9]/g, "");
@@ -694,34 +708,7 @@ export default function Step2PropertyProfile({ data, onChange, disabled = false 
           </div>
         )}
 
-      {/* ─── SECTION 4: AGREEMENTS & TERMS (Rent / Lease Selection) ─── */}
-      {allowedFields.rent_lease_type && (
-        <div className="bg-brand/5 p-5 rounded-2xl border border-brand/10 space-y-3">
-          <Label className="text-brand font-semibold text-sm block">
-            Agreement Type <span className="text-red-500">*</span>
-          </Label>
-          <div className="flex gap-3">
-            {["rent", "lease"].map((v) => (
-              <RadioPill
-                key={v}
-                disabled={disabled}
-                checked={data.rent_lease_type === v}
-                label={v.charAt(0).toUpperCase() + v.slice(1)}
-                onChange={() =>
-                  onChange({
-                    rent_lease_type: v as any,
-                    price: "",
-                    security_deposit: "",
-                    maintenance_charge_amount: "",
-                  })
-                }
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ─── SECTION 5: KEY SPECIFICATIONS ─── */}
+      {/* ─── SECTION 4: KEY SPECIFICATIONS ─── */}
       {allowedFields.key_specifications && (
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
           <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2">
@@ -808,6 +795,33 @@ export default function Step2PropertyProfile({ data, onChange, disabled = false 
                 Add Key Specification
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── SECTION 5: AGREEMENTS & TERMS (Rent / Lease Selection) ─── */}
+      {allowedFields.rent_lease_type && (
+        <div className="bg-brand/5 p-5 rounded-2xl border border-brand/10 space-y-3">
+          <Label className="text-brand font-semibold text-sm block">
+            Agreement Type <span className="text-red-500">*</span>
+          </Label>
+          <div className="flex gap-3">
+            {["rent", "lease"].map((v) => (
+              <RadioPill
+                key={v}
+                disabled={disabled}
+                checked={data.rent_lease_type === v}
+                label={v.charAt(0).toUpperCase() + v.slice(1)}
+                onChange={() =>
+                  onChange({
+                    rent_lease_type: v as any,
+                    price: "",
+                    security_deposit: "",
+                    maintenance_charge_amount: "",
+                  })
+                }
+              />
+            ))}
           </div>
         </div>
       )}
@@ -1122,7 +1136,7 @@ export default function Step2PropertyProfile({ data, onChange, disabled = false 
       {/* ─── SECTION 7: PROPERTY IMAGES ─── */}
       <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
         <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2">
-          Property Images <span className="text-gray-400 font-normal text-xs ml-1">(Max 2MB each, up to 15)</span>
+          Property Images <span className="text-gray-400 font-normal text-xs ml-1">(Max 2MB each, up to {imageLimit})</span>
         </h4>
 
         {data.images && data.images.length > 0 ? (
@@ -1161,19 +1175,33 @@ export default function Step2PropertyProfile({ data, onChange, disabled = false 
               Click or drag images here
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              Accepted: JPG, JPEG, PNG only
+              Accepted: JPG, JPEG, PNG, WEBP only
             </p>
             <label className="mt-3 inline-block cursor-pointer">
               <input
                 type="file"
                 multiple
-                accept="image/jpeg,image/jpg,image/png"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files) {
                     const filesArray = Array.from(e.target.files);
-                    const newImages = filesArray.map(file => URL.createObjectURL(file));
-                    onChange({ images: [...(data.images || []), ...newImages] });
+                    const existingImages = data.images || [];
+                    const maxAllowed = imageLimit - existingImages.length;
+
+                    if (maxAllowed <= 0) {
+                      message.warning(`You can only upload up to ${imageLimit} images.`);
+                      return;
+                    }
+
+                    let filesToAdd = filesArray;
+                    if (filesArray.length > maxAllowed) {
+                      message.warning(`Only the first ${maxAllowed} images were added. Maximum limit is ${imageLimit}.`);
+                      filesToAdd = filesArray.slice(0, maxAllowed);
+                    }
+
+                    const newImages = filesToAdd.map(file => URL.createObjectURL(file));
+                    onChange({ images: [...existingImages, ...newImages] });
                   }
                 }}
               />

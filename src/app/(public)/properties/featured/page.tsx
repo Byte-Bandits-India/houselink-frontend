@@ -32,6 +32,7 @@ function FeaturedPropertiesListContent() {
         const fetchParams: any = {
           is_active: "true",
           moderation: "approved",
+          is_featured: "true",
           page_size: "100",
         };
 
@@ -72,10 +73,15 @@ function FeaturedPropertiesListContent() {
         const res = await getProperties(fetchParams);
         let data = res.data || [];
 
+        // Filter strictly client-side to ensure only featured properties are shown
+        data = data.filter((p) => p.isFeatured === true);
+
         // Apply client-side filters
         
-        // 1. Property Purpose (Rent/Lease)
-        if (propertyPurpose === "rent") {
+        // 1. Property Purpose (Sell vs Rent/Lease)
+        if (propertyPurpose === "sell") {
+          data = data.filter((p) => p.propertyFor === "sell");
+        } else if (propertyPurpose === "rent") {
           data = data.filter(
             (p) => p.propertyFor === "rent" || p.propertyFor === "lease"
           );

@@ -222,13 +222,19 @@ export default function PropertySearch() {
   const handleTabClick = (key: string) => {
     setActiveTab(key);
     
+    let nextCategory = activeCategory;
+    if (key !== "sell" && activeCategory === "plots") {
+      nextCategory = "all";
+      setActiveCategory("all");
+    }
+
     const params = new URLSearchParams();
     params.set("property_purpose", key);
     if (city) params.set("city", city);
     if (keyword) params.set("keyword", keyword);
     if (location) params.set("location", location);
     if (categoryType) params.set("category_type", categoryType);
-    if (activeCategory !== "all") params.set("category", activeCategory);
+    if (nextCategory !== "all") params.set("category", nextCategory);
 
     if (showAdvanced) {
       params.set("max_price", String(priceRange * 10000000));
@@ -328,7 +334,7 @@ export default function PropertySearch() {
           {/* Category */}
           <Field label="Category" divider={false} className="flex-[1.2_1_140px]">
             <NativeSelect
-              options={propertyCategories}
+              options={activeTab === "sell" ? propertyCategories : propertyCategories.filter(cat => cat.value !== "plots")}
               placeholder="Select Category"
               value={activeCategory === "all" ? "" : activeCategory}
               onChange={setActiveCategory}
@@ -435,7 +441,7 @@ export default function PropertySearch() {
 
       {/* ── Category Nav ── */}
       <div className="flex justify-center gap-7 mt-9 flex-wrap">
-        {categories.map((cat) => (
+        {categories.filter(cat => activeTab === "sell" || cat.id !== "plots").map((cat) => (
           <button
             key={cat.id}
             type="button"
