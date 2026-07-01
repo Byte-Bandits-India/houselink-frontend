@@ -138,25 +138,29 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
   };
 
   const handleTotalFloorsChange = (val: string) => {
-    const total = parseInt(val, 10);
-    const onFloor = parseInt(data.property_on_floor || "", 10);
-    const patch: Partial<PropertyFormData> = { total_floors: val };
-    
-    if (!isNaN(total) && !isNaN(onFloor) && onFloor > total) {
-      patch.property_on_floor = val;
-    }
-    onChange(patch);
+    onChange({ total_floors: val });
   };
 
   const handlePropertyOnFloorChange = (val: string) => {
     const onFloor = parseInt(val, 10);
     const total = parseInt(data.total_floors || "", 10);
-    const patch: Partial<PropertyFormData> = { property_on_floor: val };
     
     if (!isNaN(onFloor) && !isNaN(total) && onFloor > total) {
-      patch.total_floors = val;
+      message.error("Property Floor cannot be greater than Total Floors.");
+      onChange({ total_floors: "", property_on_floor: "" });
+    } else {
+      onChange({ property_on_floor: val });
     }
-    onChange(patch);
+  };
+
+  const handleFloorBlur = () => {
+    const total = parseInt(data.total_floors || "", 10);
+    const onFloor = parseInt(data.property_on_floor || "", 10);
+    
+    if (!isNaN(total) && !isNaN(onFloor) && onFloor > total) {
+      message.error("Property Floor cannot be greater than Total Floors.");
+      onChange({ total_floors: "", property_on_floor: "" });
+    }
   };
 
   return (
@@ -400,6 +404,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                     disabled={disabled}
                     value={data.total_floors || ""}
                     onChange={(e) => handleTotalFloorsChange(e.target.value)}
+                    onBlur={handleFloorBlur}
                     placeholder="e.g. 10"
                     className={cn(isFloorInvalid && "border-red-500 focus-visible:ring-red-500 text-red-500")}
                   />
@@ -413,6 +418,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                     disabled={disabled}
                     value={data.property_on_floor || ""}
                     onChange={(e) => handlePropertyOnFloorChange(e.target.value)}
+                    onBlur={handleFloorBlur}
                     placeholder="e.g. 3"
                     className={cn(isFloorInvalid && "border-red-500 focus-visible:ring-red-500 text-red-500")}
                   />
