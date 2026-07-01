@@ -55,7 +55,6 @@ export default function LeadsPage() {
   }, [filter]);
 
   const filtered = leadsList.filter((l) => l.filter === filter);
-  const totalPages = Math.max(Math.ceil(filtered.length / ITEMS_PER_PAGE), 1);
   const paginatedLeads = filtered.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE

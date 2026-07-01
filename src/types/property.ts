@@ -163,7 +163,9 @@ export interface PropertyFormData
   Step2FormData,
   Step3FormData,
   Step4FormData,
-  Step5FormData { }
+  Step5FormData {
+  id?: number | string;
+}
 
 export const defaultFormData: PropertyFormData = {
   property_for: "sell",

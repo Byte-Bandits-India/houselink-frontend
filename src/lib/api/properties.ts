@@ -839,6 +839,7 @@ export function mapApiPayloadToFormData(p: any): PropertyFormData {
 
   // Return the mapped PropertyFormData
   return {
+    id: p.id,
     property_for,
     owner_type,
     property_main_type: p.category?.type?.toLowerCase() === "commercial" ? "commercial" : "residential",
@@ -1072,6 +1073,21 @@ export function getImageUrl(img?: string | null): string {
   const baseUrl = process.env.NEXT_PUBLIC_WEB_API_URL || "http://localhost:4000";
   const cleanImg = img.startsWith("/") ? img.substring(1) : img;
   return `${baseUrl}/${cleanImg}`;
+}
+
+export async function checkPermalinkAvailability(
+  permalink: string,
+  propertyId?: number | string
+): Promise<{ success: boolean; available: boolean; message?: string }> {
+  const searchParams = new URLSearchParams();
+  searchParams.append("permalink", permalink);
+  if (propertyId) {
+    searchParams.append("propertyId", String(propertyId));
+  }
+  return apiClient.get<{ success: boolean; available: boolean; message?: string }>(
+    `/properties/check-permalink?${searchParams.toString()}`,
+    { skipAuth: true }
+  );
 }
 
 

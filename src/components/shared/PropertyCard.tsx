@@ -135,8 +135,8 @@ export default function PropertyCard(props: PropertyCardProps) {
               <div className="property-tags">
                 {props.isFeatured && <span className="tag-featured">Featured</span>}
                 {props.ownership_type && <span className="tag-owner">{props.ownership_type}</span>}
+                {props.type && <span className="tag-owner capitalize">{props.type}</span>}
                 {props.property_for && <span className="tag-sell">{props.property_for}</span>}
-                {!props.property_for && props.type && <span className="tag-sell capitalize">{props.type}</span>}
               </div>
               <button
                 onClick={handleWishlistClick}

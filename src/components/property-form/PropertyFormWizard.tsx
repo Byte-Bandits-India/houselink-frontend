@@ -38,6 +38,7 @@ export default function PropertyFormWizard({
     ...defaultFormData,
     ...initialData,
   });
+  const [permalinkStatus, setPermalinkStatus] = useState<"idle" | "checking" | "available" | "taken" | "error">("idle");
 
   const patch = (update: Partial<PropertyFormData>) => {
     if (isViewMode) return; // block edits in view mode
@@ -80,6 +81,16 @@ export default function PropertyFormWizard({
       if (allowedFields.name && !data.name) {
         console.log("Validation failed: name is empty", data.name);
         return false;
+      }
+      if (allowedFields.permalink) {
+        if (!data.permalink) {
+          console.log("Validation failed: permalink is empty", data.permalink);
+          return false;
+        }
+        if (permalinkStatus === "checking" || permalinkStatus === "taken") {
+          console.log("Validation failed: permalink status", permalinkStatus);
+          return false;
+        }
       }
       if (allowedFields.description && !data.description) {
         console.log("Validation failed: description is empty", data.description);
@@ -324,7 +335,15 @@ export default function PropertyFormWizard({
           isViewMode && "bg-gray-50/50 opacity-85"
         )}>
           {step === 0 && <Step1BasicDetails data={formData} onChange={patch} disabled={isViewMode} />}
-          {step === 1 && <Step2PropertyProfile data={formData} onChange={patch} disabled={isViewMode} />}
+          {step === 1 && (
+            <Step2PropertyProfile
+              data={formData}
+              onChange={patch}
+              disabled={isViewMode}
+              permalinkStatus={permalinkStatus}
+              onPermalinkStatusChange={setPermalinkStatus}
+            />
+          )}
           {step === 2 && <Step3Location data={formData} onChange={patch} disabled={isViewMode} />}
           {step === 3 && <Step4Amenities data={formData} onChange={patch} disabled={isViewMode} />}
           {step === 4 && <Step5Final data={formData} onChange={patch} isEditMode={isEditMode} disabled={isViewMode} />}

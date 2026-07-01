@@ -37,6 +37,7 @@ export {
   deleteProperty,
   getProperty,
   getPropertyByPermalink,
+  checkPermalinkAvailability,
   updateProperty,
   mapApiPayloadToFormData,
   getProperties,

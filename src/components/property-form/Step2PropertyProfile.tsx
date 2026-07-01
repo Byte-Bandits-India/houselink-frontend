@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { message } from "antd";
+import { checkPermalinkAvailability } from "@/lib/api";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +32,8 @@ interface Props {
   data: PropertyFormData;
   onChange: (patch: Partial<PropertyFormData>) => void;
   disabled?: boolean;
+  permalinkStatus?: "idle" | "checking" | "available" | "taken" | "error";
+  onPermalinkStatusChange?: (status: "idle" | "checking" | "available" | "taken" | "error") => void;
 }
 
 const RadioPill = ({
@@ -158,7 +161,13 @@ function convertNumberToWords(num: number | string): string {
   return trimmed + " Rupees Only";
 }
 
-export default function Step2PropertyProfile({ data, onChange, disabled = false }: Props) {
+export default function Step2PropertyProfile({
+  data,
+  onChange,
+  disabled = false,
+  permalinkStatus = "idle",
+  onPermalinkStatusChange,
+}: Props) {
   const subtype = data.property_subtype || "";
   const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
 
@@ -167,6 +176,34 @@ export default function Step2PropertyProfile({ data, onChange, disabled = false 
 
   const isConsultant = data.owner_type === "Consultant";
   const imageLimit = isConsultant ? 5 : 15;
+
+  // Debounced Permalink Availability Check
+  useEffect(() => {
+    const permalink = data.permalink?.trim();
+    if (!permalink) {
+      onPermalinkStatusChange?.("idle");
+      return;
+    }
+
+    onPermalinkStatusChange?.("idle");
+
+    const timer = setTimeout(() => {
+      onPermalinkStatusChange?.("checking");
+      checkPermalinkAvailability(permalink, data.id)
+        .then(res => {
+          if (res.success) {
+            onPermalinkStatusChange?.(res.available ? "available" : "taken");
+          } else {
+            onPermalinkStatusChange?.("error");
+          }
+        })
+        .catch(() => {
+          onPermalinkStatusChange?.("error");
+        });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [data.permalink, data.id, onPermalinkStatusChange]);
 
   const currentImagesCount = data.images?.length || 0;
   useEffect(() => {
@@ -238,6 +275,26 @@ export default function Step2PropertyProfile({ data, onChange, disabled = false 
                 onChange={(e) => onChange({ permalink: e.target.value })}
                 placeholder="your-property-slug"
               />
+            </div>
+            <div className="mt-1 min-h-[18px]">
+              {permalinkStatus === "checking" ? (
+                <span className="text-xs text-amber-600 flex items-center gap-1.5">
+                  <span className="animate-spin inline-block w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full"></span>
+                  Checking availability...
+                </span>
+              ) : permalinkStatus === "available" ? (
+                <span className="text-xs text-emerald-600 flex items-center gap-1">
+                  ✓ Permalink is available
+                </span>
+              ) : permalinkStatus === "taken" ? (
+                <span className="text-xs text-red-500 flex items-center gap-1 font-medium">
+                  ✕ Already in use
+                </span>
+              ) : permalinkStatus === "error" ? (
+                <span className="text-xs text-amber-500 flex items-center gap-1">
+                  ⚠️ Error checking availability
+                </span>
+              ) : null}
             </div>
           </div>
         )}
