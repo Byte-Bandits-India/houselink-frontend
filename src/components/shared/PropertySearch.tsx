@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getStates, getCities, getFeatures } from "@/lib/api";
+import { useHomeFilter } from "@/contexts/HomeFilterContext";
 
 const categories = [
   { id: "all", name: "All" },
@@ -110,10 +111,24 @@ export default function PropertySearch() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { setFilters } = useHomeFilter();
 
-  const basePath = ["/", "/properties", "/properties/featured", "/properties/owner"].includes(pathname)
-    ? pathname
-    : "/properties";
+  const isListingPage = ["/", "/properties", "/properties/featured", "/properties/owner"].includes(pathname);
+  const isHomePage = pathname === "/";
+  // basePath only matters for non-listing pages (e.g., a blog page clicking Search → go to /properties)
+  const basePath = isListingPage ? pathname : "/properties";
+
+  const scrollToResults = () => {
+    if (isHomePage) {
+      setTimeout(() => {
+        const el = document.getElementById("featured-properties");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    } else if (isListingPage) {
+      // On other listing pages just scroll to the top of the results area
+      setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 100);
+    }
+  };
 
   // State initialized from URL query params (browser execution only)
   const [activeTab, setActiveTab] = useState("sell");
@@ -208,7 +223,6 @@ export default function PropertySearch() {
     if (activeCategory !== "all") params.set("category", activeCategory);
 
     if (showAdvanced) {
-      // price range 0-100 Cr converted to actual currency
       params.set("max_price", String(priceRange * 10000000));
       params.set("max_area", String(areaRange));
       if (selectedAmenities.length > 0) {
@@ -216,7 +230,23 @@ export default function PropertySearch() {
       }
     }
 
-    router.push(`${basePath}?${params.toString()}`);
+    if (isListingPage) {
+      // On all listing pages: update context, keep URL clean
+      setFilters({
+        activeTab: activeTab as "sell" | "rent",
+        activeCategory,
+        city,
+        keyword,
+        location,
+        categoryType,
+        maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
+        maxArea: showAdvanced ? String(areaRange) : "",
+        amenities: showAdvanced && selectedAmenities.length > 0 ? selectedAmenities.join(",") : "",
+      });
+      scrollToResults();
+    } else {
+      router.push(`${basePath}?${params.toString()}`, { scroll: false });
+    }
   };
 
   const handleTabClick = (key: string) => {
@@ -226,6 +256,22 @@ export default function PropertySearch() {
     if (key !== "sell" && activeCategory === "plots") {
       nextCategory = "all";
       setActiveCategory("all");
+    }
+
+    if (isListingPage) {
+      // On all listing pages: update context only, keep URL clean
+      setFilters({
+        activeTab: key as "sell" | "rent",
+        activeCategory: nextCategory,
+        city,
+        keyword,
+        location,
+        categoryType,
+        maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
+        maxArea: showAdvanced ? String(areaRange) : "",
+        amenities: showAdvanced && selectedAmenities.length > 0 ? selectedAmenities.join(",") : "",
+      });
+      return;
     }
 
     const params = new URLSearchParams();
@@ -244,11 +290,27 @@ export default function PropertySearch() {
       }
     }
     
-    router.push(`${basePath}?${params.toString()}`);
+    router.push(`${basePath}?${params.toString()}`, { scroll: false });
   };
 
   const handleCategoryNavClick = (catId: string) => {
     setActiveCategory(catId);
+
+    if (isListingPage) {
+      // On all listing pages: update context only, keep URL clean
+      setFilters({
+        activeTab: activeTab as "sell" | "rent",
+        activeCategory: catId,
+        city,
+        keyword,
+        location,
+        categoryType,
+        maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
+        maxArea: showAdvanced ? String(areaRange) : "",
+        amenities: showAdvanced && selectedAmenities.length > 0 ? selectedAmenities.join(",") : "",
+      });
+      return;
+    }
     
     const params = new URLSearchParams();
     params.set("property_purpose", activeTab);
@@ -266,7 +328,7 @@ export default function PropertySearch() {
       }
     }
     
-    router.push(`${basePath}?${params.toString()}`);
+    router.push(`${basePath}?${params.toString()}`, { scroll: false });
   };
 
   return (

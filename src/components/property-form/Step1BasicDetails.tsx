@@ -18,6 +18,7 @@ import {
   AREA_UNITS,
   RESIDENTIAL_SUBTYPES,
   COMMERCIAL_SUBTYPES,
+  getSchemaFields,
 } from "@/types/property";
 
 interface Props {
@@ -100,18 +101,19 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
   const hasConsultantCredits = (user?.creditPointsConsultant ?? 0) > 0;
 
   // ── Step 1 fields based strictly on step1.MD ──
-  const showLandPlotDetails = ["villa", "individual_house", "plot", "land"].includes(subtype);
+  const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
+  const showLandPlotDetails = allowedFields.plot_area;
   const showPlotAreaRequired = ["villa", "individual_house", "plot", "land"].includes(subtype);
 
-  const showAreaDetails = subtype && subtype !== "plot" && subtype !== "land";
-  const showCarpetArea = ["villa", "individual_house", "shop", "building", "godown", "warehouse", "office_space"].includes(subtype);
-  const showStorageArea = ["godown", "warehouse"].includes(subtype);
+  const showAreaDetails = allowedFields.super_builtup_area;
+  const showCarpetArea = allowedFields.carpet_area;
+  const showStorageArea = allowedFields.storage_area;
 
-  const showFloorDetails = ["apartment", "shop", "building", "godown", "warehouse", "office_space"].includes(subtype);
+  const showFloorDetails = allowedFields.total_floors;
   const isFloorRequired = ["apartment", "building"].includes(subtype);
-  const showUdsArea = subtype === "apartment" && data.property_for !== "rent_lease";
+  const showUdsArea = allowedFields.uds_area;
 
-  const showAdditionalDetails = ["plot", "land"].includes(subtype);
+  const showAdditionalDetails = allowedFields.plot_length || allowedFields.plot_breadth;
 
   const totalFloorsNum = data.total_floors ? parseInt(data.total_floors, 10) : NaN;
   const propertyOnFloorNum = data.property_on_floor ? parseInt(data.property_on_floor, 10) : NaN;
@@ -127,7 +129,12 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
   const showCommercial = !isResidential ? COMMERCIAL_SUBTYPES : [];
 
   const handleSubtype = (val: PropertySubtype) => {
-    onChange({ property_subtype: val });
+    const isNewCommercial = ["shop", "building", "godown", "warehouse", "office_space", "land"].includes(val);
+    const allowed = isNewCommercial ? ["Individual", "Company", "Any"] : ["Family", "Bachelor", "Students", "Working Professionals", "Any"];
+    onChange({
+      property_subtype: val,
+      tenant_preference: (data.tenant_preference || []).filter(tp => allowed.includes(tp))
+    });
   };
 
   const handleDecimalInput = (field: keyof PropertyFormData, value: string) => {
@@ -176,7 +183,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           checked={data.property_for === "sell"}
           label="Sell"
           disabled={disabled}
-          onChange={() => onChange({ property_for: "sell", property_subtype: "" })}
+          onChange={() => onChange({ property_for: "sell", property_subtype: "", tenant_preference: [] })}
         />
         <RadioPill
           name="property_for"
@@ -186,7 +193,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           disabled={disabled}
           onChange={() => {
             const nextOwnerType = data.owner_type === "Builder" ? "Owner" : data.owner_type;
-            onChange({ property_for: "rent_lease", property_subtype: "", owner_type: nextOwnerType });
+            onChange({ property_for: "rent_lease", property_subtype: "", tenant_preference: [], owner_type: nextOwnerType });
           }}
         />
       </div>
@@ -235,7 +242,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           label="Residential"
           disabled={disabled}
           onChange={() => {
-            const patch: Partial<PropertyFormData> = { property_main_type: "residential", property_subtype: "" };
+            const patch: Partial<PropertyFormData> = { property_main_type: "residential", property_subtype: "", tenant_preference: [] };
             if (data.ownership_type === "Company Owned") {
               patch.ownership_type = "";
             }
@@ -248,7 +255,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           checked={data.property_main_type === "commercial"}
           label="Commercial"
           disabled={disabled}
-          onChange={() => onChange({ property_main_type: "commercial", property_subtype: "" })}
+          onChange={() => onChange({ property_main_type: "commercial", property_subtype: "", tenant_preference: [] })}
         />
       </div>
 
@@ -271,122 +278,94 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
       {/* Dynamic Area Fields */}
       {subtype && (
         <div className="mt-4 rounded-xl space-y-4">
-          {/* Land Details / Plot Details */}
-          {showLandPlotDetails && (
-            <>
-              <h4 className="font-semibold text-sm text-gray-700">
-                {subtype === "plot" ? "Plot Details" : "Land Details"}
-              </h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>
-                    {subtype === "plot" ? "Plot Area" : "Land Area"}{" "}
-                    {showPlotAreaRequired && <span className="text-red-500">*</span>}
-                  </Label>
-                  <Input
-                    type="number"
-                    disabled={disabled}
-                    value={data.plot_area || ""}
-                    onChange={(e) => onChange({ plot_area: e.target.value })}
-                    placeholder="Enter area"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>
-                    Unit <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    disabled={disabled}
-                    value={data.plot_unit || ""}
-                    onValueChange={(v) => onChange({ plot_unit: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AREA_UNITS.map((u) => (
-                        <SelectItem key={u.value} value={u.value}>
-                          {u.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+          <h4 className="font-semibold text-sm text-gray-700">
+            {["plot", "land"].includes(subtype) ? (subtype === "plot" ? "Plot Details" : "Land Details") : "Area Details"}
+          </h4>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Unit * (Always rendered first in the grid) */}
+            <div className="space-y-1">
+              <Label>
+                Unit <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                disabled={disabled}
+                value={data.area_unit || ""}
+                onValueChange={(v) => onChange({ area_unit: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {AREA_UNITS.map((u) => (
+                    <SelectItem key={u.value} value={u.value}>
+                      {u.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Plot/Land Area Input */}
+            {showLandPlotDetails && (
+              <div className="space-y-1">
+                <Label>
+                  {subtype === "plot" ? "Plot Area" : "Land Area"}{" "}
+                  {showPlotAreaRequired && <span className="text-red-500">*</span>}
+                </Label>
+                <Input
+                  type="number"
+                  disabled={disabled}
+                  value={data.plot_area || ""}
+                  onChange={(e) => onChange({ plot_area: e.target.value })}
+                  placeholder="Enter area"
+                />
               </div>
-            </>
-          )}
+            )}
 
-          {/* Area Details */}
-          {showAreaDetails && (
-            <>
-              <h4 className="font-semibold text-sm text-gray-700">Area Details</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>
-                    Built-Up Area <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    type="number"
-                    disabled={disabled}
-                    value={data.super_builtup_area || ""}
-                    onChange={(e) => onChange({ super_builtup_area: e.target.value })}
-                    placeholder="Enter area"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>
-                    Unit <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    disabled={disabled}
-                    value={data.builtup_unit || ""}
-                    onValueChange={(v) => onChange({ builtup_unit: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AREA_UNITS.map((u) => (
-                        <SelectItem key={u.value} value={u.value}>
-                          {u.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            {/* Built-Up Area Input */}
+            {showAreaDetails && (
+              <div className="space-y-1">
+                <Label>
+                  Built-Up Area <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="number"
+                  disabled={disabled}
+                  value={data.super_builtup_area || ""}
+                  onChange={(e) => onChange({ super_builtup_area: e.target.value })}
+                  placeholder="Enter area"
+                />
               </div>
+            )}
 
-              {/* Carpet Area (Optional) */}
-              {showCarpetArea && (
-                <div className="space-y-1">
-                  <Label>Carpet Area (Sq. Ft)</Label>
-                  <Input
-                    disabled={disabled}
-                    value={data.carpet_area || ""}
-                    onChange={(e) => handleDecimalInput("carpet_area", e.target.value)}
-                    placeholder="Enter carpet area"
-                    className="rounded-xl border-gray-200 focus-visible:ring-brand"
-                  />
-                </div>
-              )}
+            {/* Carpet Area (Optional) */}
+            {showAreaDetails && showCarpetArea && (
+              <div className="space-y-1">
+                <Label>Carpet Area (Sq. Ft)</Label>
+                <Input
+                  disabled={disabled}
+                  value={data.carpet_area || ""}
+                  onChange={(e) => handleDecimalInput("carpet_area", e.target.value)}
+                  placeholder="Enter carpet area"
+                />
+              </div>
+            )}
 
-              {/* Storage Area (Required for Godown/Warehouse) */}
-              {showStorageArea && (
-                <div className="space-y-1">
-                  <Label>
-                    Storage Area (Sq. Ft) <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    disabled={disabled}
-                    value={data.storage_area || ""}
-                    onChange={(e) => handleDecimalInput("storage_area", e.target.value)}
-                    placeholder="Enter storage area"
-                    className="rounded-xl border-gray-200 focus-visible:ring-brand"
-                  />
-                </div>
-              )}
-            </>
-          )}
+            {/* Storage Area (Required for Godown/Warehouse) */}
+            {showAreaDetails && showStorageArea && (
+              <div className="space-y-1">
+                <Label>
+                  Storage Area (Sq. Ft) <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  disabled={disabled}
+                  value={data.storage_area || ""}
+                  onChange={(e) => handleDecimalInput("storage_area", e.target.value)}
+                  placeholder="Enter storage area"
+                />
+              </div>
+            )}
+          </div>
 
           {/* Floor Details */}
           {showFloorDetails && (
@@ -423,25 +402,24 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                     className={cn(isFloorInvalid && "border-red-500 focus-visible:ring-red-500 text-red-500")}
                   />
                 </div>
+
+                {/* UDS Area (Optional, Apartment only) */}
+                {showUdsArea && (
+                  <div className="space-y-1">
+                    <Label>UDS Area (Sq. Ft)</Label>
+                    <Input
+                      disabled={disabled}
+                      value={data.uds_area || ""}
+                      onChange={(e) => handleDecimalInput("uds_area", e.target.value)}
+                      placeholder="Enter undivided share area"
+                    />
+                  </div>
+                )}
               </div>
               {isFloorInvalid && (
                 <p className="text-red-500 text-xs font-semibold mt-1">
                   Property Floor cannot be greater than Total Floors.
                 </p>
-              )}
-
-              {/* UDS Area (Optional, Apartment only) */}
-              {showUdsArea && (
-                <div className="space-y-1 mt-2">
-                  <Label>UDS Area (Sq. Ft)</Label>
-                  <Input
-                    disabled={disabled}
-                    value={data.uds_area || ""}
-                    onChange={(e) => handleDecimalInput("uds_area", e.target.value)}
-                    placeholder="Enter undivided share area"
-                    className="rounded-xl border-gray-200 focus-visible:ring-brand"
-                  />
-                </div>
               )}
             </>
           )}

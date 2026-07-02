@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Save, Send, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, Send } from "lucide-react";
 import { PropertyFormData, defaultFormData, getSchemaFields } from "@/types/property";
 import Step1BasicDetails from "./Step1BasicDetails";
 import Step2PropertyProfile from "./Step2PropertyProfile";
@@ -22,6 +22,7 @@ interface Props {
   initialData?: Partial<PropertyFormData>;
   isEditMode?: boolean;
   isViewMode?: boolean;
+  disabled?: boolean;
   onSubmit?: (data: PropertyFormData) => void;
   onEdit?: () => void;
 }
@@ -30,6 +31,7 @@ export default function PropertyFormWizard({
   initialData,
   isEditMode = false,
   isViewMode = false,
+  disabled = false,
   onSubmit,
   onEdit,
 }: Props) {
@@ -53,17 +55,20 @@ export default function PropertyFormWizard({
       if (!data.property_for || !data.owner_type || !data.property_main_type || !subtype) {
         return false;
       }
-      const showLandPlotDetails = ["villa", "individual_house", "plot", "land"].includes(subtype);
-      if (showLandPlotDetails) {
-        if (!data.plot_area || !data.plot_unit) return false;
+      const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
+
+      const showLandPlotDetails = allowedFields.plot_area;
+      const showPlotAreaRequired = ["villa", "individual_house", "plot", "land"].includes(subtype);
+      if (showLandPlotDetails && showPlotAreaRequired) {
+        if (!data.plot_area || !data.area_unit) return false;
       }
-      const showAreaDetails = subtype !== "plot" && subtype !== "land";
+      const showAreaDetails = allowedFields.super_builtup_area;
       if (showAreaDetails) {
-        if (!data.super_builtup_area || !data.builtup_unit) return false;
-        const showStorageArea = ["godown", "warehouse"].includes(subtype);
+        if (!data.super_builtup_area || !data.area_unit) return false;
+        const showStorageArea = allowedFields.storage_area;
         if (showStorageArea && !data.storage_area) return false;
       }
-      const showFloorDetails = ["apartment", "shop", "building", "godown", "warehouse", "office_space"].includes(subtype);
+      const showFloorDetails = allowedFields.total_floors;
       const isFloorRequired = ["apartment", "building"].includes(subtype);
       if (showFloorDetails) {
         if (isFloorRequired && (!data.total_floors || !data.property_on_floor)) return false;
@@ -224,7 +229,7 @@ export default function PropertyFormWizard({
     if (stepIndex === 3) {
       const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
       if (allowedFields.direction_facing) {
-        const isDirectionRequired = data.property_for === "sell" && (data.owner_type === "Builder" || data.owner_type === "Consultant") && subtype === "plot";
+        const isDirectionRequired = data.property_for === "sell" && subtype === "plot";
         if (isDirectionRequired && !data.direction_facing) return false;
       }
       return true;
@@ -332,21 +337,21 @@ export default function PropertyFormWizard({
         )}
         <div className={cn(
           "rounded-2xl border border-gray-200 bg-white shadow-sm p-6 min-h-[400px]",
-          isViewMode && "bg-gray-50/50 opacity-85"
+          (isViewMode || disabled) && "bg-gray-50/50 opacity-85"
         )}>
-          {step === 0 && <Step1BasicDetails data={formData} onChange={patch} disabled={isViewMode} />}
+          {step === 0 && <Step1BasicDetails data={formData} onChange={patch} disabled={isViewMode || disabled} />}
           {step === 1 && (
             <Step2PropertyProfile
               data={formData}
               onChange={patch}
-              disabled={isViewMode}
+              disabled={isViewMode || disabled}
               permalinkStatus={permalinkStatus}
               onPermalinkStatusChange={setPermalinkStatus}
             />
           )}
-          {step === 2 && <Step3Location data={formData} onChange={patch} disabled={isViewMode} />}
-          {step === 3 && <Step4Amenities data={formData} onChange={patch} disabled={isViewMode} />}
-          {step === 4 && <Step5Final data={formData} onChange={patch} isEditMode={isEditMode} disabled={isViewMode} />}
+          {step === 2 && <Step3Location data={formData} onChange={patch} disabled={isViewMode || disabled} />}
+          {step === 3 && <Step4Amenities data={formData} onChange={patch} disabled={isViewMode || disabled} />}
+          {step === 4 && <Step5Final data={formData} onChange={patch} isEditMode={isEditMode} disabled={isViewMode || disabled} />}
         </div>
       </div>
 
@@ -355,11 +360,14 @@ export default function PropertyFormWizard({
         <button
           type="button"
           onClick={() => setStep((s) => Math.max(0, s - 1))}
+          disabled={disabled}
           className={cn(
             "flex items-center gap-2 px-5 py-2.5 rounded-lg border text-sm font-semibold transition-all duration-200",
             step === 0
               ? "opacity-0 pointer-events-none"
-              : "border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+              : disabled
+                ? "opacity-50 border-gray-300 text-gray-400 cursor-not-allowed"
+                : "border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
           )}
         >
           <ChevronLeft className="w-4 h-4" /> Previous
@@ -371,10 +379,10 @@ export default function PropertyFormWizard({
           <button
             type="button"
             onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
-            disabled={!canGoNext()}
+            disabled={!canGoNext() || disabled}
             className={cn(
               "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200",
-              canGoNext()
+              canGoNext() && !disabled
                 ? "bg-brand text-white hover:bg-brand/90 shadow-sm"
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
             )}
@@ -387,15 +395,24 @@ export default function PropertyFormWizard({
           <button
             type="button"
             onClick={() => onSubmit?.(formData)}
-            disabled={!isStepValid(step, formData)}
+            disabled={!isStepValid(step, formData) || disabled}
             className={cn(
               "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200",
-              isStepValid(step, formData)
+              isStepValid(step, formData) && !disabled
                 ? "bg-brand text-white hover:bg-brand/90 transition-colors shadow-sm"
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
             )}
           >
-            {isEditMode ? <><Save className="w-4 h-4" /> Save Changes</> : <><Send className="w-4 h-4" /> Submit Listing</>}
+            {disabled ? (
+              <span className="flex items-center gap-2">
+                <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                Submitting...
+              </span>
+            ) : isEditMode ? (
+              <><Save className="w-4 h-4" /> Save Changes</>
+            ) : (
+              <><Send className="w-4 h-4" /> Submit Listing</>
+            )}
           </button>
         )}
       </div>

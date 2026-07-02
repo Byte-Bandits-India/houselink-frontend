@@ -7,6 +7,7 @@ import Link from "next/link";
 import PropertyCard from "@/components/shared/PropertyCard";
 import { getProperties, mapApiPropertyToCardProps, getCityIdByName } from "@/lib/api";
 import { fadeUp, stagger } from "@/lib/animations";
+import { useHomeFilter } from "@/contexts/HomeFilterContext";
 
 const categories = [
   { id: "all", name: "All" },
@@ -21,23 +22,34 @@ function FeaturedPropertiesContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { filters: homeFilters, setFilters } = useHomeFilter();
 
-  // Extract parameters from URL
-  const activeTab = (searchParams.get("property_purpose") || "sell") as "sell" | "rent";
-  const activeCategory = searchParams.get("category") || "all";
-  const city = searchParams.get("city");
-  const keyword = searchParams.get("keyword");
-  const location = searchParams.get("location");
-  const categoryType = searchParams.get("category_type");
-  const maxPrice = searchParams.get("max_price");
-  const maxArea = searchParams.get("max_area");
-  const amenities = searchParams.get("amenities");
+  const isHomePage = pathname === "/";
+
+  // On homepage read from context (no URL pollution); on other pages read from URL
+  const activeTab = (isHomePage ? homeFilters.activeTab : (searchParams.get("property_purpose") || "sell")) as "sell" | "rent";
+  const activeCategory = isHomePage ? homeFilters.activeCategory : (searchParams.get("category") || "all");
+  const city = isHomePage ? homeFilters.city || null : searchParams.get("city");
+  const keyword = isHomePage ? homeFilters.keyword || null : searchParams.get("keyword");
+  const location = isHomePage ? homeFilters.location || null : searchParams.get("location");
+  const categoryType = isHomePage ? homeFilters.categoryType || null : searchParams.get("category_type");
+  const maxPrice = isHomePage ? homeFilters.maxPrice || null : searchParams.get("max_price");
+  const maxArea = isHomePage ? homeFilters.maxArea || null : searchParams.get("max_area");
+  const amenities = isHomePage ? homeFilters.amenities || null : searchParams.get("amenities");
 
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const handleTabChange = (newTab: "sell" | "rent") => {
+    if (isHomePage) {
+      setFilters({
+        ...homeFilters,
+        activeTab: newTab,
+        activeCategory: newTab !== "sell" && homeFilters.activeCategory === "plots" ? "all" : homeFilters.activeCategory,
+      });
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     params.set("property_purpose", newTab);
     if (newTab !== "sell" && activeCategory === "plots") {
@@ -47,6 +59,10 @@ function FeaturedPropertiesContent() {
   };
 
   const handleCategoryChange = (catId: string) => {
+    if (isHomePage) {
+      setFilters({ ...homeFilters, activeCategory: catId });
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     if (catId === "all") {
       params.delete("category");
@@ -106,11 +122,20 @@ function FeaturedPropertiesContent() {
         // Apply client-side filters
         let filteredData = applyFilters(data);
 
-        // Sort: featured properties first
+        // Sort: featured properties first, and then by updatedAt / createdAt descending
         filteredData.sort((a, b) => {
           const aFeatured = a.isFeatured ? 1 : 0;
           const bFeatured = b.isFeatured ? 1 : 0;
-          return bFeatured - aFeatured;
+          if (bFeatured !== aFeatured) {
+            return bFeatured - aFeatured;
+          }
+          
+          const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+          const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+          if (bTime !== aTime) {
+            return bTime - aTime;
+          }
+          return b.id - a.id;
         });
 
         // Map backend properties to PropertyCardProps format
@@ -226,7 +251,7 @@ function FeaturedPropertiesContent() {
     }
 
     loadProperties();
-  }, [activeTab, activeCategory, city, keyword, location, categoryType, maxPrice, maxArea, amenities]);
+  }, [activeTab, activeCategory, city, keyword, location, categoryType, maxPrice, maxArea, amenities, homeFilters]);
 
   return (
     <section className="py-24 bg-surface" id="featured-properties">

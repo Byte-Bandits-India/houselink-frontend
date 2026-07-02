@@ -153,7 +153,7 @@ export default async function PropertyDetailPage({
       <PropertyGallery images={images} />
 
       {/* ── Body ── */}
-      <div className="container mx-auto px-4 pt-6 bg-white rounded-xl -top-16 relative">
+      <div className="container mx-auto px-4 py-6 bg-white rounded-xl -top-16 relative">
         {/* Header card */}
         <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-start gap-4 justify-between">
@@ -274,9 +274,16 @@ export default async function PropertyDetailPage({
                     property.parkingAvailability != null && [
                       "Parking",
                       property.parkingAvailability
-                        ? `${property.parkingType ? formatCapitalize(property.parkingType) : "Yes"}${property.parkingSlots
-                            ? ` (${property.parkingSlots} slots)`
-                            : ""
+                        ? `${
+                            property.parkingType?.toLowerCase() === "both"
+                              ? "Car & Bike"
+                              : property.parkingType
+                              ? formatCapitalize(property.parkingType)
+                              : "Yes"
+                          }${
+                            property.parkingSlots
+                              ? ` (${property.parkingSlots} slots)`
+                              : ""
                           }`
                         : "No",
                     ],

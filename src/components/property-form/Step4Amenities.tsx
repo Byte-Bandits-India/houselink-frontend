@@ -65,7 +65,6 @@ export default function Step4Amenities({ data, onChange, disabled = false }: Pro
 
   const isDirectionRequired =
     data.property_for === "sell" &&
-    (data.owner_type === "Builder" || data.owner_type === "Consultant") &&
     subtype === "plot";
 
   const [dbFeatures, setDbFeatures] = useState<Array<{ id: number; name: string }>>([]);

@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, AlertCircle, Sparkles, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle, Sparkles } from "lucide-react";
 import PropertyFormWizard from "@/components/property-form/PropertyFormWizard";
 import { PropertyFormData } from "@/types/property";
 import { useAuth } from "@/context/AuthContext";
 import { createProperty, ApiError, uploadFiles } from "@/lib/api";
+import { message } from "antd";
 
 export default function AddPropertyPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStep, setSubmitStep] = useState<"location" | "payload" | "posting" | "success" | "">("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (data: PropertyFormData) => {
@@ -28,13 +28,6 @@ export default function AddPropertyPage() {
     setErrorMsg(null);
     
     try {
-      // Step 1: Resolve location
-      setSubmitStep("location");
-      await new Promise((r) => setTimeout(r, 600)); // micro-animation delay
-
-      // Step 2: Payload transformation & uploading local blob files
-      setSubmitStep("payload");
-
       const blobToFile = async (blobUrl: string, defaultName: string): Promise<File> => {
         const response = await fetch(blobUrl);
         const blob = await response.blob();
@@ -108,23 +101,16 @@ export default function AddPropertyPage() {
         video_thumbnail: finalVideoThumbnail,
       };
 
-      await new Promise((r) => setTimeout(r, 400)); // micro-animation delay
-
-      // Step 3: Posting
-      setSubmitStep("posting");
       const result = await createProperty(finalData, user.id);
       console.log("Property created successfully:", result);
 
-      // Step 4: Success state
-      setSubmitStep("success");
-      await new Promise((r) => setTimeout(r, 800)); // allow user to feel success!
+      message.success("Property listing created successfully!");
       
       router.refresh();
       router.push("/dashboard/properties");
     } catch (err: any) {
       console.error("Submission failed:", err);
       setIsSubmitting(false);
-      setSubmitStep("");
       
       if (err instanceof ApiError) {
         let msg = err.message || "Backend rejected property data. Please verify your fields.";
@@ -156,75 +142,6 @@ export default function AddPropertyPage() {
 
   return (
     <div className="space-y-6 relative">
-      {/* ── Submission Overlay ── */}
-      {isSubmitting && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300">
-          <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/50 dark:border-slate-800/50 shadow-2xl rounded-2xl p-8 max-w-md w-full text-center space-y-6 transform scale-100 transition-all">
-            
-            {/* Spinning/Animating icon depending on sub-step */}
-            <div className="flex justify-center">
-              <div className="relative">
-                {submitStep === "success" ? (
-                  <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/50 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 scale-100 transition-transform duration-500">
-                    <CheckCircle2 className="w-8 h-8 animate-bounce" />
-                  </div>
-                ) : (
-                  <div className="relative w-16 h-16">
-                    {/* Ring animation */}
-                    <div className="absolute inset-0 border-4 border-brand/20 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-t-brand border-r-brand rounded-full animate-spin"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-brand animate-pulse" />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Submitting text and progress steps */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                {submitStep === "success" ? "Listing Published!" : "Publishing Property Listing"}
-              </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Please wait while we secure your real estate upload.
-              </p>
-            </div>
-
-            {/* Interactive Progress Indicators */}
-            <div className="space-y-3 pt-2 text-left max-w-xs mx-auto text-xs font-semibold">
-              <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${
-                  submitStep === "location" ? "bg-brand animate-ping" : 
-                  submitStep === "payload" || submitStep === "posting" || submitStep === "success" ? "bg-emerald-500" : "bg-slate-300"
-                }`} />
-                <span className={submitStep === "location" ? "text-brand" : submitStep === "payload" || submitStep === "posting" || submitStep === "success" ? "text-emerald-600" : "text-slate-400"}>
-                  Resolving database location IDs...
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${
-                  submitStep === "payload" ? "bg-brand animate-ping" : 
-                  submitStep === "posting" || submitStep === "success" ? "bg-emerald-500" : "bg-slate-300"
-                }`} />
-                <span className={submitStep === "payload" ? "text-brand" : submitStep === "posting" || submitStep === "success" ? "text-emerald-600" : "text-slate-400"}>
-                  Structuring listing schema payload...
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${
-                  submitStep === "posting" ? "bg-brand animate-ping" : 
-                  submitStep === "success" ? "bg-emerald-500" : "bg-slate-300"
-                }`} />
-                <span className={submitStep === "posting" ? "text-brand" : submitStep === "success" ? "text-emerald-600" : "text-slate-400"}>
-                  Pushing API record to servers...
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
@@ -256,7 +173,7 @@ export default function AddPropertyPage() {
       )}
 
       {/* Wizard */}
-      <PropertyFormWizard onSubmit={handleSubmit} />
+      <PropertyFormWizard onSubmit={handleSubmit} disabled={isSubmitting} />
     </div>
   );
 }

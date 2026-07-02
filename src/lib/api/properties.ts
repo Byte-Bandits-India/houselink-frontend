@@ -186,16 +186,6 @@ export function mapFormDataToApiPayload(
   let subtypeRaw = formData.property_subtype ? formData.property_subtype.toLowerCase() : "apartment";
   let categoriesId = CATEGORY_ID_MAP[subtypeRaw as PropertySubtype] || 1;
 
-  if (formData.property_for === "sell") {
-    if (subtypeRaw === "land") {
-      categoriesId = 3; // Plot maps to category 3 under sell
-    }
-  } else if (formData.property_for === "rent_lease") {
-    if (subtypeRaw === "land" || subtypeRaw === "plot") {
-      categoriesId = 5; // Land maps to category 5 under rent/lease
-    }
-  }
-
   const payload: any = {
     customerId: Number(customerId),
     propertyFor,
@@ -228,28 +218,20 @@ export function mapFormDataToApiPayload(
   // Plot area required check (Plot, Villa/Individual House, Land)
   if (subtypeRaw === "plot" || subtypeRaw === "land" || subtypeRaw === "villa" || subtypeRaw === "individual_house") {
     payload.plotLandArea = plotAreaVal && plotAreaVal > 0 ? plotAreaVal : (builtUpAreaVal && builtUpAreaVal > 0 ? builtUpAreaVal : 1200);
-    payload.plotLandUnit = formData.plot_unit && AREA_UNIT_MAP[formData.plot_unit]
-      ? AREA_UNIT_MAP[formData.plot_unit]
-      : "sq_ft";
   } else {
     if (plotAreaVal) payload.plotLandArea = plotAreaVal;
-    if (formData.plot_unit && AREA_UNIT_MAP[formData.plot_unit]) {
-      payload.plotLandUnit = AREA_UNIT_MAP[formData.plot_unit];
-    }
   }
 
   // Built-up area required check (Apartment, Villa/House, Shop, Building, Godown, Office Space)
   if (subtypeRaw !== "plot" && subtypeRaw !== "land") {
     payload.builtUpArea = builtUpAreaVal && builtUpAreaVal > 0 ? builtUpAreaVal : (plotAreaVal && plotAreaVal > 0 ? plotAreaVal : 1000);
-    payload.builtUpAreaUnit = formData.builtup_unit && AREA_UNIT_MAP[formData.builtup_unit]
-      ? AREA_UNIT_MAP[formData.builtup_unit]
-      : "sq_ft";
   } else {
     if (builtUpAreaVal) payload.builtUpArea = builtUpAreaVal;
-    if (formData.builtup_unit && AREA_UNIT_MAP[formData.builtup_unit]) {
-      payload.builtUpAreaUnit = AREA_UNIT_MAP[formData.builtup_unit];
-    }
   }
+
+  payload.areaUnit = formData.area_unit && AREA_UNIT_MAP[formData.area_unit]
+    ? AREA_UNIT_MAP[formData.area_unit]
+    : "sq_ft";
 
   payload.plotLandLength = parseOptionalFloat(formData.plot_length);
   payload.plotLandBreadth = parseOptionalFloat(formData.plot_breadth);
@@ -359,9 +341,13 @@ export function mapFormDataToApiPayload(
   }
 
   if (formData.parking_type && formData.parking_type.length > 0) {
-    const pt = formData.parking_type[0].toLowerCase();
-    if (pt === "bike" || pt === "car") {
-      payload.parkingType = pt;
+    const normalized = formData.parking_type.map((t: string) => t.toLowerCase().trim());
+    if (normalized.includes("bike") && normalized.includes("car")) {
+      payload.parkingType = "both";
+    } else if (normalized.includes("bike")) {
+      payload.parkingType = "bike";
+    } else if (normalized.includes("car")) {
+      payload.parkingType = "car";
     }
   }
   if (formData.parking_slots_count) {
@@ -458,7 +444,13 @@ export function mapFormDataToApiPayload(
     if (formData.tenant_preference && formData.tenant_preference.length > 0) {
       payload.tenantPreference = formData.tenant_preference.map(t => {
         const normalized = t.toLowerCase().trim();
-        if (normalized.includes("bachelor") || normalized.includes("student") || normalized.includes("professional")) {
+        if (normalized === "students" || normalized === "student") {
+          return "students";
+        }
+        if (normalized === "working professionals" || normalized === "working_professionals" || normalized === "professional") {
+          return "working_professionals";
+        }
+        if (normalized.includes("bachelor")) {
           return "bachelor";
         }
         return normalized;
@@ -475,6 +467,7 @@ export function mapFormDataToApiPayload(
   // Renewal settings
   payload.renew24Hours = !!formData.renew_24_hours;
   payload.renew30Days = !!formData.renew_30_days;
+  payload.isFeatured = !!formData.is_featured;
 
   // Videos - clean, auto-prepend https:// and validate to prevent 422 validation errors
   let videoUrl = formData.video_url?.trim();
@@ -847,11 +840,10 @@ export function mapApiPayloadToFormData(p: any): PropertyFormData {
 
     // Area and dimensions
     plot_area: p.plotLandArea != null ? String(p.plotLandArea) : "",
-    plot_unit: (p.plotLandUnit && AREA_UNIT_REVERSE[p.plotLandUnit]) || "1",
+    area_unit: (p.areaUnit && AREA_UNIT_REVERSE[p.areaUnit]) || "1",
     plot_length: p.plotLandLength != null ? String(p.plotLandLength) : "",
     plot_breadth: p.plotLandBreadth != null ? String(p.plotLandBreadth) : "",
     super_builtup_area: p.builtUpArea != null ? String(p.builtUpArea) : "",
-    builtup_unit: (p.builtUpAreaUnit && AREA_UNIT_REVERSE[p.builtUpAreaUnit]) || "1",
     carpet_area: p.carpetArea != null ? String(p.carpetArea) : "",
     uds_area: p.udsArea != null ? String(p.udsArea) : "",
     storage_area: p.storageArea != null ? String(p.storageArea) : "",
@@ -883,7 +875,11 @@ export function mapApiPayloadToFormData(p: any): PropertyFormData {
     food_preference: (p.foodPreference && FOOD_PREFERENCE_REVERSE[p.foodPreference]) || "",
     pet_policy: p.petPolicy === "not_allowed" ? "Not Allowed" : p.petPolicy === "allowed" ? "Allowed" : "",
     parking_availability: p.parkingAvailability === true ? "Yes" : p.parkingAvailability === false ? "No" : "",
-    parking_type: p.parkingType ? [p.parkingType.charAt(0).toUpperCase() + p.parkingType.slice(1)] : [],
+    parking_type: (() => {
+      if (!p.parkingType) return [];
+      if (p.parkingType.toLowerCase() === "both") return ["Bike", "Car"];
+      return [p.parkingType.charAt(0).toUpperCase() + p.parkingType.slice(1)];
+    })(),
     parking_slots_count: p.parkingSlots != null ? String(p.parkingSlots) : "",
     ownership_type: (p.ownershipType && OWNERSHIP_TYPE_REVERSE[p.ownershipType]) || "",
 
@@ -922,11 +918,24 @@ export function mapApiPayloadToFormData(p: any): PropertyFormData {
     features,
     facilities,
     key_specifications,
-    tenant_preference: Array.isArray(p.tenantPreference)
-      ? p.tenantPreference.map((t: string) => typeof t === "string" ? t.charAt(0).toUpperCase() + t.slice(1) : String(t))
-      : typeof p.tenantPreference === "string"
-        ? [p.tenantPreference.charAt(0).toUpperCase() + p.tenantPreference.slice(1)]
-        : [],
+    tenant_preference: (() => {
+      if (!p.tenantPreference) return [];
+      const parts = typeof p.tenantPreference === "string"
+        ? p.tenantPreference.split(",")
+        : (Array.isArray(p.tenantPreference) ? p.tenantPreference : [p.tenantPreference]);
+      
+      return parts.map((t: string) => {
+        const val = t.toLowerCase().trim();
+        if (val === "family") return "Family";
+        if (val === "bachelor") return "Bachelor";
+        if (val === "students" || val === "student") return "Students";
+        if (val === "working_professionals" || val === "working professionals" || val === "professional") return "Working Professionals";
+        if (val === "any") return "Any";
+        if (val === "individual") return "Individual";
+        if (val === "company") return "Company";
+        return t.charAt(0).toUpperCase() + t.slice(1);
+      });
+    })(),
     tags: Array.isArray(p.tags) ? p.tags : [],
     images,
     video_url,

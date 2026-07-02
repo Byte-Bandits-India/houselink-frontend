@@ -64,13 +64,11 @@ export interface Step1FormData {
   property_subtype: PropertySubtype | "";
   // area fields
   plot_area?: string;
-  plot_unit?: string;
+  area_unit?: string;
   plot_length?: string;
   plot_breadth?: string;
   super_builtup_area?: string;
-  builtup_unit?: string;
   carpet_area?: string;
-  carpet_unit?: string;
   total_floors?: string;
   property_on_floor?: string;
 }
@@ -155,6 +153,7 @@ export interface Step5FormData {
   // Auto-renewal options
   renew_24_hours?: boolean;
   renew_30_days?: boolean;
+  is_featured?: boolean;
 }
 
 // Combined Property Form Data interface extending all steps
@@ -191,6 +190,7 @@ export const defaultFormData: PropertyFormData = {
   images: [],
   renew_24_hours: false,
   renew_30_days: false,
+  is_featured: false,
   availability_status: "Ready to Occupy",
 };
 
@@ -211,8 +211,10 @@ export function getSchemaFields(
   fields.permalink = true;
   fields.description = true;
   fields.price = true;
-  fields.availability_status = true;
-  fields.availability_date = true;
+  if (isRentLease || subtype !== "land") {
+    fields.availability_status = true;
+    fields.availability_date = true;
+  }
   if (
     subtype !== "plot" &&
     subtype !== "land" &&
@@ -275,7 +277,7 @@ export function getSchemaFields(
 
     if (subtype === "apartment") {
       fields.super_builtup_area = true;
-      fields.builtup_unit = true;
+      fields.area_unit = true;
       fields.total_floors = true;
       fields.property_on_floor = true;
       if (!isRentLease) {
@@ -284,9 +286,8 @@ export function getSchemaFields(
     } else {
       // Villa / Individual House
       fields.plot_area = true;
-      fields.plot_unit = true;
+      fields.area_unit = true;
       fields.super_builtup_area = true;
-      fields.builtup_unit = true;
       fields.carpet_area = true;
       fields.garden = true;
       fields.swimming_pool = true;
@@ -294,7 +295,7 @@ export function getSchemaFields(
   } else if (["plot", "land"].includes(subtype)) {
     // Plots / Lands
     fields.plot_area = true;
-    fields.plot_unit = true;
+    fields.area_unit = true;
     fields.ownership_type = true;
     fields.plot_length = true;
     fields.plot_breadth = true;
@@ -307,7 +308,7 @@ export function getSchemaFields(
     // Commercial (Office Space, Shop, Building, Godown, Warehouse)
     fields.ownership_type = true;
     fields.super_builtup_area = true;
-    fields.builtup_unit = true;
+    fields.area_unit = true;
     fields.carpet_area = true;
     fields.parking_availability = true;
     fields.parking_type = true;
@@ -323,12 +324,6 @@ export function getSchemaFields(
       if (!["shop", "building", "office_space", "godown", "warehouse"].includes(subtype)) {
         fields.water_supply = true;
       }
-    }
-
-    // Plot area/unit is in all sell commercial and shop/building/godown/warehouse rent/lease schemas
-    if (subtype !== "office_space" || !isRentLease) {
-      fields.plot_area = true;
-      fields.plot_unit = true;
     }
 
     if (subtype === "office_space") {
@@ -370,11 +365,8 @@ export function getSchemaFields(
       fields.corner_property = true;
       fields.utility_area = true;
       fields.key_specifications = true;
-
-      if (isRentLease) {
-        fields.total_floors = true;
-        fields.property_on_floor = true;
-      }
+      fields.total_floors = true;
+      fields.property_on_floor = true;
     }
   }
 
