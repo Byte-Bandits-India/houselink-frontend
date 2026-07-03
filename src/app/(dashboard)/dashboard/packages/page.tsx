@@ -55,7 +55,9 @@ function CreditCard({ entry }: { entry: CreditEntry }) {
       {isActive ? (
         <>
           <p className="text-4xl font-bold text-ink leading-none my-2">{entry.credits}</p>
-          <p className="text-sm text-ink-secondary mb-1">Active Listing Points</p>
+          <p className="text-sm text-ink-secondary mb-1">
+            {entry.expiry ? `Expiry-Date: ${entry.expiry}` : "Active Listing Points"}
+          </p>
         </>
       ) : (
         <p className="text-sm font-semibold text-ink my-3">No package found</p>
@@ -105,6 +107,46 @@ export default function PackageDetailsPage() {
     }
     loadData();
   }, [user?.id, refreshUser]);
+
+  // Expiry calculation helper
+  function getPackageExpiryDate(userType: string, isRent: boolean): string | null {
+    const matching = invoices.filter((inv) => {
+      const invStatus = String(inv.status).toLowerCase();
+      if (invStatus !== "paid" && invStatus !== "successful") return false;
+      const invType = inv.package_type === "rent" ? "rent" : "sell";
+      if (isRent) {
+        return invType === "rent";
+      } else {
+        if (invType === "rent") return false;
+        const invUserType = inv.user_type || "Owner";
+        return invUserType.toLowerCase() === userType.toLowerCase();
+      }
+    });
+
+    let date: Date;
+    if (matching.length === 0) {
+      // Fallback: If no matching paid invoices, default to 30 days from user registration (or today)
+      const refDate = user?.createdAt ? new Date(user.createdAt) : new Date();
+      date = new Date(refDate);
+      date.setDate(date.getDate() + 30);
+    } else {
+      // Find the latest paid invoice
+      const latest = matching.reduce((latest, current) => {
+        return new Date(current.created_at).getTime() > new Date(latest.created_at).getTime() ? current : latest;
+      }, matching[0]);
+
+      const daysLimit = latest.total_days_limit || 30;
+      date = new Date(latest.created_at);
+      date.setDate(date.getDate() + daysLimit);
+    }
+
+    // Format as DD-MM-YYYY
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+  }
 
   // 1. Separate user credits by type
   let ownerCreditsLeft = user?.creditPointsOwner ?? 0;
@@ -158,13 +200,13 @@ export default function PackageDetailsPage() {
   consultantSellCredits += consultantCreditsLeft;
 
   const sellCards: CreditEntry[] = [
-    { title: "Owner Credit Points", credits: ownerSellCredits, expiry: null, buyHref: "/dashboard/credits?tab=owners", Icon: OwnerIcon },
-    { title: "Builder Credit Points", credits: builderSellCredits, expiry: "active", buyHref: "/dashboard/credits?tab=builders", Icon: BuilderIcon },
-    { title: "Consultant Credit Points", credits: consultantSellCredits, expiry: "active", buyHref: "/dashboard/credits?tab=consultants", Icon: ConsultantIcon },
+    { title: "Owner Credit Points", credits: ownerSellCredits, expiry: getPackageExpiryDate("Owner", false), buyHref: "/dashboard/credits?tab=owners", Icon: OwnerIcon },
+    { title: "Builder Credit Points", credits: builderSellCredits, expiry: getPackageExpiryDate("Builder", false), buyHref: "/dashboard/credits?tab=builders", Icon: BuilderIcon },
+    { title: "Consultant Credit Points", credits: consultantSellCredits, expiry: getPackageExpiryDate("Consultant", false), buyHref: "/dashboard/credits?tab=consultants", Icon: ConsultantIcon },
   ];
 
   const rentCards: CreditEntry[] = [
-    { title: "Rent/Lease Credit Points", credits: rentCredits, expiry: "active", buyHref: "/dashboard/credits?filter=rent", Icon: EnquiryIcon },
+    { title: "Rent/Lease Credit Points", credits: rentCredits, expiry: getPackageExpiryDate("Owner", true), buyHref: "/dashboard/credits?filter=rent", Icon: EnquiryIcon },
   ];
 
   const cards = filter === "sell" ? sellCards : rentCards;

@@ -174,10 +174,10 @@ export default async function PropertyDetailPage({
               <Tag size={15} className="text-[#1a3c6b]" />
               {categoryName}
             </span>
-            <span className="flex items-center gap-1.5">
+            {/* <span className="flex items-center gap-1.5">
               <Eye size={15} className="text-[#1a3c6b]" />
               {property.views ?? 0} Views
-            </span>
+            </span> */}
             <PropertySaveButton propertyId={Number(property.id)} />
           </div>
         </div>
