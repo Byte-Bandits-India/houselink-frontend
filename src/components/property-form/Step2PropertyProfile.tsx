@@ -236,6 +236,33 @@ export default function Step2PropertyProfile({
     onChange({ [field]: sanitized });
   };
 
+  const getTitlePlaceholder = () => {
+    switch (subtype) {
+      case "apartment":
+        return "e.g. Greenwood Heights Apartment";
+      case "villa":
+        return "e.g. Luxury 4 BHK Villa in ECR";
+      case "individual_house":
+        return "e.g. Spacious 3 BHK Individual House in Velachery";
+      case "plot":
+        return "e.g. 2400 Sq.Ft Residential Plot in Tambaram";
+      case "land":
+        return "e.g. 2 Acres Commercial Land near Highway";
+      case "shop":
+        return "e.g. Commercial Shop in T-Nagar Main Road";
+      case "building":
+        return "e.g. Multi-storey Commercial Building in OMR";
+      case "godown":
+        return "e.g. Spacious Godown in Redhills";
+      case "warehouse":
+        return "e.g. 10,000 Sq.Ft Warehouse in Sriperumbudur";
+      case "office_space":
+        return "e.g. Modern Office Space in Guindy Tech Park";
+      default:
+        return "e.g. Greenwood Heights Apartment";
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* ─── SECTION 1: BASIC DETAILS (Name, Slug, Description) ─── */}
@@ -258,7 +285,7 @@ export default function Step2PropertyProfile({
                   .replace(/\s+/g, "-");
                 onChange({ name, permalink: slug });
               }}
-              placeholder="e.g. Greenwood Heights Apartment"
+              placeholder={getTitlePlaceholder()}
               className="rounded-xl border-gray-200 focus-visible:ring-brand"
             />
             <p className="text-xs text-gray-400 text-right">{(data.name || "").length}/100</p>
@@ -791,7 +818,7 @@ export default function Step2PropertyProfile({
               ({subtype === "shop" ? "Highlight key features of your shop" : 
                 subtype === "office_space" ? "Highlight key features of your office" :
                 ["godown", "warehouse"].includes(subtype) ? "Highlight key features of your warehouse" :
-                ["plot", "land"].includes(subtype) ? "Highlight key features of your land" :
+                subtype === "plot" ? "Highlight key features of your land" :
                 "Highlight key features of your property"})
             </span>
           </h4>

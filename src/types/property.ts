@@ -223,7 +223,7 @@ export function getSchemaFields(
     fields.construction_age = true;
   }
   fields.direction_facing = true;
-  if (subtype && ["land", "shop", "building", "godown", "warehouse", "office_space"].includes(subtype)) {
+  if (subtype && ["plot", "shop", "building", "godown", "warehouse", "office_space"].includes(subtype)) {
     fields.key_specifications = true;
   }
 
