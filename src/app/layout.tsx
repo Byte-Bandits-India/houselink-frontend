@@ -5,7 +5,6 @@ import { Providers } from "@/components/global/Providers";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
 import Header from "@/components/global/Header";
 import Footer from "@/components/global/Footer";
-import SmoothScroll from "@/components/global/SmoothScroll";
 import "antd/dist/reset.css";
 
 const hankenGrotesk = Hanken_Grotesk({

@@ -111,7 +111,7 @@ export default function PropertySearch() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { setFilters } = useHomeFilter();
+  const { filters: homeFilters, setFilters } = useHomeFilter();
 
   const isListingPage = ["/", "/properties", "/properties/featured", "/properties/owner"].includes(pathname);
   const isHomePage = pathname === "/";
@@ -143,6 +143,32 @@ export default function PropertySearch() {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [citiesList, setCitiesList] = useState<{ value: string; label: string }[]>(cities);
   const [amenityList, setAmenityList] = useState<string[]>(defaultAmenities);
+
+  // ── Sync local state FROM context (home page only) ────────────────────────
+  // This keeps PropertySearch in sync when FeaturedProperties (or any other
+  // consumer) updates the shared HomeFilterContext.
+  useEffect(() => {
+    if (!isHomePage) return;
+    setActiveTab(homeFilters.activeTab);
+    setActiveCategory(homeFilters.activeCategory);
+    setCity(homeFilters.city);
+    setKeyword(homeFilters.keyword);
+    setLocation(homeFilters.location);
+    setCategoryType(homeFilters.categoryType);
+    if (homeFilters.maxPrice) {
+      setShowAdvanced(true);
+      setPriceRange(Number(homeFilters.maxPrice) / 10000000);
+    }
+    if (homeFilters.maxArea) {
+      setShowAdvanced(true);
+      setAreaRange(Number(homeFilters.maxArea));
+    }
+    if (homeFilters.amenities) {
+      setShowAdvanced(true);
+      setSelectedAmenities(homeFilters.amenities.split(","));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeFilters]);
 
   useEffect(() => {
     async function loadBackendData() {
