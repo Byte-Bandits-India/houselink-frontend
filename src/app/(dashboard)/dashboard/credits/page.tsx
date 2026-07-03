@@ -328,18 +328,21 @@ export default function CreditsPage() {
       {activePackages.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {activePackages.map((pkg) => {
-            const priceVal = pkg.finalPrice !== null ? pkg.finalPrice : pkg.price;
-            const originalVal = pkg.price;
+            const numPrice = Number(pkg.price);
+            const numFinalPrice = pkg.finalPrice !== null ? Number(pkg.finalPrice) : null;
+            const priceVal = numFinalPrice !== null ? numFinalPrice : numPrice;
+            const originalVal = numPrice;
             const formattedPrice = new Intl.NumberFormat("en-IN", {
               style: "currency",
               currency: "INR",
               maximumFractionDigits: 0,
             }).format(priceVal);
 
-            const hasSavings = pkg.finalPrice !== null && pkg.finalPrice < pkg.price;
-            const savingsPercent = hasSavings
-              ? Math.round(((Number(originalVal) - Number(priceVal)) / Number(originalVal)) * 100)
+            const hasSavings = numFinalPrice !== null && numFinalPrice < numPrice;
+            const rawSavings = hasSavings
+              ? ((originalVal - priceVal) / originalVal) * 100
               : 0;
+            const savingsPercent = rawSavings % 1 === 0 ? rawSavings.toFixed(0) : rawSavings.toFixed(1);
 
             const activePackageId = getActivePackageId(pkg.userType || "Owner", pkg.type === "rent");
             const isThisPackageActive = activePackageId === pkg.id;
@@ -354,15 +357,9 @@ export default function CreditsPage() {
                     : "border-gray-100 hover:shadow-lg"
                 )}
               >
-                {hasSavings && !isThisPackageActive && (
-                  <div className="absolute top-0 right-0 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-tr-2xl rounded-bl-xl animate-bounce">
+                {hasSavings && (
+                  <div className="absolute top-0 right-0 z-10 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-tr-2xl rounded-bl-xl animate-bounce">
                     SAVE {savingsPercent}%
-                  </div>
-                )}
-
-                {isThisPackageActive && (
-                  <div className="absolute top-0 right-0 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-tr-2xl rounded-bl-xl">
-                    ACTIVE
                   </div>
                 )}
 
@@ -391,23 +388,37 @@ export default function CreditsPage() {
                   <p className="text-sm text-ink-secondary mb-3">{pkg.totalDaysLimit} Days validity</p>
                 )}
 
-                <button
-                  onClick={() => handleBuyPackage(pkg)}
-                  disabled={isThisPackageActive || buyingId === pkg.id}
-                  className={cn(
-                    "w-full mt-auto border-2 font-bold text-sm py-2.5 rounded-lg transition-colors duration-200",
-                    isThisPackageActive
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-700 cursor-not-allowed"
-                      : "border-brand text-brand hover:bg-brand hover:text-white disabled:opacity-50"
-                  )}
-                >
-                  {buyingId === pkg.id
-                    ? "Processing..."
-                    : isThisPackageActive
-                      ? "Active Package Exists"
-                      : "Buy Package"
-                  }
-                </button>
+                {/* Compute alreadyHasCredits inside the loop */}
+                {(() => {
+                  const uType = pkg.userType?.toLowerCase();
+                  const alreadyHasCredits =
+                    (uType === "owner" && hasOwnerCredits) ||
+                    (uType === "builder" && hasBuilderCredits) ||
+                    (uType === "consultant" && hasConsultantCredits) ||
+                    (pkg.type === "rent" && hasRentCredits);
+
+                  return (
+                    <button
+                      onClick={() => handleBuyPackage(pkg)}
+                      disabled={alreadyHasCredits || buyingId === pkg.id}
+                      className={cn(
+                        "w-full mt-auto border-2 font-bold text-sm py-2.5 rounded-lg transition-colors duration-200",
+                        alreadyHasCredits
+                          ? "border-emerald-600 bg-emerald-50 text-emerald-700 cursor-not-allowed"
+                          : "border-brand text-brand hover:bg-brand hover:text-white disabled:opacity-50"
+                      )}
+                    >
+                      {buyingId === pkg.id
+                        ? "Processing..."
+                        : isThisPackageActive
+                          ? "Active Package"
+                          : alreadyHasCredits
+                            ? "Active Package Exists"
+                            : "Buy Package"
+                      }
+                    </button>
+                  );
+                })()}
               </div>
             );
           })}
