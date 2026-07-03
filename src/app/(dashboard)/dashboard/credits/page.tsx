@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { getPackagesList, createCheckoutOrder, verifyCheckoutPayment, getCustomerInvoices, type Package, type UserInvoice } from "@/lib/api";
+import { message } from "antd";
 
 type Filter = "sell" | "rent";
 type UserTab = "owners" | "builders" | "consultants";
@@ -121,9 +122,44 @@ export default function CreditsPage() {
   const hasConsultantCredits = consultantSellCredits > 0;
   const hasRentCredits = rentCredits > 0;
 
+  // Helper to check if a specific package is the active one
+  const getActivePackageId = (userType: string, isRent: boolean): number | null => {
+    const hasCredits =
+      (userType.toLowerCase() === "owner" && !isRent && ownerSellCredits > 0) ||
+      (userType.toLowerCase() === "builder" && !isRent && builderSellCredits > 0) ||
+      (userType.toLowerCase() === "consultant" && !isRent && consultantSellCredits > 0) ||
+      (isRent && rentCredits > 0);
+
+    if (!hasCredits) return null;
+
+    const matching = invoices.filter((inv) => {
+      const invStatus = String(inv.status).toLowerCase();
+      if (invStatus !== "paid" && invStatus !== "successful") return false;
+      const invType = inv.package_type === "rent" ? "rent" : "sell";
+      if (isRent) {
+        return invType === "rent";
+      } else {
+        if (invType === "rent") return false;
+        const invUserType = inv.user_type || "Owner";
+        return invUserType.toLowerCase() === userType.toLowerCase();
+      }
+    });
+
+    if (matching.length === 0) return null;
+
+    const latest = matching.reduce((latest, current) => {
+      return new Date(current.created_at).getTime() > new Date(latest.created_at).getTime() ? current : latest;
+    }, matching[0]);
+
+    if (latest.package_id && typeof latest.package_id === 'string' && latest.package_id.startsWith("pkg_")) {
+      return Number(latest.package_id.replace("pkg_", ""));
+    }
+    return Number(latest.package_id);
+  };
+
   const handleBuyPackage = async (pkg: Package) => {
     if (!user) {
-      alert("Please log in to purchase credit packages.");
+      message.warning("Please log in to purchase credit packages.");
       return;
     }
 
@@ -135,7 +171,7 @@ export default function CreditsPage() {
       (pkg.type === "rent" && hasRentCredits);
 
     if (alreadyHasCredits) {
-      alert("You already have active credit points for this category. You cannot purchase another package until they are exhausted.");
+      message.error("You already have active credits in this category. You cannot purchase another package until they are exhausted.");
       return;
     }
 
@@ -143,14 +179,14 @@ export default function CreditsPage() {
       setBuyingId(pkg.id);
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        alert("Failed to load Razorpay Payment Gateway script. Please check your connection.");
+        message.error("Failed to load Razorpay Payment Gateway script. Please check your connection.");
         return;
       }
 
       // Create backend order
       const orderRes = await createCheckoutOrder(Number(user.id), pkg.id);
       if (!orderRes.success) {
-        alert("Failed to initiate order. Please try again.");
+        message.error("Failed to initiate order. Please try again.");
         return;
       }
 
@@ -174,13 +210,13 @@ export default function CreditsPage() {
             });
 
             if (verifyRes.success) {
-              alert(`Payment successful! ${pkg.noOfCredit} credits have been added to your account.`);
+              message.success(`Payment successful! ${pkg.noOfCredit} credits have been added to your account.`);
               window.location.href = "/dashboard/packages";
             } else {
-              alert("Payment verification failed. Please contact support.");
+              message.error("Payment verification failed. Please contact support.");
             }
           } catch (err: any) {
-            alert(err.message || "Payment verification failed.");
+            message.error(err.message || "Payment verification failed.");
           } finally {
             setBuyingId(null);
           }
@@ -203,7 +239,7 @@ export default function CreditsPage() {
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
     } catch (err: any) {
-      alert(err.message || "Something went wrong while initiating payment");
+      message.error(err.message || "Something went wrong while initiating payment");
       setBuyingId(null);
     }
   };
@@ -216,6 +252,7 @@ export default function CreditsPage() {
 
   // Filtering
   const activePackages = packages.filter((p) => {
+    if (p.isGuest) return false;
     const mappedFilter = filter === "sell" ? "buy" : "rent";
     if (p.type !== mappedFilter) return false;
     if (mappedFilter === "buy") {
@@ -228,20 +265,18 @@ export default function CreditsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-5 animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/4 mb-4" />
-        <div className="flex gap-2 mb-4">
-          <div className="h-10 bg-gray-200 rounded w-24" />
-          <div className="h-10 bg-gray-200 rounded w-32" />
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-brand">Dashboard</h1>
+        <div className="flex gap-2">
+          <div className="w-24 h-10 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="w-32 h-10 bg-gray-200 rounded-lg animate-pulse" />
         </div>
-        <div className="h-12 bg-gray-200 rounded w-full mb-6" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {Array.from({ length: 3 }).map((_, idx) => (
-            <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center h-[280px]">
-              <div className="w-16 h-16 bg-gray-200 rounded-full mb-4" />
-              <div className="h-6 bg-gray-200 rounded w-1/2 mb-3" />
-              <div className="h-4 bg-gray-200 rounded w-5/6 mb-2" />
-              <div className="h-4 bg-gray-200 rounded w-2/3 mb-4" />
+            <div key={idx} className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col items-center min-h-[260px] animate-pulse">
+              <div className="w-20 h-20 bg-gray-200 rounded-full mb-3" />
+              <div className="h-6 bg-gray-200 rounded w-2/3 mb-4" />
+              <div className="h-10 bg-gray-200 rounded w-1/3 mb-4" />
               <div className="h-10 bg-gray-200 rounded w-full mt-auto" />
             </div>
           ))}
@@ -306,30 +341,26 @@ export default function CreditsPage() {
               ? Math.round(((Number(originalVal) - Number(priceVal)) / Number(originalVal)) * 100)
               : 0;
 
-            const uType = pkg.userType?.toLowerCase();
-            const alreadyHasCredits =
-              (uType === "owner" && hasOwnerCredits) ||
-              (uType === "builder" && hasBuilderCredits) ||
-              (uType === "consultant" && hasConsultantCredits) ||
-              (pkg.type === "rent" && hasRentCredits);
+            const activePackageId = getActivePackageId(pkg.userType || "Owner", pkg.type === "rent");
+            const isThisPackageActive = activePackageId === pkg.id;
 
             return (
               <div
                 key={pkg.id}
                 className={cn(
                   "relative bg-white border rounded-2xl p-4 flex flex-col items-center text-center shadow-md transition-all duration-200",
-                  alreadyHasCredits 
+                  isThisPackageActive 
                     ? "border-emerald-200/80 bg-emerald-50/10 shadow-sm"
                     : "border-gray-100 hover:shadow-lg"
                 )}
               >
-                {hasSavings && !alreadyHasCredits && (
+                {hasSavings && !isThisPackageActive && (
                   <div className="absolute top-0 right-0 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-tr-2xl rounded-bl-xl animate-bounce">
                     SAVE {savingsPercent}%
                   </div>
                 )}
 
-                {alreadyHasCredits && (
+                {isThisPackageActive && (
                   <div className="absolute top-0 right-0 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-tr-2xl rounded-bl-xl">
                     ACTIVE
                   </div>
@@ -362,17 +393,17 @@ export default function CreditsPage() {
 
                 <button
                   onClick={() => handleBuyPackage(pkg)}
-                  disabled={alreadyHasCredits || buyingId === pkg.id}
+                  disabled={isThisPackageActive || buyingId === pkg.id}
                   className={cn(
                     "w-full mt-auto border-2 font-bold text-sm py-2.5 rounded-lg transition-colors duration-200",
-                    alreadyHasCredits
+                    isThisPackageActive
                       ? "border-emerald-600 bg-emerald-50 text-emerald-700 cursor-not-allowed"
                       : "border-brand text-brand hover:bg-brand hover:text-white disabled:opacity-50"
                   )}
                 >
                   {buyingId === pkg.id
                     ? "Processing..."
-                    : alreadyHasCredits
+                    : isThisPackageActive
                       ? "Active Package Exists"
                       : "Buy Package"
                   }
