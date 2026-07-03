@@ -133,7 +133,8 @@ export default function Step3Location({ data, onChange, disabled = false }: Prop
         </Label>
         <Input
           value={data.address || ""}
-          onChange={(e) => onChange({ address: e.target.value })}
+          maxLength={200}
+          onChange={(e) => onChange({ address: e.target.value.slice(0, 200) })}
           placeholder="e.g. 12, MG Road"
           disabled={disabled}
         />

@@ -47,6 +47,16 @@ export default function Step5Final({ data, onChange, isEditMode, disabled = fals
 
   const handleDecimalInput = (field: keyof PropertyFormData, val: string) => {
     if (/^\d*\.?\d*$/.test(val)) {
+      // Clamp brokerage percentage to 0–100
+      if (field === "brokerage_percentage") {
+        const num = parseFloat(val);
+        if (!isNaN(num) && num > 100) return;
+      }
+      // Clamp brokerage fee to 10 integer digits
+      if (field === "brokerage_fee") {
+        const parts = val.split(".");
+        if (parts[0].length > 10) return;
+      }
       onChange({ [field]: val });
     }
   };
@@ -131,10 +141,12 @@ export default function Step5Final({ data, onChange, isEditMode, disabled = fals
                     <Input
                       disabled={disabled}
                       value={data.seo_title || ""}
-                      onChange={(e) => onChange({ seo_title: e.target.value })}
+                      maxLength={70}
+                      onChange={(e) => onChange({ seo_title: e.target.value.slice(0, 70) })}
                       placeholder="e.g. 3BHK Apartment for Sale in Bengaluru – Best Price"
                       className="rounded-xl border-gray-200 focus-visible:ring-brand"
                     />
+                    <p className="text-xs text-gray-400 text-right">{(data.seo_title || "").length}/70</p>
                   </div>
                 )}
 
@@ -144,11 +156,13 @@ export default function Step5Final({ data, onChange, isEditMode, disabled = fals
                     <Textarea
                       disabled={disabled}
                       value={data.seo_desc || ""}
-                      onChange={(e) => onChange({ seo_desc: e.target.value })}
+                      maxLength={160}
+                      onChange={(e) => onChange({ seo_desc: e.target.value.slice(0, 160) })}
                       placeholder="Provide a search-engine-friendly description of the property..."
                       className="resize-none rounded-xl border-gray-200 focus-visible:ring-brand"
                       rows={3}
                     />
+                    <p className="text-xs text-gray-400 text-right">{(data.seo_desc || "").length}/160</p>
                   </div>
                 )}
 
@@ -214,7 +228,8 @@ export default function Step5Final({ data, onChange, isEditMode, disabled = fals
                 <Input
                   disabled={disabled}
                   value={data.video_url || ""}
-                  onChange={(e) => onChange({ video_url: e.target.value })}
+                  maxLength={500}
+                  onChange={(e) => onChange({ video_url: e.target.value.slice(0, 500) })}
                   placeholder="e.g. https://youtube.com/watch?v=..."
                   className="rounded-xl border-gray-200 focus-visible:ring-brand"
                 />

@@ -278,21 +278,31 @@ export function mapFormDataToApiPayload(
     payload.storageArea = parseOptionalFloat(formData.super_builtup_area) || parseOptionalFloat(formData.plot_area) || 1000;
   }
 
-  // Booleans mapped from "Yes" / "No" or defaults to satisfy reqBool
-  payload.balcony = formData.balcony === "Yes";
-  payload.garden = formData.garden === "Yes";
-  payload.swimmingPool = formData.swimming_pool === "Yes";
-  payload.compoundWall = formData.compound_wall === "Yes";
-  payload.cornerProperty = formData.corner_property === "Yes";
-  payload.utilityArea = formData.utility_area === "Yes";
-  payload.pantryArea = formData.pantry_area === "Yes";
+  // Booleans mapped from "Yes" / "No" — only set when explicitly chosen, otherwise omit (null)
+  if (formData.balcony === "Yes" || formData.balcony === "No") {
+    payload.balcony = formData.balcony === "Yes";
+  }
+  if (formData.garden === "Yes" || formData.garden === "No") {
+    payload.garden = formData.garden === "Yes";
+  }
+  if (formData.swimming_pool === "Yes" || formData.swimming_pool === "No") {
+    payload.swimmingPool = formData.swimming_pool === "Yes";
+  }
+  if (formData.compound_wall === "Yes" || formData.compound_wall === "No") {
+    payload.compoundWall = formData.compound_wall === "Yes";
+  }
+  if (formData.corner_property === "Yes" || formData.corner_property === "No") {
+    payload.cornerProperty = formData.corner_property === "Yes";
+  }
+  if (formData.utility_area === "Yes" || formData.utility_area === "No") {
+    payload.utilityArea = formData.utility_area === "Yes";
+  }
+  if (formData.pantry_area === "Yes" || formData.pantry_area === "No") {
+    payload.pantryArea = formData.pantry_area === "Yes";
+  }
 
-  if (subtypeRaw === "godown" || subtypeRaw === "warehouse") {
+  if (formData.loading_unloading_facility === "Yes" || formData.loading_unloading_facility === "No") {
     payload.loadingUnloadingFacility = formData.loading_unloading_facility === "Yes";
-  } else {
-    if (formData.loading_unloading_facility) {
-      payload.loadingUnloadingFacility = formData.loading_unloading_facility === "Yes";
-    }
   }
 
   // Enums mapped with robust fallbacks
@@ -779,11 +789,7 @@ export function mapApiPayloadToFormData(p: any): PropertyFormData {
     );
     const cleanAddress = cleanParts.join(", ");
 
-    if (state && city) {
-      address = `${state}, ${city}, ${cleanAddress}`;
-    } else {
-      address = p.location;
-    }
+    address = cleanAddress || p.location;
 
     if (cleanParts.length >= 2) {
       area = cleanParts[1] || "";
@@ -1042,7 +1048,18 @@ export function mapApiPropertyToCardProps(p: any): any {
     type: ownerTypeVal,
     categoryName: categoryNameVal,
     price: Number(p.price) || 0,
-    location: p.location || "N/A",
+    location: (() => {
+      if (!p.location) return "N/A";
+      const stateName = p.state?.name || "";
+      const cityName = p.city?.name || "";
+      const parts = p.location.split(",").map((s: string) => s.trim());
+      const cleanParts = parts.filter(
+        (part: string) =>
+          part.toLowerCase() !== stateName.toLowerCase() &&
+          part.toLowerCase() !== cityName.toLowerCase()
+      );
+      return cleanParts.join(", ") || p.location;
+    })(),
     bedrooms: p.bedrooms != null ? Number(p.bedrooms) : undefined,
     bathrooms: p.bathrooms != null ? Number(p.bathrooms) : undefined,
     area: areaVal || undefined,

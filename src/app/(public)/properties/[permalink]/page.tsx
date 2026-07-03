@@ -320,9 +320,18 @@ export default async function PropertyDetailPage({
               <div className="flex items-start gap-2.5">
                 <MapPin size={18} className="text-[#1a3c6b] mt-0.5 shrink-0" />
                 <p className="text-sm text-gray-700">
-                  {property.location}
-                  {property.city ? `, ${property.city.name}` : ""}
-                  {property.state ? `, ${property.state.name}` : ""}.
+                  {(() => {
+                    if (!property.location) return "";
+                    const stateName = property.state?.name || "";
+                    const cityName = property.city?.name || "";
+                    const parts = property.location.split(",").map((s: string) => s.trim());
+                    const cleanParts = parts.filter(
+                      (part: string) =>
+                        part.toLowerCase() !== stateName.toLowerCase() &&
+                        part.toLowerCase() !== cityName.toLowerCase()
+                    );
+                    return cleanParts.join(", ") || property.location;
+                  })()}.
                 </p>
               </div>
             </div>

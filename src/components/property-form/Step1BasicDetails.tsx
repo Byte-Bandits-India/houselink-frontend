@@ -137,26 +137,35 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
     });
   };
 
-  const handleDecimalInput = (field: keyof PropertyFormData, value: string) => {
+  const handleDecimalInput = (field: keyof PropertyFormData, value: string, max = 999999) => {
     const clean = value.replace(/[^0-9.]/g, "");
     const parts = clean.split(".");
     const sanitized = parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : clean;
+    // Clamp to max
+    if (sanitized !== "" && !sanitized.endsWith(".")) {
+      const num = parseFloat(sanitized);
+      if (!isNaN(num) && num > max) return;
+    }
     onChange({ [field]: sanitized });
   };
 
   const handleTotalFloorsChange = (val: string) => {
-    onChange({ total_floors: val });
+    const clean = val.replace(/[^0-9]/g, "");
+    const num = parseInt(clean, 10);
+    if (clean !== "" && (isNaN(num) || num < 0 || num > 200)) return;
+    onChange({ total_floors: clean });
   };
 
   const handlePropertyOnFloorChange = (val: string) => {
-    const onFloor = parseInt(val, 10);
+    const clean = val.replace(/[^0-9]/g, "");
+    const onFloor = parseInt(clean, 10);
     const total = parseInt(data.total_floors || "", 10);
-    
+    if (clean !== "" && (isNaN(onFloor) || onFloor < 0 || onFloor > 200)) return;
     if (!isNaN(onFloor) && !isNaN(total) && onFloor > total) {
       message.error("Property Floor cannot be greater than Total Floors.");
       onChange({ total_floors: "", property_on_floor: "" });
     } else {
-      onChange({ property_on_floor: val });
+      onChange({ property_on_floor: clean });
     }
   };
 
@@ -282,7 +291,44 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
             {["plot", "land"].includes(subtype) ? (subtype === "plot" ? "Plot Details" : "Land Details") : "Area Details"}
           </h4>
           <div className="grid grid-cols-2 gap-4">
-            {/* Unit * (Always rendered first in the grid) */}
+            {/* Plot/Land Area Input — first in grid */}
+            {showLandPlotDetails && (
+              <div className="space-y-1">
+                <Label>
+                  {subtype === "plot" ? "Plot Area" : "Land Area"}{" "}
+                  {showPlotAreaRequired && <span className="text-red-500">*</span>}
+                </Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={999999}
+                  disabled={disabled}
+                  value={data.plot_area || ""}
+                  onChange={(e) => handleDecimalInput("plot_area", e.target.value)}
+                  placeholder="Enter area"
+                />
+              </div>
+            )}
+
+            {/* Built-Up Area Input — first when no plot/land */}
+            {showAreaDetails && (
+              <div className="space-y-1">
+                <Label>
+                  Built-Up Area <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={999999}
+                  disabled={disabled}
+                  value={data.super_builtup_area || ""}
+                  onChange={(e) => handleDecimalInput("super_builtup_area", e.target.value)}
+                  placeholder="Enter area"
+                />
+              </div>
+            )}
+
+            {/* Unit * — always second in the grid */}
             <div className="space-y-1">
               <Label>
                 Unit <span className="text-red-500">*</span>
@@ -305,44 +351,14 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
               </Select>
             </div>
 
-            {/* Plot/Land Area Input */}
-            {showLandPlotDetails && (
-              <div className="space-y-1">
-                <Label>
-                  {subtype === "plot" ? "Plot Area" : "Land Area"}{" "}
-                  {showPlotAreaRequired && <span className="text-red-500">*</span>}
-                </Label>
-                <Input
-                  type="number"
-                  disabled={disabled}
-                  value={data.plot_area || ""}
-                  onChange={(e) => onChange({ plot_area: e.target.value })}
-                  placeholder="Enter area"
-                />
-              </div>
-            )}
-
-            {/* Built-Up Area Input */}
-            {showAreaDetails && (
-              <div className="space-y-1">
-                <Label>
-                  Built-Up Area <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="number"
-                  disabled={disabled}
-                  value={data.super_builtup_area || ""}
-                  onChange={(e) => onChange({ super_builtup_area: e.target.value })}
-                  placeholder="Enter area"
-                />
-              </div>
-            )}
-
             {/* Carpet Area (Optional) */}
             {showAreaDetails && showCarpetArea && (
               <div className="space-y-1">
                 <Label>Carpet Area (Sq. Ft)</Label>
                 <Input
+                  type="number"
+                  min={1}
+                  max={999999}
                   disabled={disabled}
                   value={data.carpet_area || ""}
                   onChange={(e) => handleDecimalInput("carpet_area", e.target.value)}
@@ -358,6 +374,9 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   Storage Area (Sq. Ft) <span className="text-red-500">*</span>
                 </Label>
                 <Input
+                  type="number"
+                  min={1}
+                  max={999999}
                   disabled={disabled}
                   value={data.storage_area || ""}
                   onChange={(e) => handleDecimalInput("storage_area", e.target.value)}
@@ -380,6 +399,8 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   </Label>
                   <Input
                     type="number"
+                    min={1}
+                    max={200}
                     disabled={disabled}
                     value={data.total_floors || ""}
                     onChange={(e) => handleTotalFloorsChange(e.target.value)}
@@ -394,6 +415,8 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   </Label>
                   <Input
                     type="number"
+                    min={0}
+                    max={200}
                     disabled={disabled}
                     value={data.property_on_floor || ""}
                     onChange={(e) => handlePropertyOnFloorChange(e.target.value)}
@@ -408,6 +431,9 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   <div className="space-y-1">
                     <Label>UDS Area (Sq. Ft)</Label>
                     <Input
+                      type="number"
+                      min={1}
+                      max={999999}
                       disabled={disabled}
                       value={data.uds_area || ""}
                       onChange={(e) => handleDecimalInput("uds_area", e.target.value)}
@@ -435,9 +461,16 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   <Label>Length (Ft)</Label>
                   <Input
                     type="number"
+                    min={1}
+                    max={9999}
                     disabled={disabled}
                     value={data.plot_length || ""}
-                    onChange={(e) => onChange({ plot_length: e.target.value })}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9]/g, "");
+                      const n = parseInt(v, 10);
+                      if (v !== "" && (isNaN(n) || n < 1 || n > 9999)) return;
+                      onChange({ plot_length: v });
+                    }}
                     placeholder="e.g. 60"
                   />
                 </div>
@@ -445,9 +478,16 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   <Label>Breadth (Ft)</Label>
                   <Input
                     type="number"
+                    min={1}
+                    max={9999}
                     disabled={disabled}
                     value={data.plot_breadth || ""}
-                    onChange={(e) => onChange({ plot_breadth: e.target.value })}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9]/g, "");
+                      const n = parseInt(v, 10);
+                      if (v !== "" && (isNaN(n) || n < 1 || n > 9999)) return;
+                      onChange({ plot_breadth: v });
+                    }}
                     placeholder="e.g. 40"
                   />
                 </div>

@@ -69,7 +69,18 @@ function mapBackendToWishlistProperty(p: any): Property {
     id: p.id,
     name: p.name || "Untitled Property",
     permalink: p.permalink || "",
-    location: p.location || "",
+    location: (() => {
+      if (!p.location) return "";
+      const stateName = p.state?.name || "";
+      const cityName = p.city?.name || "";
+      const parts = p.location.split(",").map((s: string) => s.trim());
+      const cleanParts = parts.filter(
+        (part: string) =>
+          part.toLowerCase() !== stateName.toLowerCase() &&
+          part.toLowerCase() !== cityName.toLowerCase()
+      );
+      return cleanParts.join(", ") || p.location;
+    })(),
     price: p.price ? Number(p.price) : 0,
     image: mainImage ? getImageUrl(mainImage) : "/assets/blur.png",
     ownerType: ownerTypeVal,

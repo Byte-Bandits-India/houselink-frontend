@@ -214,8 +214,10 @@ export default function Step2PropertyProfile({
     }
   }, [currentImagesCount, imageLimit, data.owner_type, onChange, data.images]);
 
-  const handleNumberInput = (field: keyof PropertyFormData, value: string) => {
+  const handleNumberInput = (field: keyof PropertyFormData, value: string, max = 999999999) => {
     const clean = value.replace(/[^0-9]/g, "");
+    const num = parseInt(clean, 10);
+    if (clean !== "" && (!isNaN(num) && num > max)) return;
     onChange({ [field]: clean });
   };
 
@@ -223,11 +225,13 @@ export default function Step2PropertyProfile({
     const clean = value.replace(/[^0-9.]/g, "");
     const parts = clean.split(".");
     const sanitized = parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : clean;
-    if (field === "price") {
+    if (field === "price" || field === "security_deposit" || field === "maintenance_charge_amount") {
       const sanitizedParts = sanitized.split(".");
-      if (sanitizedParts[0].length > 10) {
-        return;
-      }
+      if (sanitizedParts[0].length > 10) return;
+    }
+    if (field === "brokerage_percentage") {
+      const num = parseFloat(sanitized);
+      if (!isNaN(num) && num > 100) return;
     }
     onChange({ [field]: sanitized });
   };
@@ -244,8 +248,9 @@ export default function Step2PropertyProfile({
             <Input
               disabled={disabled}
               value={data.name}
+              maxLength={100}
               onChange={(e) => {
-                const name = e.target.value;
+                const name = e.target.value.slice(0, 100);
                 const slug = name
                   .toLowerCase()
                   .trim()
@@ -256,6 +261,7 @@ export default function Step2PropertyProfile({
               placeholder="e.g. Greenwood Heights Apartment"
               className="rounded-xl border-gray-200 focus-visible:ring-brand"
             />
+            <p className="text-xs text-gray-400 text-right">{(data.name || "").length}/100</p>
           </div>
         )}
 
@@ -272,7 +278,8 @@ export default function Step2PropertyProfile({
                 disabled={disabled}
                 className="border-0 rounded-none focus-visible:ring-0 shadow-none h-9 py-1 px-3 text-sm"
                 value={data.permalink}
-                onChange={(e) => onChange({ permalink: e.target.value })}
+                maxLength={100}
+                onChange={(e) => onChange({ permalink: e.target.value.slice(0, 100).toLowerCase().replace(/[^a-z0-9-]/g, "-") })}
                 placeholder="your-property-slug"
               />
             </div>
@@ -307,11 +314,13 @@ export default function Step2PropertyProfile({
             <Textarea
               disabled={disabled}
               rows={4}
+              maxLength={2000}
               value={data.description}
-              onChange={(e) => onChange({ description: e.target.value })}
+              onChange={(e) => onChange({ description: e.target.value.slice(0, 2000) })}
               placeholder="Provide a detailed description of the property, key selling points, neighborhood highlights, etc..."
               className="resize-none rounded-xl border-gray-200 focus-visible:ring-brand"
             />
+            <p className="text-xs text-gray-400 text-right">{(data.description || "").length}/2000</p>
           </div>
         )}
       </div>
@@ -372,9 +381,10 @@ export default function Step2PropertyProfile({
               <Input
                 type="number"
                 min={0}
+                max={50}
                 disabled={disabled}
                 value={data.bedrooms || ""}
-                onChange={(e) => handleNumberInput("bedrooms", e.target.value)}
+                onChange={(e) => handleNumberInput("bedrooms", e.target.value, 50)}
                 placeholder="e.g. 3"
                 className="rounded-xl border-gray-200 focus-visible:ring-brand"
               />
@@ -389,9 +399,10 @@ export default function Step2PropertyProfile({
               <Input
                 type="number"
                 min={0}
+                max={50}
                 disabled={disabled}
                 value={data.bathrooms || ""}
-                onChange={(e) => handleNumberInput("bathrooms", e.target.value)}
+                onChange={(e) => handleNumberInput("bathrooms", e.target.value, 50)}
                 placeholder="e.g. 2"
                 className="rounded-xl border-gray-200 focus-visible:ring-brand"
               />
@@ -426,12 +437,15 @@ export default function Step2PropertyProfile({
               <Select
                 disabled={disabled}
                 value={data.water_supply || ""}
-                onValueChange={(v) => onChange({ water_supply: v })}
+                onValueChange={(v) => onChange({ water_supply: v === "__none__" ? "" : v })}
               >
                 <SelectTrigger className="rounded-xl border-gray-200">
                   <SelectValue placeholder="Select Source" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="__none__">
+                    <span className="text-gray-400 italic">Not specified</span>
+                  </SelectItem>
                   {WATER_SUPPLY_OPTIONS.map((w) => (
                     <SelectItem key={w} value={w}>{w}</SelectItem>
                   ))}
@@ -491,8 +505,9 @@ export default function Step2PropertyProfile({
               </Label>
               <Input
                 disabled={disabled}
+                maxLength={100}
                 value={data.property_suitable_for || ""}
-                onChange={(e) => onChange({ property_suitable_for: e.target.value })}
+                onChange={(e) => onChange({ property_suitable_for: e.target.value.slice(0, 100) })}
                 placeholder="e.g. Office, Clinic, Restaurant, Gym"
                 className="rounded-xl border-gray-200 focus-visible:ring-brand"
               />
@@ -530,7 +545,7 @@ export default function Step2PropertyProfile({
                         disabled={disabled}
                         checked={data.balcony === v}
                         label={v}
-                        onChange={() => onChange({ balcony: v as any })}
+                        onChange={() => onChange({ balcony: data.balcony === v ? ("" as any) : (v as any) })}
                       />
                     ))}
                   </div>
@@ -547,7 +562,7 @@ export default function Step2PropertyProfile({
                         disabled={disabled}
                         checked={data.garden === v}
                         label={v}
-                        onChange={() => onChange({ garden: v as any })}
+                        onChange={() => onChange({ garden: data.garden === v ? ("" as any) : (v as any) })}
                       />
                     ))}
                   </div>
@@ -564,7 +579,7 @@ export default function Step2PropertyProfile({
                         disabled={disabled}
                         checked={data.swimming_pool === v}
                         label={v}
-                        onChange={() => onChange({ swimming_pool: v as any })}
+                        onChange={() => onChange({ swimming_pool: data.swimming_pool === v ? ("" as any) : (v as any) })}
                       />
                     ))}
                   </div>
@@ -581,7 +596,7 @@ export default function Step2PropertyProfile({
                         disabled={disabled}
                         checked={data.corner_property === v}
                         label={v}
-                        onChange={() => onChange({ corner_property: v as any })}
+                        onChange={() => onChange({ corner_property: data.corner_property === v ? ("" as any) : (v as any) })}
                       />
                     ))}
                   </div>
@@ -598,7 +613,7 @@ export default function Step2PropertyProfile({
                         disabled={disabled}
                         checked={data.compound_wall === v}
                         label={v}
-                        onChange={() => onChange({ compound_wall: v as any })}
+                        onChange={() => onChange({ compound_wall: data.compound_wall === v ? ("" as any) : (v as any) })}
                       />
                     ))}
                   </div>
@@ -615,7 +630,7 @@ export default function Step2PropertyProfile({
                         disabled={disabled}
                         checked={data.utility_area === v}
                         label={v}
-                        onChange={() => onChange({ utility_area: v as any })}
+                        onChange={() => onChange({ utility_area: data.utility_area === v ? ("" as any) : (v as any) })}
                       />
                     ))}
                   </div>
@@ -632,7 +647,7 @@ export default function Step2PropertyProfile({
                         disabled={disabled}
                         checked={data.pantry_area === v}
                         label={v}
-                        onChange={() => onChange({ pantry_area: v as any })}
+                        onChange={() => onChange({ pantry_area: data.pantry_area === v ? ("" as any) : (v as any) })}
                       />
                     ))}
                   </div>
@@ -651,7 +666,7 @@ export default function Step2PropertyProfile({
                         disabled={disabled}
                         checked={data.loading_unloading_facility === v}
                         label={v}
-                        onChange={() => onChange({ loading_unloading_facility: v as any })}
+                        onChange={() => onChange({ loading_unloading_facility: data.loading_unloading_facility === v ? ("" as any) : (v as any) })}
                       />
                     ))}
                   </div>
@@ -670,7 +685,7 @@ export default function Step2PropertyProfile({
                         disabled={disabled}
                         checked={data.pet_policy === v}
                         label={v}
-                        onChange={() => onChange({ pet_policy: v as any })}
+                        onChange={() => onChange({ pet_policy: data.pet_policy === v ? ("" as any) : (v as any) })}
                       />
                     ))}
                   </div>
@@ -751,9 +766,11 @@ export default function Step2PropertyProfile({
                       <Label className="text-gray-700 font-medium">No. of Slots</Label>
                       <Input
                         type="number"
+                        min={1}
+                        max={500}
                         disabled={disabled}
                         value={data.parking_slots_count || ""}
-                        onChange={(e) => handleNumberInput("parking_slots_count", e.target.value)}
+                        onChange={(e) => handleNumberInput("parking_slots_count", e.target.value, 500)}
                         placeholder="e.g. 2"
                         className="rounded-xl border-gray-200 focus-visible:ring-brand"
                       />
@@ -784,11 +801,12 @@ export default function Step2PropertyProfile({
                 <Input
                   disabled={disabled}
                   value={spec}
+                  maxLength={150}
                   onChange={(e) => {
                     const currentSpecs = data.key_specifications && data.key_specifications.length > 0
                       ? [...data.key_specifications]
                       : [""];
-                    currentSpecs[index] = e.target.value;
+                    currentSpecs[index] = e.target.value.slice(0, 150);
                     onChange({ key_specifications: currentSpecs });
                   }}
                   placeholder="e.g. Double-height entrance, High ceiling, Heavy load bearing floor"

@@ -10,6 +10,7 @@ import {
     CartesianGrid,
     Cell,
 } from "recharts";
+import { BarChart2 } from "lucide-react";
 import {
     Card,
     CardContent,
@@ -95,40 +96,48 @@ export default function PropertyCharts({ properties }: PropertyChartsProps) {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ChartContainer config={barConfig} className="h-[260px] w-full">
-                        <BarChart
-                            key={JSON.stringify(viewsData)}
-                            data={viewsData}
-                            margin={{ top: 16, right: 8, left: -10, bottom: 0 }}
-                        >
-                            <CartesianGrid
-                                vertical={false}
-                                strokeDasharray="4 4"
-                                stroke="#f1f5f9"
-                            />
-                            <XAxis
-                                dataKey="name"
-                                tickLine={false}
-                                axisLine={false}
-                                tick={{ fontSize: 11, fill: "#475569" }}
-                            />
-                            <YAxis
-                                tickLine={false}
-                                axisLine={false}
-                                tick={{ fontSize: 11, fill: "#475569" }}
-                            />
-                            <ChartTooltip
-                                cursor={{ fill: "#eaf0fb", radius: 4 }}
-                                content={<ChartTooltipContent />}
-                            />
-                            <Bar
-                                dataKey="views"
-                                fill="#153e75"
-                                radius={[6, 6, 0, 0]}
-                                maxBarSize={48}
-                            />
-                        </BarChart>
-                    </ChartContainer>
+                    {viewsData.length === 0 ? (
+                        <div className="h-[260px] w-full flex flex-col items-center justify-center gap-3 text-ink-muted">
+                            <BarChart2 className="w-10 h-10 opacity-25" />
+                            <p className="text-sm font-medium">No property data to display</p>
+                            <p className="text-xs opacity-70">Add properties to see view statistics</p>
+                        </div>
+                    ) : (
+                        <ChartContainer config={barConfig} className="h-[260px] w-full">
+                            <BarChart
+                                key={JSON.stringify(viewsData)}
+                                data={viewsData}
+                                margin={{ top: 16, right: 8, left: -10, bottom: 0 }}
+                            >
+                                <CartesianGrid
+                                    vertical={false}
+                                    strokeDasharray="4 4"
+                                    stroke="#f1f5f9"
+                                />
+                                <XAxis
+                                    dataKey="name"
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tick={{ fontSize: 11, fill: "#475569" }}
+                                />
+                                <YAxis
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tick={{ fontSize: 11, fill: "#475569" }}
+                                />
+                                <ChartTooltip
+                                    cursor={{ fill: "#eaf0fb", radius: 4 }}
+                                    content={<ChartTooltipContent />}
+                                />
+                                <Bar
+                                    dataKey="views"
+                                    fill="#153e75"
+                                    radius={[6, 6, 0, 0]}
+                                    maxBarSize={48}
+                                />
+                            </BarChart>
+                        </ChartContainer>
+                    )}
                 </CardContent>
             </Card>
 
@@ -143,45 +152,55 @@ export default function PropertyCharts({ properties }: PropertyChartsProps) {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center gap-4">
-                    <ChartContainer config={pieConfig} className="h-[220px] w-full">
-                        <PieChart key={JSON.stringify(moderationData)}>
-                            <ChartTooltip
-                                content={<ChartTooltipContent nameKey="status" hideLabel />}
-                            />
-                            <Pie
-                                data={moderationData}
-                                dataKey="count"
-                                nameKey="status"
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={62}
-                                outerRadius={96}
-                                paddingAngle={3}
-                                strokeWidth={0}
-                            >
-                                {moderationData.map((entry) => (
-                                    <Cell key={entry.status} fill={entry.fill} />
-                                ))}
-                            </Pie>
-                        </PieChart>
-                    </ChartContainer>
+                    {moderationData.length === 0 ? (
+                        <div className="h-[220px] w-full flex flex-col items-center justify-center gap-3 text-ink-muted">
+                            <BarChart2 className="w-10 h-10 opacity-25" />
+                            <p className="text-sm font-medium">No moderation data yet</p>
+                            <p className="text-xs opacity-70">Listing statuses will appear here once properties are submitted</p>
+                        </div>
+                    ) : (
+                        <>
+                            <ChartContainer config={pieConfig} className="h-[220px] w-full">
+                                <PieChart key={JSON.stringify(moderationData)}>
+                                    <ChartTooltip
+                                        content={<ChartTooltipContent nameKey="status" hideLabel />}
+                                    />
+                                    <Pie
+                                        data={moderationData}
+                                        dataKey="count"
+                                        nameKey="status"
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={62}
+                                        outerRadius={96}
+                                        paddingAngle={3}
+                                        strokeWidth={0}
+                                    >
+                                        {moderationData.map((entry) => (
+                                            <Cell key={entry.status} fill={entry.fill} />
+                                        ))}
+                                    </Pie>
+                                </PieChart>
+                            </ChartContainer>
 
-                    {/* Summary pills */}
-                    <div className="flex gap-2.5 flex-wrap justify-center">
-                        {moderationData.map((d) => (
-                            <div
-                                key={d.status}
-                                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-secondary border border-surface-tertiary"
-                            >
-                                <span
-                                    className="w-2 h-2 rounded-full flex-shrink-0"
-                                    style={{ background: d.fill.startsWith("var") ? pieConfig[d.status as keyof typeof pieConfig].color : d.fill }}
-                                />
-                                <span className="text-xs font-medium text-ink-secondary capitalize">{d.status}</span>
-                                <span className="text-xs font-bold text-ink">{d.count}</span>
+                            {/* Summary pills */}
+                            <div className="flex gap-2.5 flex-wrap justify-center">
+                                {moderationData.map((d) => (
+                                    <div
+                                        key={d.status}
+                                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-secondary border border-surface-tertiary"
+                                    >
+                                        <span
+                                            className="w-2 h-2 rounded-full flex-shrink-0"
+                                            style={{ background: d.fill.startsWith("var") ? pieConfig[d.status as keyof typeof pieConfig].color : d.fill }}
+                                        />
+                                        <span className="text-xs font-medium text-ink-secondary capitalize">{d.status}</span>
+                                        <span className="text-xs font-bold text-ink">{d.count}</span>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        </>
+                    )}
                 </CardContent>
             </Card>
 
