@@ -143,50 +143,67 @@ export default function Step4Amenities({ data, onChange, disabled = false }: Pro
         <div className="space-y-3">
           {selectedFacilities.map((fac, index) => {
             const currentVal = fac.facilityValue || "";
+            const isEmpty = !currentVal.trim();
             return (
-              <div key={index} className="flex items-center gap-3">
-                <div className="flex-1 min-w-[200px]">
-                  <Select
-                    value={String(fac.facilityId)}
-                    onValueChange={(v) => handleUpdateFacility(index, { facilityId: Number(v) })}
+              <div key={index} className="flex flex-col gap-1">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 min-w-[200px]">
+                    <Select
+                      value={String(fac.facilityId)}
+                      onValueChange={(v) => handleUpdateFacility(index, { facilityId: Number(v) })}
+                      disabled={disabled}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Facility" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {facilitiesList.map((f) => {
+                          const isAlreadyChosen = selectedFacilities.some((sf, sIdx) => sf.facilityId === f.id && sIdx !== index);
+                          return (
+                            <SelectItem key={f.id} value={String(f.id)} disabled={isAlreadyChosen}>
+                              {f.name} {isAlreadyChosen ? "(Already selected)" : ""}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-[2] relative">
+                    <Input
+                      value={currentVal}
+                      onChange={(e) => {
+                        const sanitized = e.target.value.replace(/[^a-zA-Z0-9\s.-]/g, "");
+                        handleUpdateFacility(index, { facilityValue: sanitized.slice(0, 50) });
+                      }}
+                      placeholder="Distance (E.g: 200m , 1km..) from here"
+                      maxLength={50}
+                      disabled={disabled}
+                      className={cn(
+                        "pr-16",
+                        isEmpty && "border-red-500 focus-visible:ring-red-500"
+                      )}
+                    />
+                    <span className="absolute right-3 top-2.5 text-xs text-gray-400">
+                      {currentVal.length}/50
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFacility(index)}
                     disabled={disabled}
+                    className={cn(
+                      "p-2.5 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors bg-white",
+                      disabled && "cursor-not-allowed opacity-50"
+                    )}
                   >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Facility" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {facilitiesList.map((f) => (
-                        <SelectItem key={f.id} value={String(f.id)}>
-                          {f.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="flex-[2] relative">
-                  <Input
-                    value={currentVal}
-                    onChange={(e) => handleUpdateFacility(index, { facilityValue: e.target.value })}
-                    placeholder="Distance (E.g: 200m , 1km..) from here"
-                    maxLength={50}
-                    disabled={disabled}
-                    className="pr-16"
-                  />
-                  <span className="absolute right-3 top-2.5 text-xs text-gray-400">
-                    {currentVal.length}/50
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFacility(index)}
-                  disabled={disabled}
-                  className={cn(
-                    "p-2.5 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors bg-white",
-                    disabled && "cursor-not-allowed opacity-50"
-                  )}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {isEmpty && (
+                  <p className="text-[10px] text-red-500 font-semibold ml-1">
+                    Distance is required
+                  </p>
+                )}
               </div>
             );
           })}

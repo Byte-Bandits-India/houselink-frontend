@@ -232,6 +232,11 @@ export default function PropertyFormWizard({
         const isDirectionRequired = data.property_for === "sell" && subtype === "plot";
         if (isDirectionRequired && !data.direction_facing) return false;
       }
+      // Validate that all added facilities have distance values
+      if (data.facilities && data.facilities.length > 0) {
+        const hasEmptyValue = data.facilities.some(f => !f.facilityValue || !f.facilityValue.trim());
+        if (hasEmptyValue) return false;
+      }
       return true;
     }
 
