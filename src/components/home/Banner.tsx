@@ -6,11 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getAds } from "@/lib/api";
 import type { AdBanner } from "@/types/ad";
 
-const defaultBanners = [
+const defaultBanners: BannerSlide[] = [
   {
     id: -1,
     name: "Default Banner 1",
     image: "/assets/default_images/Banner.png",
+    pcImage: "/assets/default_images/Banner.png",
+    tabletImage: "/assets/default_images/Banner.png",
+    mobileImage: "/assets/default_images/Banner.png",
     url: null,
     openInNewTab: false,
   },
@@ -18,6 +21,9 @@ const defaultBanners = [
     id: -2,
     name: "Default Banner 2",
     image: "/assets/images/about-us/about-img-2.jpg",
+    pcImage: "/assets/images/about-us/about-img-2.jpg",
+    tabletImage: "/assets/images/about-us/about-img-2.jpg",
+    mobileImage: "/assets/images/about-us/about-img-2.jpg",
     url: null,
     openInNewTab: false,
   },
@@ -25,6 +31,9 @@ const defaultBanners = [
     id: -3,
     name: "Default Banner 3",
     image: "/assets/default_images/Banner.png",
+    pcImage: "/assets/default_images/Banner.png",
+    tabletImage: "/assets/default_images/Banner.png",
+    mobileImage: "/assets/default_images/Banner.png",
     url: null,
     openInNewTab: false,
   },
@@ -60,6 +69,9 @@ interface BannerSlide {
   id: number;
   name: string;
   image: string;
+  pcImage: string;
+  tabletImage: string;
+  mobileImage: string;
   url: string | null;
   openInNewTab: boolean;
 }
@@ -86,20 +98,27 @@ const Banner = () => {
               return !!(ad.pcImage || ad.tabletImage || ad.mobileImage);
             })
             .map((ad) => {
-              const rawImg = ad.pcImage || ad.tabletImage || ad.mobileImage;
-              let resolvedImg = "/assets/default_images/Banner.png";
-              if (rawImg) {
+              const resolveUrl = (rawImg: string | null | undefined) => {
+                if (!rawImg) return "";
                 if (rawImg.startsWith("http://") || rawImg.startsWith("https://")) {
-                  resolvedImg = rawImg;
-                } else {
-                  const base = process.env.NEXT_PUBLIC_WEB_API_URL ?? "http://localhost:4000";
-                  resolvedImg = `${base.replace(/\/$/, "")}/${rawImg.replace(/^\//, "")}`;
+                  return rawImg;
                 }
-              }
+                const base = process.env.NEXT_PUBLIC_WEB_API_URL ?? "http://localhost:4000";
+                return `${base.replace(/\/$/, "")}/${rawImg.replace(/^\//, "")}`;
+              };
+
+              const pc = resolveUrl(ad.pcImage);
+              const tab = resolveUrl(ad.tabletImage);
+              const mob = resolveUrl(ad.mobileImage);
+              const fallback = pc || tab || mob || "/assets/default_images/Banner.png";
+
               return {
                 id: ad.id,
                 name: ad.name,
-                image: resolvedImg,
+                image: fallback,
+                pcImage: pc || fallback,
+                tabletImage: tab || fallback,
+                mobileImage: mob || fallback,
                 url: ad.url || null,
                 openInNewTab: ad.openInNewTab,
               };
@@ -155,28 +174,82 @@ const Banner = () => {
               rel={slide.openInNewTab ? "noopener noreferrer" : undefined}
               className="absolute inset-0 block cursor-pointer w-full h-full"
             >
-              <Image
-                src={slide.image}
-                alt={slide.name}
-                fill
-                unoptimized
-                className="object-cover"
-                priority
-                draggable={false}
-              />
+              {/* PC Banner */}
+              <div className="hidden lg:block absolute inset-0 w-full h-full">
+                <Image
+                  src={slide.pcImage}
+                  alt={slide.name}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                  priority
+                  draggable={false}
+                />
+              </div>
+              {/* Tablet Banner */}
+              <div className="hidden sm:block lg:hidden absolute inset-0 w-full h-full">
+                <Image
+                  src={slide.tabletImage}
+                  alt={slide.name}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                  priority
+                  draggable={false}
+                />
+              </div>
+              {/* Mobile Banner */}
+              <div className="block sm:hidden absolute inset-0 w-full h-full">
+                <Image
+                  src={slide.mobileImage}
+                  alt={slide.name}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                  priority
+                  draggable={false}
+                />
+              </div>
               <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
             </a>
           ) : (
             <div className="absolute inset-0 w-full h-full">
-              <Image
-                src={slide.image}
-                alt={slide.name}
-                fill
-                unoptimized
-                className="object-cover"
-                priority
-                draggable={false}
-              />
+              {/* PC Banner */}
+              <div className="hidden lg:block absolute inset-0 w-full h-full">
+                <Image
+                  src={slide.pcImage}
+                  alt={slide.name}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                  priority
+                  draggable={false}
+                />
+              </div>
+              {/* Tablet Banner */}
+              <div className="hidden sm:block lg:hidden absolute inset-0 w-full h-full">
+                <Image
+                  src={slide.tabletImage}
+                  alt={slide.name}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                  priority
+                  draggable={false}
+                />
+              </div>
+              {/* Mobile Banner */}
+              <div className="block sm:hidden absolute inset-0 w-full h-full">
+                <Image
+                  src={slide.mobileImage}
+                  alt={slide.name}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                  priority
+                  draggable={false}
+                />
+              </div>
               <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
             </div>
           )}
