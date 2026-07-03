@@ -403,18 +403,18 @@ export default function CreditsPage() {
                       disabled={alreadyHasCredits || buyingId === pkg.id}
                       className={cn(
                         "w-full mt-auto border-2 font-bold text-sm py-2.5 rounded-lg transition-colors duration-200",
-                        alreadyHasCredits
+                        isThisPackageActive
                           ? "border-emerald-600 bg-emerald-50 text-emerald-700 cursor-not-allowed"
-                          : "border-brand text-brand hover:bg-brand hover:text-white disabled:opacity-50"
+                          : alreadyHasCredits
+                            ? "border-slate-300 bg-slate-100 text-slate-400 cursor-not-allowed"
+                            : "border-brand text-brand hover:bg-brand hover:text-white disabled:opacity-50"
                       )}
                     >
                       {buyingId === pkg.id
                         ? "Processing..."
                         : isThisPackageActive
                           ? "Active Package"
-                          : alreadyHasCredits
-                            ? "Active Package Exists"
-                            : "Buy Package"
+                          : "Buy Package"
                       }
                     </button>
                   );
