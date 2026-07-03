@@ -204,7 +204,21 @@ export default function PropertyCard(props: PropertyCardProps) {
             </div>
 
             <hr className="property-divider" />
-            <div className="property-price text-brand">{priceFormatted}</div>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between gap-2">
+                <div className="property-price text-brand">{priceFormatted}</div>
+                {props.property_for?.toLowerCase() === "lease" && props.lease_duration && (
+                  <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md whitespace-nowrap">
+                    Lease Duration: {props.lease_duration}
+                  </span>
+                )}
+                {props.property_for?.toLowerCase() === "rent" && props.security_deposit != null && props.security_deposit > 0 && (
+                  <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md whitespace-nowrap">
+                    Security Deposit: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(props.security_deposit)}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1066,6 +1066,8 @@ export function mapApiPropertyToCardProps(p: any): any {
     direction: directionVal || undefined,
     features: featuresVal,
     property_for: purposeVal,
+    security_deposit: p.securityDeposit ? Number(p.securityDeposit) : undefined,
+    lease_duration: p.leaseDuration || undefined,
   };
 }
 

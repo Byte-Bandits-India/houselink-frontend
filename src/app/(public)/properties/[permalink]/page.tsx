@@ -147,6 +147,117 @@ export default async function PropertyDetailPage({
     .map((pf: any) => ({ name: pf.feature?.name }))
     .filter((f: any) => !!f.name);
 
+  const allRows: [string, string][] = [];
+
+  if (property.houseType) {
+    allRows.push(["House type", formatHouseType(property.houseType)]);
+  }
+  if (property.constructionAge) {
+    allRows.push(["Construction age", formatConstructionAge(property.constructionAge)]);
+  }
+  if (property.ownershipType) {
+    allRows.push(["Ownership", formatCapitalize(property.ownershipType)]);
+  }
+  if (property.availabilityStatus) {
+    const val = property.availabilityStatus === "available_from" && property.availabilityDate
+      ? `Available From ${new Date(property.availabilityDate).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })}`
+      : formatCapitalize(property.availabilityStatus);
+    allRows.push(["Possession status", val]);
+  }
+  if (property.furnishingType) {
+    allRows.push(["Furnishing", formatCapitalize(property.furnishingType)]);
+  }
+  if (property.category?.type?.toLowerCase() !== "commercial" && property.waterSupply) {
+    allRows.push(["Water supply", formatCapitalize(property.waterSupply)]);
+  }
+  if (property.parkingAvailability != null) {
+    const val = property.parkingAvailability
+      ? `${
+          property.parkingType?.toLowerCase() === "both"
+            ? "Car & Bike"
+            : property.parkingType
+            ? formatCapitalize(property.parkingType)
+            : "Yes"
+        }${
+          property.parkingSlots
+            ? ` (${property.parkingSlots} slots)`
+            : ""
+        }`
+      : "No";
+    allRows.push(["Parking", val]);
+  }
+  if (property.directionFacing) {
+    allRows.push(["Direction Facing", formatCapitalize(property.directionFacing)]);
+  }
+  if (property.totalFloors) {
+    allRows.push(["Total Floors", String(property.totalFloors)]);
+  }
+  if (property.propertyOnFloor != null && property.propertyOnFloor !== "") {
+    allRows.push(["Property on Floor", String(property.propertyOnFloor)]);
+  }
+  const formatBoolean = (val: any) => {
+    if (val === true || String(val).toLowerCase() === "true" || String(val).toLowerCase() === "yes") return "Yes";
+    if (val === false || String(val).toLowerCase() === "false" || String(val).toLowerCase() === "no") return "No";
+    return "";
+  };
+
+  if (property.balcony != null) {
+    allRows.push(["Has Balcony", formatBoolean(property.balcony)]);
+  }
+  if (property.garden != null) {
+    allRows.push(["Garden / Lawn", formatBoolean(property.garden)]);
+  }
+  if (property.swimmingPool != null) {
+    allRows.push(["Swimming Pool", formatBoolean(property.swimmingPool)]);
+  }
+  if (property.cornerProperty != null) {
+    allRows.push(["Corner Property", formatBoolean(property.cornerProperty)]);
+  }
+  if (property.compoundWall != null) {
+    allRows.push(["Compound Wall", formatBoolean(property.compoundWall)]);
+  }
+  if (property.utilityArea != null) {
+    allRows.push(["Utility Area", formatBoolean(property.utilityArea)]);
+  }
+  if (property.pantryArea != null) {
+    allRows.push(["Pantry Area", formatBoolean(property.pantryArea)]);
+  }
+  if (property.loadingUnloadingFacility != null) {
+    allRows.push(["Loading / Unloading", formatBoolean(property.loadingUnloadingFacility)]);
+  }
+  if (property.petPolicy) {
+    allRows.push(["Pet Policy", property.petPolicy === "not_allowed" ? "Not Allowed" : "Allowed"]);
+  }
+  if (property.foodPreference) {
+    allRows.push(["Food Preference", formatCapitalize(property.foodPreference)]);
+  }
+  if (property.propertySuitableFor) {
+    allRows.push(["Suitable For", formatCapitalize(property.propertySuitableFor)]);
+  }
+  if (property.plotLandLength != null && Number(property.plotLandLength) > 0) {
+    allRows.push(["Plot Length", `${property.plotLandLength} Ft`]);
+  }
+  if (property.plotLandBreadth != null && Number(property.plotLandBreadth) > 0) {
+    allRows.push(["Plot Breadth", `${property.plotLandBreadth} Ft`]);
+  }
+  if (property.carpetArea != null && Number(property.carpetArea) > 0) {
+    allRows.push(["Carpet Area", `${property.carpetArea} Sq.Ft`]);
+  }
+  if (property.udsArea != null && Number(property.udsArea) > 0) {
+    allRows.push(["UDS Area", `${property.udsArea} Sq.Ft`]);
+  }
+  if (property.storageArea != null && Number(property.storageArea) > 0) {
+    allRows.push(["Storage Area", `${property.storageArea} Sq.Ft`]);
+  }
+
+  const half = Math.ceil(allRows.length / 2);
+  const leftRows = allRows.slice(0, half);
+  const rightRows = allRows.slice(half);
+
   return (
     <div className="min-h-screen bg-[#f5f4f0] pb-20">
       {/* ── Gallery ── */}
@@ -238,57 +349,8 @@ export default async function PropertyDetailPage({
                 Property details
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                <DetailsColumn
-                  rows={[
-                    property.houseType && ["House type", formatHouseType(property.houseType)],
-                    property.constructionAge && [
-                      "Construction age",
-                      formatConstructionAge(property.constructionAge),
-                    ],
-                    property.ownershipType && [
-                      "Ownership",
-                      formatCapitalize(property.ownershipType),
-                    ],
-                    property.availabilityStatus && [
-                      "Possession status",
-                      property.availabilityStatus === "available_from" && property.availabilityDate
-                        ? `Available From ${new Date(property.availabilityDate).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })}`
-                        : formatCapitalize(property.availabilityStatus),
-                    ],
-                  ]}
-                />
-                <DetailsColumn
-                  rows={[
-                    property.furnishingType && [
-                      "Furnishing",
-                      formatCapitalize(property.furnishingType),
-                    ],
-                    property.category?.type?.toLowerCase() !== "commercial" && property.waterSupply && [
-                      "Water supply",
-                      formatCapitalize(property.waterSupply),
-                    ],
-                    property.parkingAvailability != null && [
-                      "Parking",
-                      property.parkingAvailability
-                        ? `${
-                            property.parkingType?.toLowerCase() === "both"
-                              ? "Car & Bike"
-                              : property.parkingType
-                              ? formatCapitalize(property.parkingType)
-                              : "Yes"
-                          }${
-                            property.parkingSlots
-                              ? ` (${property.parkingSlots} slots)`
-                              : ""
-                          }`
-                        : "No",
-                    ],
-                  ]}
-                />
+                <DetailsColumn rows={leftRows} />
+                <DetailsColumn rows={rightRows} />
               </div>
             </div>
 
