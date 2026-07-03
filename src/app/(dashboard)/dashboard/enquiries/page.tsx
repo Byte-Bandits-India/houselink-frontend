@@ -7,7 +7,7 @@ import { getMyEnquiries } from "@/lib/api/leads";
 import { message } from "antd";
 import Pagination from "@/components/ui/pagination";
 
-type Filter = "sell" | "rent";
+type Filter = "sell" | "rent" | "lease";
 
 interface Enquiry {
   id: number;
@@ -52,7 +52,10 @@ export default function EnquiriesPage() {
     setCurrentPage(1);
   }, [filter]);
 
-  const filtered = enquiriesList.filter((e) => e.filter === filter);
+  // "sell" tab shows sell; "rent" tab shows both rent + lease
+  const filtered = enquiriesList.filter((e) =>
+    filter === "sell" ? e.filter === "sell" : e.filter === "rent" || e.filter === "lease"
+  );
   const paginatedEnquiries = filtered.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE

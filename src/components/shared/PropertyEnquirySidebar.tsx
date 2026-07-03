@@ -2,28 +2,75 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Lock, CheckCircle2, ChevronRight, AlertCircle } from "lucide-react";
+import {
+  Lock,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  Tag,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { sendOtp, verifyOtpLogin, ApiError, createLead } from "@/lib/api";
+import { sendOtp, verifyOtpLogin, ApiError, createLead, checkEnquiryStatus } from "@/lib/api";
+import type { EnquiryStatusResponse } from "@/lib/api";
 
 interface PropertyEnquirySidebarProps {
   property: {
     id: number;
     name: string;
+    propertyFor?: string;
+    propertyOwnership?: string;
+    permalink?: string;
     [key: string]: any;
   };
 }
 
+/** Format seconds remaining into a human-readable string */
+function formatCooldown(seconds: number, propertyFor: string): string {
+  if (propertyFor === "sell") {
+    const mins = Math.ceil(seconds / 60);
+    return mins <= 60 ? `${mins} minute${mins !== 1 ? "s" : ""}` : `${Math.ceil(mins / 60)} hour${Math.ceil(mins / 60) !== 1 ? "s" : ""}`;
+  }
+  // rent / lease
+  const days = Math.ceil(seconds / 86400);
+  return `${days} day${days !== 1 ? "s" : ""}`;
+}
+
+/** Badge for property_for type */
+function PropertyForBadge({ propertyFor }: { propertyFor?: string }) {
+  if (!propertyFor) return null;
+  const pf = propertyFor.toLowerCase();
+  const config =
+    pf === "sell"
+      ? { label: "For Sale", bg: "bg-emerald-50 text-emerald-700 border-emerald-200" }
+      : pf === "rent"
+      ? { label: "For Rent", bg: "bg-blue-50 text-blue-700 border-blue-200" }
+      : pf === "lease"
+      ? { label: "For Lease", bg: "bg-purple-50 text-purple-700 border-purple-200" }
+      : null;
+  if (!config) return null;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full border ${config.bg}`}
+    >
+      <Tag size={9} />
+      {config.label}
+    </span>
+  );
+}
+
 export default function PropertyEnquirySidebar({ property }: PropertyEnquirySidebarProps) {
   const { isLoggedIn, user, setAuthUser } = useAuth();
+  const propertyFor = (property.propertyFor || "sell").toLowerCase();
 
   // Common T&C Checkbox
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // ==========================================
-  // LOGGED OUT STATE VARIABLES & FUNCTIONS
-  // ==========================================
+  // ── Enquiry status state (cooldown / points) ──────────────────────────────
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [enquiryStatus, setEnquiryStatus] = useState<EnquiryStatusResponse["data"] | null>(null);
+
+  // ── Logged-out state variables ────────────────────────────────────────────
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -47,6 +94,38 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     }
   }, [timeLeft]);
 
+  // ── Logged-in state variables ─────────────────────────────────────────────
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    message: "I'm interested in your property...",
+  });
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Sync user details when logged in + fetch enquiry status
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      setFormData({
+        name: `${user.firstName} ${user.lastName || ""}`.trim(),
+        phone: user.phone.replace(/^\+91/, ""),
+        email: user.email || "",
+        message: "I'm interested in your property...",
+      });
+      setAgreedToTerms(true);
+
+      // Pre-flight: check cooldown + points
+      setStatusLoading(true);
+      checkEnquiryStatus(property.id)
+        .then((res) => {
+          if (res.success) setEnquiryStatus(res.data);
+        })
+        .catch(() => {/* silent — don't block the form */})
+        .finally(() => setStatusLoading(false));
+    }
+  }, [isLoggedIn, user, property.id]);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
   const handleSendOtp = async () => {
     if (!phone || phone.length !== 10) {
       setPhoneError("Please enter a valid 10-digit phone number");
@@ -54,7 +133,6 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     }
     setPhoneError("");
     setIsLoading(true);
-
     try {
       await sendOtp({ phone });
       setOtpSent(true);
@@ -76,15 +154,10 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
-
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-
-    // Auto-focus next input
-    if (value && index < 3) {
-      otpRefs[index + 1].current?.focus();
-    }
+    if (value && index < 3) otpRefs[index + 1].current?.focus();
   };
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -99,7 +172,6 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
       return;
     }
     setFormError("");
-
     const otpValue = otp.join("");
     if (otpValue.length !== 4) {
       setOtpError("Please enter the complete 4-digit OTP");
@@ -107,10 +179,8 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     }
     setOtpError("");
     setIsLoading(true);
-
     try {
       const res = await verifyOtpLogin({ phone, otp: otpValue });
-      // Update Auth State, which dynamically shifts this component to the Logged-in State
       setAuthUser(res.customer);
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
@@ -123,31 +193,6 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     }
   };
 
-  // ==========================================
-  // LOGGED IN STATE VARIABLES & FUNCTIONS
-  // ==========================================
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    message: "I'm interested in your property...",
-  });
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
-  // Sync user details when logged in
-  useEffect(() => {
-    if (isLoggedIn && user) {
-      setFormData({
-        name: `${user.firstName} ${user.lastName || ""}`.trim(),
-        phone: user.phone.replace(/^\+91/, ""), // strip prefix if database already has it to avoid duplicates in input
-        email: user.email || "",
-        message: "I'm interested in your property...",
-      });
-      // Automatically check agreedToTerms when logged in to match screenshot pre-population
-      setAgreedToTerms(true);
-    }
-  }, [isLoggedIn, user]);
-
   const handleEnquireLoggedIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreedToTerms) {
@@ -156,7 +201,6 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     }
     setFormError("");
     setIsLoading(true);
-
     try {
       await createLead({
         property_id: property.id,
@@ -168,7 +212,14 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
       setIsSubmitted(true);
     } catch (err) {
       if (err instanceof ApiError) {
-        setFormError(err.message);
+        if (err.status === 429) {
+          // Cooldown hit — refresh status
+          const errData = (err as any).data?.data;
+          if (errData) setEnquiryStatus(errData);
+          else setFormError(err.message);
+        } else {
+          setFormError(err.message);
+        }
       } else {
         setFormError("Failed to submit enquiry. Please try again.");
       }
@@ -177,9 +228,7 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     }
   };
 
-  // ==========================================
-  // RENDER SUCCESS STATE
-  // ==========================================
+  // ── RENDER: Success state ─────────────────────────────────────────────────
   if (isSubmitted) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm text-center space-y-4 animate-fade-in">
@@ -188,13 +237,22 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
         </div>
         <h3 className="text-xl font-bold text-gray-900">Enquiry Sent!</h3>
         <p className="text-sm text-gray-500 leading-relaxed">
-          Thank you for your interest in <span className="font-semibold text-gray-800">{property.name}</span>.
+          Thank you for your interest in{" "}
+          <span className="font-semibold text-gray-800">{property.name}</span>.
         </p>
         <p className="text-xs text-gray-400 bg-gray-50 rounded-lg p-3">
           The owner/agent will contact you shortly on your registered details.
         </p>
         <button
-          onClick={() => setIsSubmitted(false)}
+          onClick={() => {
+            setIsSubmitted(false);
+            // Re-check status after enquiry so cooldown reflects immediately
+            if (isLoggedIn) {
+              checkEnquiryStatus(property.id)
+                .then((res) => { if (res.success) setEnquiryStatus(res.data); })
+                .catch(() => {});
+            }
+          }}
           className="w-full bg-[#1a3c6b] hover:bg-[#142e52] text-white font-semibold py-3 rounded-xl transition-colors text-sm"
         >
           Send Another Enquiry
@@ -203,141 +261,180 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     );
   }
 
-  // ==========================================
-  // RENDER LOGGED IN STATE
-  // ==========================================
+  // ── RENDER: Logged in state ───────────────────────────────────────────────
   if (isLoggedIn) {
+    const cooldownActive = enquiryStatus && !enquiryStatus.can_enquire && !!enquiryStatus.remaining_seconds;
+
     return (
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Request Info</h3>
+        {/* Header with type badge */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-900">Request Info</h3>
+          <PropertyForBadge propertyFor={propertyFor} />
+        </div>
 
-        <form onSubmit={handleEnquireLoggedIn} className="space-y-4">
-          {/* Property Name */}
-          <div>
-            <label className="text-xs font-semibold text-gray-600 block mb-1">
-              Property Name
-            </label>
-            <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5">
-              <span className="text-xs text-gray-500 truncate flex-1 font-medium">
-                {property.name}
-              </span>
-              <Lock size={13} className="text-gray-400 shrink-0" />
+        {/* ── COOLDOWN BLOCK ─────────────────────────────────────────── */}
+        {cooldownActive ? (
+          <div className="space-y-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col items-center text-center gap-3">
+              <div className="bg-amber-100 w-12 h-12 rounded-full flex items-center justify-center">
+                <Clock size={24} className="text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-amber-800">Already Enquired</p>
+                <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                  You have already enquired about this property.{" "}
+                  {propertyFor === "sell"
+                    ? "You can enquire again after the 60-minute cooldown."
+                    : "You can enquire again after the 30-day cooldown."}
+                </p>
+              </div>
+              <div className="bg-white border border-amber-200 rounded-lg px-4 py-2 w-full">
+                <p className="text-[10px] text-amber-600 font-semibold uppercase tracking-wider mb-0.5">
+                  Time Remaining
+                </p>
+                <p className="text-base font-bold text-amber-700">
+                  {formatCooldown(enquiryStatus!.remaining_seconds!, propertyFor)}
+                </p>
+              </div>
+              {enquiryStatus?.owner_details_expires_at && (
+                <p className="text-[10px] text-amber-600">
+                  Cooldown ends:{" "}
+                  {new Date(enquiryStatus.owner_details_expires_at).toLocaleString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              )}
             </div>
           </div>
-
-          {/* Name & Phone */}
-          <div className="grid grid-cols-2 gap-4">
+        ) : (
+          /* ── ENQUIRY FORM ──────────────────────────────────────────── */
+          <form onSubmit={handleEnquireLoggedIn} className="space-y-4">
+            {/* ENQUIRY FORM BODY */}
             <div>
               <label className="text-xs font-semibold text-gray-600 block mb-1">
-                Name
+                Property Name
               </label>
+              <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5">
+                <span className="text-xs text-gray-500 truncate flex-1 font-medium">
+                  {property.name}
+                </span>
+                <Lock size={13} className="text-gray-400 shrink-0" />
+              </div>
+            </div>
+
+            {/* Name & Phone */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 text-xs text-gray-700 font-medium outline-none focus:border-[#1a3c6b] focus:bg-white transition-colors"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Phone</label>
+                <div className="flex items-center bg-gray-100 border border-gray-200 rounded-lg overflow-hidden">
+                  <span className="text-xs text-gray-500 font-medium pl-3 pr-1 py-2.5 bg-gray-100 select-none">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value.replace(/\D/g, "") })
+                    }
+                    className="w-full bg-gray-100 border-0 rounded-r-lg px-1 py-2.5 text-xs text-gray-700 font-medium outline-none focus:bg-white transition-colors min-w-0"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">Email</label>
               <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 text-xs text-gray-700 font-medium outline-none focus:border-[#1a3c6b] focus:bg-white transition-colors"
                 required
               />
             </div>
+
+            {/* Message */}
             <div>
               <label className="text-xs font-semibold text-gray-600 block mb-1">
-                Phone
+                Do you have anything on mind ?
               </label>
-              <div className="flex items-center bg-gray-100 border border-gray-200 rounded-lg overflow-hidden">
-                <span className="text-xs text-gray-500 font-medium pl-3 pr-1 py-2.5 bg-gray-100 select-none">
-                  +91
-                </span>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, "") })}
-                  className="w-full bg-gray-100 border-0 rounded-r-lg px-1 py-2.5 text-xs text-gray-700 font-medium outline-none focus:bg-white transition-colors min-w-0"
-                  required
-                />
+              <textarea
+                rows={3}
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-[#1a3c6b] transition-colors resize-none"
+                placeholder="I'm interested in your property..."
+              />
+            </div>
+
+            {/* T&C */}
+            <div className="flex items-start gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="terms-loggedin"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-0.5 accent-[#1a3c6b] cursor-pointer"
+              />
+              <label
+                htmlFor="terms-loggedin"
+                className="text-xs text-gray-500 leading-relaxed cursor-pointer select-none"
+              >
+                By clicking you agree to our{" "}
+                <a href="#" className="text-[#1a3c6b] underline hover:text-[#142e52]">
+                  Terms &amp; Conditions
+                </a>
+              </label>
+            </div>
+
+            {formError && (
+              <div className="flex items-center gap-1.5 text-xs text-red-500">
+                <AlertCircle size={14} className="shrink-0" />
+                <span>{formError}</span>
               </div>
-            </div>
-          </div>
+            )}
 
-          {/* Email */}
-          <div>
-            <label className="text-xs font-semibold text-gray-600 block mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 text-xs text-gray-700 font-medium outline-none focus:border-[#1a3c6b] focus:bg-white transition-colors"
-              required
-            />
-          </div>
-
-          {/* Message */}
-          <div>
-            <label className="text-xs font-semibold text-gray-600 block mb-1">
-              Do you have anything on mind ?
-            </label>
-            <textarea
-              rows={3}
-              value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-[#1a3c6b] transition-colors resize-none"
-              placeholder="I'm interested in your property..."
-            />
-          </div>
-
-          {/* T&C Agreement */}
-          <div className="flex items-start gap-2 pt-1">
-            <input
-              type="checkbox"
-              id="terms-loggedin"
-              checked={agreedToTerms}
-              onChange={(e) => setAgreedToTerms(e.target.checked)}
-              className="mt-0.5 accent-[#1a3c6b] cursor-pointer"
-            />
-            <label htmlFor="terms-loggedin" className="text-xs text-gray-500 leading-relaxed cursor-pointer select-none">
-              By clicking you agree to our{" "}
-              <a href="#" className="text-[#1a3c6b] underline hover:text-[#142e52]">
-                Terms &amp; Conditions
-              </a>
-            </label>
-          </div>
-
-          {formError && (
-            <div className="flex items-center gap-1.5 text-xs text-red-500">
-              <AlertCircle size={14} className="shrink-0" />
-              <span>{formError}</span>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading || !agreedToTerms}
-            className="w-full bg-[#1a3c6b] hover:bg-[#142e52] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
-          >
-            {isLoading ? "Sending..." : "Verify and Enquire"}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={isLoading || !agreedToTerms || statusLoading}
+              className="w-full bg-[#1a3c6b] hover:bg-[#142e52] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              {isLoading || statusLoading ? "Please wait..." : "Verify and Enquire"}
+            </button>
+          </form>
+        )}
       </div>
     );
   }
 
-  // ==========================================
-  // RENDER LOGGED OUT STATE
-  // ==========================================
+  // ── RENDER: Logged out state ──────────────────────────────────────────────
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <h3 className="text-base font-semibold text-gray-900 mb-1">
-        Login/Signup to Request Info
-      </h3>
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-base font-semibold text-gray-900">Login/Signup to Request Info</h3>
+        <PropertyForBadge propertyFor={propertyFor} />
+      </div>
 
       {/* Property Name */}
       <p className="text-xs text-gray-400 mb-1 mt-3">Property Name</p>
       <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 mb-4">
-        <span className="text-xs text-gray-500 truncate flex-1">
-          {property.name}
-        </span>
+        <span className="text-xs text-gray-500 truncate flex-1">{property.name}</span>
         <Lock size={13} className="text-gray-400 shrink-0" />
       </div>
 
@@ -367,15 +464,14 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
         )}
       </div>
 
-      {phoneError && (
-        <p className="text-xs text-red-500 mb-3 block">{phoneError}</p>
-      )}
+      {phoneError && <p className="text-xs text-red-500 mb-3 block">{phoneError}</p>}
 
       {/* OTP verification fields */}
       {otpSent && (
         <div className="mt-4 mb-4 space-y-3 animate-fade-in">
           <label className="block text-xs font-medium text-gray-600 text-center">
-            Enter 4-digit OTP sent to <span className="font-semibold text-gray-800">+91 {phone}</span>
+            Enter 4-digit OTP sent to{" "}
+            <span className="font-semibold text-gray-800">+91 {phone}</span>
           </label>
           <div className="flex justify-center gap-2">
             {otp.map((digit, index) => (
@@ -393,11 +489,7 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
               />
             ))}
           </div>
-
-          {otpError && (
-            <p className="text-xs text-center text-red-500">{otpError}</p>
-          )}
-
+          {otpError && <p className="text-xs text-center text-red-500">{otpError}</p>}
           <div className="text-center text-xs">
             <span className="text-gray-500">Didn&apos;t receive OTP? </span>
             {timeLeft > 0 ? (
@@ -425,7 +517,10 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
           onChange={(e) => setAgreedToTerms(e.target.checked)}
           className="mt-0.5 accent-[#1a3c6b] cursor-pointer"
         />
-        <label htmlFor="terms-loggedout" className="text-xs text-gray-500 leading-relaxed cursor-pointer select-none">
+        <label
+          htmlFor="terms-loggedout"
+          className="text-xs text-gray-500 leading-relaxed cursor-pointer select-none"
+        >
           By clicking you agree to our{" "}
           <a href="#" className="text-[#1a3c6b] underline hover:text-[#142e52]">
             Terms &amp; Conditions
@@ -440,7 +535,6 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
         </div>
       )}
 
-      {/* Login Action Button */}
       {otpSent ? (
         <button
           onClick={handleVerifyAndEnquireLoggedOut}
@@ -461,7 +555,10 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
 
       <p className="text-center mt-4 text-gray-500 text-[11px] leading-relaxed">
         Not registered yet?{" "}
-        <Link href={`/register?redirect=/properties/${property.permalink}`} className="text-[#1a3c6b] font-semibold hover:underline">
+        <Link
+          href={`/register?redirect=/properties/${property.permalink}`}
+          className="text-[#1a3c6b] font-semibold hover:underline"
+        >
           Sign Up here
         </Link>{" "}
         to enquire.

@@ -96,7 +96,9 @@ export {
   createLead,
   getLeads,
   getMyEnquiries,
+  checkEnquiryStatus,
 } from "./leads";
+export type { EnquiryStatusResponse } from "./leads";
 
 // Wishlist API
 export {
