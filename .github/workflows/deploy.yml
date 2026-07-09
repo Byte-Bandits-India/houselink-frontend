@@ -25,6 +25,9 @@ jobs:
 
             cd /home/houselink360/nextjs
 
+            echo "Resetting local changes..."
+            git reset --hard
+
             echo "Pulling latest code..."
             git pull origin main
 
