@@ -49,7 +49,6 @@ export function usePageFilter() {
   return useContext(PageFilterContext);
 }
 
-// Backwards-compat alias for homepage usage
 export { PageFilterProvider as HomeFilterProvider };
 export const useHomeFilter = usePageFilter;
 export type HomeFilterValues = PageFilterValues;

@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
+import { Button } from "@/components/ui/button"
 import {
   User,
   ChevronDown,
@@ -211,15 +212,6 @@ export default function Header() {
           {/* ── DESKTOP NAV ─────────────────────────────────────────────────── */}
           <nav className="hidden lg:flex items-center gap-1">
 
-            {/* Home */}
-            <Link
-              href="/"
-              className="flex flex-col items-center gap-1 px-5 py-2 rounded-xl hover:bg-blue-50 text-[#1a3a6b] transition-colors"
-            >
-              <Home size={20} strokeWidth={1.5} className="text-[#1a3a6b]" />
-              <span className="text-sm font-semibold">Home</span>
-            </Link>
-
             {/* Listings ▾ */}
             <HoverDropdown
               items={listingsMenu}
@@ -270,45 +262,48 @@ export default function Header() {
           <div className="hidden lg:flex items-center gap-3">
 
             {/* Post Your Property */}
-            <Link
+            <Button
               href={isLoggedIn ? "/dashboard/properties" : "/login"}
-              className="flex items-center gap-2 bg-[#1a3a6b] text-white px-6 h-11 rounded-full font-bold text-sm hover:bg-[#162f5a] transition-colors whitespace-nowrap"
+              variant="gradient"
+              className="gap-2 px-6 h-11 whitespace-nowrap"
             >
               <img src="/assets/header/plus.svg" alt="plus" />
               Post Your property
-            </Link>
+            </Button>
 
             {/* Support */}
             <HoverDropdown
               content={supportContent}
               align="end"
               trigger={
-                <button className="w-11 h-11 flex items-center justify-center rounded-full bg-[#1a3a6b] text-white hover:bg-[#162f5a] transition-colors flex-shrink-0 cursor-pointer">
+                <Button variant="gradient" className="w-11 h-11">
                   <img src="/assets/header/Headphone.svg" alt="headset" />
-                </button>
+                </Button>
               }
             />
 
             {/* Login / User */}
             {!isLoggedIn ? (
-              <Link
+              <Button
                 href="/login"
-                className="flex items-center justify-center bg-[#1a3a6b] text-white px-6 h-11 rounded-full hover:bg-[#162f5a] transition-colors font-bold text-sm"
+                className="px-6 h-11"
+                variant="gradient"
               >
                 Login
-              </Link>
+              </Button>
             ) : (
               <HoverDropdown
                 items={userMenu}
                 align="end"
                 trigger={
-                  <Link
+                  <Button
                     href="/dashboard"
-                    className="flex items-center gap-2 bg-[#1a3a6b] text-white px-5 h-11 rounded-full hover:bg-[#162f5a] transition-colors font-bold text-sm cursor-pointer"
+                    className="gap-2 px-5 h-11"
+                    variant="gradient"
                   >
                     <User size={18} strokeWidth={1.8} />
                     Hi {user?.firstName ?? ""}
-                  </Link>
+                  </Button>
                 }
               />
             )}
@@ -372,13 +367,14 @@ export default function Header() {
 
             {/* Account / Auth */}
             {!isLoggedIn ? (
-              <Link
+              <Button
                 href="/login"
-                className="flex items-center justify-center bg-gray-100 text-[#1a3a6b] px-4 py-3 rounded-full border border-gray-200 hover:bg-gray-200 transition font-semibold text-sm"
+                variant="secondary"
+                className="px-4 py-3"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Login
-              </Link>
+              </Button>
             ) : (
               <MobileAccordion
                 title="My Account"
@@ -388,14 +384,15 @@ export default function Header() {
             )}
 
             {/* Post Property CTA */}
-            <Link
+            <Button
               href={isLoggedIn ? "/dashboard/properties" : "/login"}
-              className="flex items-center justify-center gap-2 bg-[#1a3a6b] text-white px-4 py-3 rounded-full hover:bg-[#162f5a] transition font-bold text-sm"
+              variant="gradient"
+              className="gap-2 px-4 py-3"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <Plus size={18} strokeWidth={2.5} />
               Post Your property
-            </Link>
+            </Button>
 
           </div>
         </div>

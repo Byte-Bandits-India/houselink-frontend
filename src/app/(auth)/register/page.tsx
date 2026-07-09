@@ -369,7 +369,7 @@ export default function RegisterPage() {
                   type="button"
                   onClick={handleSendOtp}
                   disabled={isLoading || phone.length !== 10}
-                  className="h-11 px-4 bg-brand text-white font-medium rounded-md hover:bg-[#4f8bd3] disabled:bg-gray-400 whitespace-nowrap transition-colors"
+                  className="h-11 px-4 bg-brand text-white font-medium rounded-md hover:bg-primary-light disabled:bg-gray-400 whitespace-nowrap transition-colors"
                 >
                   {isLoading ? "Sending..." : "Send OTP"}
                 </button>
@@ -400,7 +400,7 @@ export default function RegisterPage() {
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
                     className={`w-10 h-10 text-center text-lg font-bold border-2 rounded-md transition-all outline-none
-                      ${digit ? "border-[#4f8bd3] bg-[#f8fff9]" : "border-gray-200 bg-white"}
+                      ${digit ? "border-primary-light bg-[#f8fff9]" : "border-gray-200 bg-white"}
                       focus:border-brand focus:ring-2`}
                   />
                 ))}

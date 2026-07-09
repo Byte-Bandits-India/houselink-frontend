@@ -4,40 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAds } from "@/lib/api";
-import type { AdBanner } from "@/types/ad";
 
-const defaultBanners: BannerSlide[] = [
-  {
-    id: -1,
-    name: "Default Banner 1",
-    image: "/assets/default_images/Banner.png",
-    pcImage: "/assets/default_images/Banner.png",
-    tabletImage: "/assets/default_images/Banner.png",
-    mobileImage: "/assets/default_images/Banner.png",
-    url: null,
-    openInNewTab: false,
-  },
-  {
-    id: -2,
-    name: "Default Banner 2",
-    image: "/assets/images/about-us/about-img-2.jpg",
-    pcImage: "/assets/images/about-us/about-img-2.jpg",
-    tabletImage: "/assets/images/about-us/about-img-2.jpg",
-    mobileImage: "/assets/images/about-us/about-img-2.jpg",
-    url: null,
-    openInNewTab: false,
-  },
-  {
-    id: -3,
-    name: "Default Banner 3",
-    image: "/assets/default_images/Banner.png",
-    pcImage: "/assets/default_images/Banner.png",
-    tabletImage: "/assets/default_images/Banner.png",
-    mobileImage: "/assets/default_images/Banner.png",
-    url: null,
-    openInNewTab: false,
-  },
-];
+
 
 const SLIDE_DURATION = 5000;
 
@@ -77,7 +45,7 @@ interface BannerSlide {
 }
 
 const Banner = () => {
-  const [banners, setBanners] = useState<BannerSlide[]>(defaultBanners);
+  const [banners, setBanners] = useState<BannerSlide[]>([]);
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
 
@@ -146,6 +114,8 @@ const Banner = () => {
     const timer = setInterval(handleNext, SLIDE_DURATION);
     return () => clearInterval(timer);
   }, [handleNext, banners.length]);
+
+  if (banners.length === 0) return null;
 
   const slide = banners[current];
 
@@ -266,7 +236,7 @@ const Banner = () => {
                 setDirection(i > current ? 1 : -1);
                 setCurrent(i);
               }}
-              className={`h-2 w-6 rounded-full transition-all duration-500 ${
+              className={`h-2 w-6 rounded-2xl transition-all duration-500 ${
                 i === current ? "bg-white" : "bg-white/40 hover:bg-white/60"
               }`}
               aria-label={`Go to slide ${i + 1}`}

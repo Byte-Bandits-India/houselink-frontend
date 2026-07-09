@@ -1,5 +1,6 @@
-import Link from 'next/link';
 import Image from 'next/image';
+import { Heart, MapPin } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { getImageUrl } from '@/lib/api';
 import { useWishlist } from '@/context/WishlistContext';
 
@@ -118,110 +119,76 @@ export default function PropertyCard(props: PropertyCardProps) {
   };
 
   return (
-    <div className="custom-property-card group">
-      <div className="property-card-wrapper">
-        <div className="property-image-container image-anime">
-          <div className="property-image">
-            <Image
-              src={props.image && props.image !== "/assets/blur.png" ? getImageUrl(props.image) : getDefaultImage(props.categoryName)}
-              alt={props.name}
-              fill
-              unoptimized={true}
-              className="object-cover"
-            />
-            <Link href={url} className="property-link"></Link>
+    <Card className="group relative flex h-[380px] max-w-[420px] w-full flex-col overflow-hidden rounded-xl border border-gray-150 shadow-sm transition-all duration-300 hover:shadow-md bg-white">
+      {/* Image container */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-xl select-none">
+        <Image
+          src={props.image && props.image !== "/assets/blur.png" ? getImageUrl(props.image) : getDefaultImage(props.categoryName)}
+          alt={props.name}
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          fill
+          unoptimized={true}
+        />
+        
+        {/* Heart button */}
+        <button
+          onClick={handleWishlistClick}
+          className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-neutral-700 hover:bg-white/90 hover:text-black shadow-sm transition-colors cursor-pointer border-none animate-none"
+          type="button"
+          aria-label="Add to favorites"
+        >
+          <Heart className={`h-4.5 w-4.5 stroke-[2px] ${wishlisted ? "fill-red-500 text-red-500" : "text-neutral-700"}`} />
+        </button>
 
-            <div className="property-overlay-top">
-              <div className="property-tags">
-                {props.isFeatured && <span className="tag-featured">Featured</span>}
-                {props.ownership_type && <span className="tag-owner">{props.ownership_type}</span>}
-                {props.type && <span className="tag-owner capitalize">{props.type}</span>}
-                {props.property_for && <span className="tag-sell">{props.property_for}</span>}
-              </div>
-              <button
-                onClick={handleWishlistClick}
-                className="property-wishlist-btn group/btn"
-                aria-label="Toggle Wishlist"
-              >
-                <i className={`${wishlisted ? 'fa-solid text-red-500 fill-red-500' : 'fa-regular'} fa-heart text-[20px] transition-colors group-hover/btn:font-black`}></i>
-              </button>
-            </div>
-
-            <div className="property-overlay-bottom">
-              {props.categoryName && (
-                <span className="property-category-tag flex items-center gap-2">
-                  {props.categoryName}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="property-details">
-          <div className="property-info">
-            <div className="property-specs flex items-center gap-4 text-xs font-semibold text-ink-secondary mb-3">
-              {props.bedrooms !== undefined && (
-                <div className="flex items-center gap-1">
-                  <i className="fa fa-bed text-ink text-[14px]"></i> {props.bedrooms}
-                </div>
-              )}
-              {props.bathrooms !== undefined && (
-                <div className="flex items-center gap-1">
-                  <i className="fa fa-bath text-ink text-[14px]"></i> {props.bathrooms}
-                </div>
-              )}
-              {props.direction && (
-                <div className="flex items-center gap-1">
-                  <i className="fa fa-compass text-ink text-[14px]"></i> {props.direction}
-                </div>
-              )}
-              {props.area && (
-                <div className="flex items-center gap-1">
-                  <i className="fa fa-ruler text-ink text-[14px]"></i> {props.area}
-                </div>
-              )}
-            </div>
-
-            <h5 className="property-title">{props.name}</h5>
-
-            <div className="property-location">
-              <i className="fa fa-map-marker-alt text-brand text-[16px] mr-1"></i>
-              <span>{props.location}</span>
-            </div>
-
-            <div className="property-features">
-              {props.features && props.features.length > 0 ? (
-                props.features.slice(0, 3).map((f, i) => (
-                  <span key={i} className="feature-item">
-                    {f.name}
-                  </span>
-                ))
-              ) : (
-                <span className="feature-item !text-success border-success/20 bg-success/5">
-                  Excellent amenities included
-                </span>
-              )}
-            </div>
-
-            <hr className="property-divider" />
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between gap-2">
-                <div className="property-price text-brand">{priceFormatted}</div>
-                {props.property_for?.toLowerCase() === "lease" && props.lease_duration && (
-                  <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md whitespace-nowrap">
-                    Lease Duration: {props.lease_duration}
-                  </span>
-                )}
-                {props.property_for?.toLowerCase() === "rent" && props.security_deposit != null && props.security_deposit > 0 && (
-                  <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md whitespace-nowrap">
-                    Security Deposit: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(props.security_deposit)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+        {/* Badges on top-left */}
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+          {props.categoryName && (
+            <span className="rounded-md bg-primary-light text-primary px-2.5 py-1 font-bold text-[10px] uppercase tracking-wider shadow-sm">
+              {props.categoryName}
+            </span>
+          )}
+          {props.isFeatured && (
+            <span className="rounded-md bg-[#D1FAE5] text-emerald-800 px-2.5 py-1 font-bold text-[10px] uppercase tracking-wider shadow-sm">
+              Featured
+            </span>
+          )}
         </div>
       </div>
-    </div>
+
+      {/* Info Content */}
+      <div className="flex flex-1 flex-col justify-between p-4 text-left">
+        <div>
+          <h3 className="font-extrabold text-[15px] md:text-base text-primary tracking-tight line-clamp-1">
+            {props.name}
+          </h3>
+          <p className="text-gray-500 text-xs md:text-[13px] font-medium tracking-tight mt-1 flex items-center gap-1">
+            <MapPin size={13} className="text-blue-500 flex-shrink-0" />
+            <span className="truncate">{props.location}</span>
+          </p>
+        </div>
+
+        {/* Footer specs and price */}
+        <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-3 text-xs md:text-sm">
+          {/* Bed/Bath specs */}
+          <div className="flex items-center gap-3 text-slate-500 font-semibold text-xs md:text-[13px]">
+            {props.bedrooms !== undefined && (
+              <span className="flex items-center gap-1">
+                <i className="fa fa-bed text-primary text-[13px]"></i> {props.bedrooms} Bed
+              </span>
+            )}
+            {props.bathrooms !== undefined && (
+              <span className="flex items-center gap-1">
+                <i className="fa fa-bath text-primary text-[13px]"></i> {props.bathrooms} Bath
+              </span>
+            )}
+          </div>
+          
+          {/* Price */}
+          <span className="font-black text-primary text-sm md:text-base">
+            {priceFormatted}
+          </span>
+        </div>
+      </div>
+    </Card>
   );
 }

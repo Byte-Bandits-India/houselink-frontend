@@ -9,8 +9,22 @@ const config: Config = {
     "./src/modules/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    screens: {
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1440px",
+    },
+    container: {
+      center: true,
+    },
     extend: {
       colors: {
+        primary: "#163D75",
+        "primary-light": "#9BC9FF",
+        secondary: "#4F8BD3",
+        whiteBG: "#FFFFFF",
         brand: {
           50:  "var(--brand-50)",
           100: "var(--brand-100)",

@@ -158,7 +158,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={handleSendOtp}
                   disabled={isLoading || phone.length !== 10}
-                  className="h-12 px-6 bg-brand text-white font-medium rounded-lg hover:bg-[#4f8bd3] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                  className="h-12 px-6 bg-brand text-white font-medium rounded-lg hover:bg-primary-light disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                 >
                   {isLoading ? "Sending..." : "Send OTP"}
                 </button>
@@ -188,7 +188,7 @@ export default function LoginPage() {
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
                       className={`w-12 h-12 text-center text-xl font-bold border-2 rounded-lg transition-all outline-none
-                        ${digit ? "border-[#4f8bd3] bg-[#f8fff9]" : "border-gray-200 bg-white"}
+                        ${digit ? "border-primary-light bg-[#f8fff9]" : "border-gray-200 bg-white"}
                         focus:border-brand focus:ring-4 focus:ring-brand/10`}
                     />
                   ))}

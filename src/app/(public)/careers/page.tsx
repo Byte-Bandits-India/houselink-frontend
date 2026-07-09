@@ -81,15 +81,15 @@ function JobCard({ job }: { job: Career }) {
         {/* Meta row */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.82rem] text-gray-500 mb-3">
           <span className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-[#4f8bd3]" />
+            <Clock className="w-3.5 h-3.5 text-primary-light" />
             {formatDate(job.createdAt)}
           </span>
           <span className="flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5 text-[#4f8bd3]" />
+            <MapPin className="w-3.5 h-3.5 text-primary-light" />
             {job.location || "Chennai"}
           </span>
           <span className="flex items-center gap-1">
-            <CreditCard className="w-3.5 h-3.5 text-[#4f8bd3]" />
+            <CreditCard className="w-3.5 h-3.5 text-primary-light" />
             {formatSalary(job.salaryMin, job.salaryMax)}
           </span>
         </div>

@@ -130,7 +130,7 @@ export default function HistoryPage() {
             onClick={() => { setFilter(f); setStatus("live"); }}
             className={cn(
               "px-6 py-2 rounded-md text-sm font-semibold border transition-colors duration-200",
-              filter === f ? "bg-[#163d75] border-[#163d75] text-white" : "bg-white border-[#163d75] text-[#163d75] hover:bg-[#163d75] hover:text-white"
+              filter === f ? "bg-primary border-primary text-white" : "bg-white border-primary text-primary hover:bg-primary hover:text-white"
             )}
           >
             {f === "sell" ? "Sell" : "Rent/Lease"}
@@ -146,7 +146,7 @@ export default function HistoryPage() {
             onClick={() => setStatus(s)}
             className={cn(
               "flex-1 py-3 text-sm font-semibold transition-colors duration-200 border-r border-gray-200 last:border-r-0",
-              status === s ? "bg-[#163d75] text-white" : "bg-white text-[#163d75] hover:bg-gray-50"
+               status === s ? "bg-primary text-white" : "bg-white text-primary hover:bg-gray-50"
             )}
           >
             {s === "live" ? "Live Packages" : "Expired Packages List"}
@@ -197,7 +197,7 @@ export default function HistoryPage() {
 
                 <button
                   onClick={() => setSelectedInvoice(pkg.rawInvoice)}
-                  className="mt-1 text-sm font-semibold border border-[#163d75] text-[#163d75] px-4 py-1.5 rounded-md hover:bg-[#163d75] hover:text-white transition-colors duration-200"
+                  className="mt-1 text-sm font-semibold border border-primary text-primary px-4 py-1.5 rounded-md hover:bg-primary hover:text-white transition-colors duration-200"
                 >
                   View Details
                 </button>
@@ -212,7 +212,7 @@ export default function HistoryPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
-            <div className="bg-[#163d75] text-white px-6 py-4 flex justify-between items-center">
+            <div className="bg-primary text-white px-6 py-4 flex justify-between items-center">
               <h2 className="text-lg font-bold">Invoice Details</h2>
               <button
                 onClick={() => setSelectedInvoice(null)}
@@ -227,7 +227,7 @@ export default function HistoryPage() {
               {/* Header */}
               <div className="flex justify-between items-start border-b pb-6">
                 <div>
-                  <h1 className="text-2xl font-extrabold text-[#163d75]">HOUSELINK</h1>
+                  <h1 className="text-2xl font-extrabold text-primary">HOUSELINK</h1>
                   <p className="text-xs text-gray-500 mt-1">Premium Property Listing Portal</p>
                 </div>
                 <div className="text-right">
@@ -288,7 +288,7 @@ export default function HistoryPage() {
                     <span>GST (18%):</span>
                     <span>Rs. {(Number(selectedInvoice.amount) - (Number(selectedInvoice.amount) / 1.18)).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-lg font-bold text-[#163d75] border-t pt-2">
+                  <div className="flex justify-between text-lg font-bold text-primary border-t pt-2">
                     <span>Total:</span>
                     <span>Rs. {Number(selectedInvoice.amount).toFixed(2)}</span>
                   </div>
@@ -327,7 +327,7 @@ export default function HistoryPage() {
                     }
                   }
                 }}
-                className="px-4 py-2 bg-[#163d75] hover:bg-[#163d75]/90 text-white rounded-lg text-sm font-semibold transition-colors"
+                className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-semibold transition-colors"
               >
                 Print Invoice
               </button>

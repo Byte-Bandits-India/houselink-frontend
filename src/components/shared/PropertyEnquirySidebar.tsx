@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { sendOtp, verifyOtpLogin, ApiError, createLead, checkEnquiryStatus } from "@/lib/api";
 import type { EnquiryStatusResponse } from "@/lib/api";
+import { Button } from "../ui/button";
 
 interface PropertyEnquirySidebarProps {
   property: {
@@ -410,13 +411,14 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
+              variant="gradient"
               disabled={isLoading || !agreedToTerms || statusLoading}
-              className="w-full bg-[#1a3c6b] hover:bg-[#142e52] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+              className="w-full font-extrabold text-sm py-2.5 px-4 rounded-xl shadow transition-all duration-200 active:scale-[0.98] cursor-pointer text-center"
             >
               {isLoading || statusLoading ? "Please wait..." : "Verify and Enquire"}
-            </button>
+            </Button>
           </form>
         )}
       </div>
@@ -495,14 +497,15 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
             {timeLeft > 0 ? (
               <span className="text-red-500 font-bold">Resend in {timeLeft}s</span>
             ) : (
-              <button
+              <Button
                 type="button"
                 onClick={handleSendOtp}
+                variant="gradient"
                 disabled={isLoading}
-                className="text-[#1a3c6b] hover:underline font-semibold disabled:opacity-50"
+                className="w-full font-extrabold text-sm py-2.5 px-4 rounded-xl shadow transition-all duration-200 active:scale-[0.98] cursor-pointer text-center"
               >
                 Resend OTP
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -536,21 +539,23 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
       )}
 
       {otpSent ? (
-        <button
+        <Button
           onClick={handleVerifyAndEnquireLoggedOut}
+          variant="gradient"
           disabled={isLoading || !agreedToTerms || otp.join("").length !== 4}
-          className="w-full bg-[#1a3c6b] hover:bg-[#142e52] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-colors text-sm"
+          className="w-full font-extrabold text-sm py-2.5 px-4 rounded-xl shadow transition-all duration-200 active:scale-[0.98] cursor-pointer text-center"
         >
           {isLoading ? "Verifying..." : "Verify and Enquire"}
-        </button>
+        </Button>
       ) : (
-        <button
+        <Button
           onClick={handleSendOtp}
+          variant="gradient"
           disabled={isLoading || phone.length !== 10 || !agreedToTerms}
-          className="w-full bg-[#1a3c6b] hover:bg-[#142e52] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-colors text-sm"
+          className="w-full font-extrabold text-sm py-2.5 px-4 rounded-xl shadow transition-all duration-200 active:scale-[0.98] cursor-pointer text-center"
         >
           Verify and Enquire
-        </button>
+        </Button>
       )}
 
       <p className="text-center mt-4 text-gray-500 text-[11px] leading-relaxed">

@@ -1,9 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import Image from "next/image";
-import PropertyCard from "@/components/shared/PropertyCard";
-import PropertySearch from "@/components/shared/PropertySearch";
+import PropertiesListingLayout from "@/components/shared/PropertiesListingLayout";
 import { getProperties, mapApiPropertyToCardProps, getCityIdByName } from "@/lib/api";
 import { PageFilterProvider, usePageFilter } from "@/contexts/HomeFilterContext";
 
@@ -139,33 +137,13 @@ function OwnerPropertiesListContent() {
   }, [filters]);
 
   return (
-    <div className="w-full">
-      <PropertySearch />
-
-      {isLoading ? null : error ? (
-        <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
-          <p className="text-red-500 font-semibold text-lg">{error}</p>
-        </div>
-      ) : properties.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {properties.map((prop) => (
-            <PropertyCard key={prop.id} {...prop} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
-          <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h4 className="text-xl font-bold text-ink mb-2">No owner properties found</h4>
-          <p className="text-ink-secondary max-w-sm">
-            We couldn't find any properties matching your current filters. Try resetting or adjusting your search parameters.
-          </p>
-        </div>
-      )}
-    </div>
+    <PropertiesListingLayout
+      properties={properties}
+      isLoading={isLoading}
+      error={error}
+      title="Chennai Owner Properties"
+      breadcrumbLabel="Owner Properties"
+    />
   );
 }
 
@@ -173,29 +151,9 @@ export default function OwnerPropertiesPage() {
   return (
     <PageFilterProvider>
       <div className="w-full">
-        <div className="relative w-full py-44 mb-10 flex items-center justify-center bg-brand-900">
-          <div className="absolute inset-0 z-0">
-            <Image
-              src="/assets/images/footer/owner_image.png"
-              alt="Owner Properties Background"
-              fill
-              className="object-cover opacity-40 mix-blend-overlay"
-              priority
-            />
-          </div>
-          <div className="relative z-10 text-center px-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">Owner Properties</h1>
-            <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto drop-shadow-md">
-              Properties listed directly by owners with zero brokerage.
-            </p>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-4 pb-12">
-          <Suspense fallback={null}>
-            <OwnerPropertiesListContent />
-          </Suspense>
-        </div>
+        <Suspense fallback={null}>
+          <OwnerPropertiesListContent />
+        </Suspense>
       </div>
     </PageFilterProvider>
   );

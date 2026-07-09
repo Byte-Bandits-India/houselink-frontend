@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getStates, getCities, getFeatures } from "@/lib/api";
 import { useHomeFilter } from "@/contexts/HomeFilterContext";
+import { Button } from "@/components/ui/button";
+import ActionSearchBar from "@/components/kokonutui/action-search-bar";
 
 const categories = [
   { id: "all", name: "All" },
@@ -143,6 +145,56 @@ export default function PropertySearch() {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [citiesList, setCitiesList] = useState<{ value: string; label: string }[]>(cities);
   const [amenityList, setAmenityList] = useState<string[]>(defaultAmenities);
+
+  // Typewriter placeholder animation
+  const [placeholderText, setPlaceholderText] = useState("Search for properties in Chennai...");
+  useEffect(() => {
+    const placeholderSequences = [
+      "Search for properties in Chennai...",
+      "2 BHK Apartment in Guindy...",
+      "Office Space in OMR...",
+      "Luxury Villa in ECR...",
+      "Independent House in Adyar...",
+    ];
+
+    let sequenceIndex = 0;
+    let charIndex = placeholderSequences[0].length;
+    let isDeleting = true;
+    let timeoutId: NodeJS.Timeout;
+
+    const runTypewriter = () => {
+      const currentText = placeholderSequences[sequenceIndex];
+      
+      if (isDeleting) {
+        if (charIndex > 0) {
+          charIndex--;
+          setPlaceholderText(currentText.slice(0, charIndex));
+          timeoutId = setTimeout(runTypewriter, 30);
+        } else {
+          isDeleting = false;
+          sequenceIndex = (sequenceIndex + 1) % placeholderSequences.length;
+          timeoutId = setTimeout(runTypewriter, 150); // transition delay
+        }
+      } else {
+        if (charIndex < currentText.length) {
+          charIndex++;
+          setPlaceholderText(currentText.slice(0, charIndex));
+          timeoutId = setTimeout(runTypewriter, 60);
+        } else {
+          // Pause before starting deletion
+          timeoutId = setTimeout(() => {
+            isDeleting = true;
+            runTypewriter();
+          }, 1500);
+        }
+      }
+    };
+
+    // Wait the full pause duration (1500ms) before starting the first deletion of the pre-filled text
+    timeoutId = setTimeout(runTypewriter, 1500);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   // ── Sync local state FROM context (home page only) ────────────────────────
   // This keeps PropertySearch in sync when FeaturedProperties (or any other
@@ -356,6 +408,98 @@ export default function PropertySearch() {
     
     router.push(`${basePath}?${params.toString()}`, { scroll: false });
   };
+
+  if (isHomePage) {
+    return (
+      <div className="w-full max-w-4xl mx-auto px-4 z-20">
+        {/* Tabs & City */}
+        <div className="flex flex-wrap items-center justify-center gap-4 mb-6">
+          {/* Buy / Rent Toggle */}
+          <div className="flex bg-white rounded-full p-1 shadow-sm border border-gray-100 w-[270px]">
+            {[
+              { key: "sell", label: "Buy" },
+              { key: "rent", label: "Rent / Lease" },
+            ].map(({ key, label }) => (
+              <Button
+                key={key}
+                type="button"
+                onClick={() => handleTabClick(key)}
+                className={cn(
+                  "flex-1 py-3 text-sm font-bold rounded-full transition-all duration-200 cursor-pointer text-center",
+                  activeTab === key
+                    ? "bg-gradient-to-r from-primary to-secondary text-white hover:bg-gradient-to-r hover:from-primary hover:to-secondary"
+                    : "bg-transparent text-gray-700 hover:text-black hover:bg-whiteBG"
+                )}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+
+          {/* City Dropdown */}
+          <div className="relative bg-white rounded-full px-6 py-3 shadow-sm border border-gray-100 flex items-center gap-2 cursor-pointer min-w-[160px]">
+            <select
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="w-full appearance-none bg-transparent border-none outline-none text-sm text-gray-800 font-bold pr-6 cursor-pointer"
+            >
+              <option value="">Chennai</option>
+              {citiesList.filter(o => o.value !== "chennai").map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              size={16}
+              className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+            />
+          </div>
+        </div>
+
+        {/* Search bar */}
+        <ActionSearchBar
+          keyword={keyword}
+          setKeyword={setKeyword}
+          placeholderText={placeholderText}
+          onSearch={handleSearch}
+          onSelectLocation={setLocation}
+          setActiveCategory={setActiveCategory}
+          setCity={setCity}
+          setShowAdvanced={setShowAdvanced}
+          setSelectedAmenities={setSelectedAmenities}
+        />
+
+        {/* Recent searches */}
+        <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-gray-500 mt-5">
+          <span className="font-bold text-gray-600 w-full text-center mb-1 md:w-auto md:mb-0">Recent searches:</span>
+          {[
+            "Plots in porur",
+            "Plots in porur",
+            "Plots in porur",
+            "Plots in porur",
+            "Plots in porur",
+            "Plots in porur",
+          ].map((item, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => {
+                setKeyword(item);
+                setCity("chennai");
+              }}
+              className="flex items-center gap-1.5 bg-white/70 hover:bg-white text-gray-600 px-3.5 py-1.5 rounded-full border border-gray-200/85 transition-colors shadow-sm cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {item}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[1240px] mx-auto mb-10 relative z-20 -mt-24">

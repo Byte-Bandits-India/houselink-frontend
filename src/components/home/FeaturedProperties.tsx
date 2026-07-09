@@ -1,22 +1,18 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import PropertyCard from "@/components/shared/PropertyCard";
 import { getProperties, mapApiPropertyToCardProps, getCityIdByName } from "@/lib/api";
-import { fadeUp, stagger } from "@/lib/animations";
+import { fadeUp } from "@/lib/animations";
 import { useHomeFilter } from "@/contexts/HomeFilterContext";
 
-const categories = [
-  { id: "all", name: "All" },
-  { id: "plots", name: "Plots" },
-  { id: "apartments", name: "Apartments" },
-  { id: "villas", name: "Villas" },
-  { id: "house", name: "Individual House" },
-  { id: "commercial", name: "Commercial Property" },
-];
+const FeaturedPropertyCard = ({ property }: { property: any }) => {
+  return <PropertyCard {...property} />;
+};
 
 function FeaturedPropertiesContent() {
   const router = useRouter();
@@ -41,6 +37,8 @@ function FeaturedPropertiesContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const scrollContainer = useRef<HTMLDivElement>(null);
+
   const handleTabChange = (newTab: "sell" | "rent") => {
     if (isHomePage) {
       setFilters({
@@ -58,18 +56,10 @@ function FeaturedPropertiesContent() {
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const handleCategoryChange = (catId: string) => {
-    if (isHomePage) {
-      setFilters({ ...homeFilters, activeCategory: catId });
-      return;
-    }
+  const getViewAllLink = () => {
     const params = new URLSearchParams(searchParams.toString());
-    if (catId === "all") {
-      params.delete("category");
-    } else {
-      params.set("category", catId);
-    }
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    params.set("property_purpose", activeTab);
+    return `/properties?${params.toString()}`;
   };
 
   useEffect(() => {
@@ -254,44 +244,9 @@ function FeaturedPropertiesContent() {
   }, [activeTab, activeCategory, city, keyword, location, categoryType, maxPrice, maxArea, amenities, homeFilters]);
 
   return (
-    <section className="py-24 bg-surface" id="featured-properties">
+    <section className="py-16 bg-whiteBG" id="featured-properties">
       <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-12">
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-80px" }}
-            variants={stagger}
-          >
-            <motion.h3
-              variants={fadeUp}
-              className="text-brand text-sm font-semibold tracking-wider mb-2"
-            >
-              Featured Properties
-            </motion.h3>
-            <motion.h2
-              variants={fadeUp}
-              className="text-5xl sm:text-5xl font-extrabold text-ink"
-            >
-              Best Picks For You
-            </motion.h2>
-          </motion.div>
-
-          <motion.p
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-80px" }}
-            variants={fadeUp}
-            className="text-ink-secondary max-w-xl text-base leading-relaxed"
-          >
-            We curate a versatile selection of properties, from carefully crafted
-            residential homes to visually captivating and performance-driven
-            commercial spaces.
-          </motion.p>
-        </div>
-
-        {/* Sale/Rent Toggle */}
+        {/* Sale/Rent Toggle (Top Center) */}
         <motion.div
           initial="hidden"
           whileInView="show"
@@ -303,44 +258,41 @@ function FeaturedPropertiesContent() {
             <button
               key={tab}
               onClick={() => handleTabChange(tab)}
-              className={`px-7 py-2.5 text-sm font-bold border-2 border-brand rounded-md transition-all duration-300 ${activeTab === tab
-                ? "bg-brand text-white shadow-md"
-                : "bg-white text-brand hover:bg-brand/5"
+              className={`w-40 py-3 text-sm font-bold rounded-full transition-all duration-300 cursor-pointer text-center ${activeTab === tab
+                ? "bg-primary text-white shadow-md border-none"
+                : "bg-white text-gray-800 hover:text-black border border-gray-200/80 shadow-sm"
                 }`}
             >
-              {tab === "sell" ? "For Sale" : "Rent/Lease"}
+              {tab === "sell" ? "Buy" : "Rent / Lease"}
             </button>
           ))}
         </motion.div>
 
-        {/* Category Nav */}
+        {/* Featured Properties Title and View All */}
         <motion.div
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-80px" }}
           variants={fadeUp}
-          className="flex justify-center flex-wrap gap-6 mb-12"
+          className="flex items-center justify-between gap-6 mb-8"
         >
-          {categories.filter(cat => activeTab === "sell" || cat.id !== "plots").map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => handleCategoryChange(cat.id)}
-              className={`relative pb-1.5 text-[15px] font-medium transition-all duration-300 whitespace-nowrap ${activeCategory === cat.id
-                ? "text-brand font-semibold"
-                : "text-gray-500 hover:text-brand"
-                }`}
-            >
-              {cat.name}
-              {/* Active underline */}
-              <span
-                className={`absolute bottom-0 left-0 h-[2.5px] bg-brand rounded-full transition-all duration-300 ${activeCategory === cat.id ? "w-full" : "w-0"
-                  }`}
-              />
-            </button>
-          ))}
+          <div className="flex items-center gap-1">
+            <h2 className="text-xl md:text-2xl font-extrabold text-primary flex items-center gap-0.5">
+              Featured Properties
+              <ChevronRight size={22} className="stroke-[2.5px]" />
+            </h2>
+          </div>
+
+          <Link
+            href={getViewAllLink()}
+            className="px-4 py-1.5 border border-gray-200 rounded-full text-xs font-bold text-primary hover:bg-gray-50 transition-colors flex items-center gap-0.5 shadow-sm"
+          >
+            View All
+            <ChevronRight size={14} className="stroke-[2.5px]" />
+          </Link>
         </motion.div>
 
-        {/* Property Grid */}
+        {/* Property Carousel */}
         {isLoading ? (
           <div className="text-center py-16">
             <p className="text-ink-secondary font-medium">Loading properties...</p>
@@ -350,44 +302,37 @@ function FeaturedPropertiesContent() {
             <p className="text-red-500 font-semibold text-lg">{error}</p>
           </div>
         ) : (
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-80px" }}
-            variants={stagger}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          <div 
+            ref={scrollContainer}
+            className="flex overflow-x-auto gap-6 pb-6 snap-x snap-mandatory scroll-smooth scrollbar-hide w-full"
           >
+            {/* Style block to hide scrollbar */}
+            <style dangerouslySetInnerHTML={{ __html: `
+              .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+              }
+              .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+            `}} />
             {properties.length > 0 ? (
-              properties.map((property) => (
-                <motion.div key={property.id} variants={fadeUp}>
-                  <PropertyCard {...property} />
-                </motion.div>
+              properties.slice(0, 6).map((property) => (
+                <div key={property.id} className="snap-start flex-none w-[290px] md:w-[340px]">
+                  <Link href={property.permalink ? `/properties/${property.permalink}` : `/properties/${property.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl">
+                    <FeaturedPropertyCard property={property} />
+                  </Link>
+                </div>
               ))
             ) : (
-              <div className="col-span-full text-center py-16">
+              <div className="w-full text-center py-16 bg-white rounded-2xl border border-gray-100">
                 <h4 className="text-xl text-ink-secondary">
                   No properties found matching your search filters.
                 </h4>
               </div>
             )}
-          </motion.div>
+          </div>
         )}
-
-        {/* See All Button */}
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={fadeUp}
-          className="text-center mt-12"
-        >
-          <Link
-            href={`/properties?${searchParams.toString()}`}
-            className="inline-block px-10 py-3 bg-brand text-white rounded-[30px] font-semibold text-sm uppercase tracking-wider hover:bg-brand-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-          >
-            See All Properties
-          </Link>
-        </motion.div>
       </div>
     </section>
   );
