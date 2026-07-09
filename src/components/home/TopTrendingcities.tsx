@@ -55,7 +55,7 @@ export default function TopTrendingCities() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
-    <section className="py-12 container mx-auto px-4 md:px-6">
+    <section id="trending-cities" className="py-12 container mx-auto px-4 md:px-6">
       {/* Title and Controls block */}
       <div className="flex justify-between items-end mb-8">
         <div className="text-left">

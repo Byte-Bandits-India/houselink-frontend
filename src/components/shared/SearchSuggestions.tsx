@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Clock, MapPin, Building, X, Home, Flame, Tag, CheckSquare } from "lucide-react";
 import { motion, Variants } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 interface SearchSuggestionsProps {
   query?: string;
@@ -39,6 +40,7 @@ export default function SearchSuggestions({
   onSearch,
   onClose,
 }: SearchSuggestionsProps) {
+  const router = useRouter();
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   useEffect(() => {
@@ -62,6 +64,16 @@ export default function SearchSuggestions({
     const updated = recentSearches.filter((_, i) => i !== indexToRemove);
     setRecentSearches(updated);
     localStorage.setItem("recent_searches", JSON.stringify(updated));
+  };
+
+  const handleScrollOrNavigate = (targetId: string) => {
+    onClose();
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      router.push(`/#${targetId}`);
+    }
   };
 
   const handleRecentClick = (text: string) => {
@@ -175,9 +187,13 @@ export default function SearchSuggestions({
       {/* 1. High Demand Properties */}
       <div className="flex flex-col justify-between pr-0 md:pr-3">
         <div>
-          <motion.div variants={itemVariants} className="flex items-center gap-2 mb-3">
-            <Flame size={14} className="text-orange-500 fill-orange-500" />
-            <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500">
+          <motion.div
+            variants={itemVariants}
+            className="flex items-center gap-2 mb-3 cursor-pointer group"
+            onClick={() => handleScrollOrNavigate("high-demand-properties")}
+          >
+            <Flame size={14} className="text-orange-500 fill-orange-500 group-hover:scale-110 transition-transform" />
+            <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500 group-hover:text-gray-900 transition-colors">
               {isSearching ? "Matching Properties" : "High Demand Properties"}
             </h4>
           </motion.div>
@@ -187,7 +203,7 @@ export default function SearchSuggestions({
               <motion.div
                 variants={itemVariants}
                 key={index}
-                onClick={() => handleRecentClick(prop)}
+                onClick={() => handleScrollOrNavigate("high-demand-properties")}
                 className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
               >
                 <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
@@ -210,9 +226,13 @@ export default function SearchSuggestions({
       {/* 2. High Demand Regions */}
       <div className="flex flex-col justify-between pt-4 md:pt-0 pl-0 md:pl-4 pr-0 md:pr-3">
         <div>
-          <motion.div variants={itemVariants} className="flex items-center gap-2 mb-3">
-            <Flame size={14} className="text-orange-500 fill-orange-500" />
-            <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500">
+          <motion.div
+            variants={itemVariants}
+            className="flex items-center gap-2 mb-3 cursor-pointer group"
+            onClick={() => handleScrollOrNavigate("trending-cities")}
+          >
+            <Flame size={14} className="text-orange-500 fill-orange-500 group-hover:scale-110 transition-transform" />
+            <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500 group-hover:text-gray-900 transition-colors">
               {isSearching ? "Matching Locations" : "High Demand Regions"}
             </h4>
           </motion.div>
@@ -223,7 +243,7 @@ export default function SearchSuggestions({
               <motion.div
                 variants={itemVariants}
                 key={index}
-                onClick={() => handleRegionClick(region)}
+                onClick={() => handleScrollOrNavigate("trending-cities")}
                 className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
               >
                 <div className="w-7 h-7 rounded-lg bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
@@ -241,7 +261,7 @@ export default function SearchSuggestions({
                 <motion.div
                   variants={itemVariants}
                   key={`city-${index}`}
-                  onClick={() => handleCityClick(city.toLowerCase())}
+                  onClick={() => handleScrollOrNavigate("trending-cities")}
                   className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
                 >
                   <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
