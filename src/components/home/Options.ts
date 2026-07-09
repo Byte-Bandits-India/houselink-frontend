@@ -99,7 +99,7 @@ export const whatWeDoItems: WhatWeDoItem[] = [
         description:
             "Reach genuine buyers, get better visibility, and sell your property with confidence.",
         linkText: "List Your Property",
-        href: "/properties/create",
+        href: "/dashboard/properties/new",
         image: "/assets/home/sell.png",
     },
     {
@@ -108,7 +108,7 @@ export const whatWeDoItems: WhatWeDoItem[] = [
         description:
             "Partner with us and grow your business with trusted support and exciting opportunities.",
         linkText: "Partner With US",
-        href: "/contact-us",
+        href: "/partner-with-us",
         image: "/assets/home/partner.png",
     },
 ];
