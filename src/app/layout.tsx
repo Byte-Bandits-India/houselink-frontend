@@ -5,6 +5,7 @@ import { Providers } from "@/components/global/Providers";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
 import Header from "@/components/global/Header";
 import Footer from "@/components/global/Footer";
+import Preloader from "@/components/global/Preloader";
 import "antd/dist/reset.css";
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -52,6 +53,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${hankenGrotesk.variable} font-sans antialiased`}>
         <Providers>
+          <Preloader />
           <Header />
           {children}
           <Footer />

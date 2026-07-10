@@ -6,9 +6,11 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import PropertyCard from "@/components/shared/PropertyCard";
+import PropertyTypeSwitch from "@/components/shared/PropertyTypeSwitch";
 import { getProperties, mapApiPropertyToCardProps, getCityIdByName } from "@/lib/api";
 import { fadeUp } from "@/lib/animations";
 import { useHomeFilter } from "@/contexts/HomeFilterContext";
+import { smoothScrollBy } from "@/lib/smoothScroll";
 
 const FeaturedPropertyCard = ({ property }: { property: any }) => {
   return <PropertyCard {...property} />;
@@ -246,10 +248,11 @@ function FeaturedPropertiesContent() {
   const handleScroll = (direction: "left" | "right") => {
     if (scrollContainer.current) {
       const scrollAmount = 360; // card width + gap approx
-      scrollContainer.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
+      smoothScrollBy(
+        scrollContainer.current,
+        direction === "left" ? -scrollAmount : scrollAmount,
+        450
+      );
     }
   };
 
@@ -264,18 +267,13 @@ function FeaturedPropertiesContent() {
           variants={fadeUp}
           className="flex justify-center gap-3 mb-8"
         >
-          {(["sell", "rent"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabChange(tab)}
-              className={`w-40 py-3 text-sm font-bold rounded-full transition-all duration-300 cursor-pointer text-center ${activeTab === tab
-                ? "bg-primary text-white shadow-md border-none"
-                : "bg-white text-gray-800 hover:text-black border border-gray-200/80 shadow-sm"
-              }`}
-            >
-              {tab === "sell" ? "Buy" : "Rent"}
-            </button>
-          ))}
+          <div className="w-[280px]">
+            <PropertyTypeSwitch
+              activeTab={activeTab}
+              onChange={handleTabChange}
+              variant="header"
+            />
+          </div>
         </motion.div>
         {/* Header */}
         <motion.div
@@ -293,14 +291,6 @@ function FeaturedPropertiesContent() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link
-              href={getViewAllLink()}
-              className="px-4 py-1.5 border border-gray-200 rounded-full text-xs font-bold text-primary hover:bg-gray-50 transition-colors flex items-center gap-0.5 shadow-sm"
-            >
-              View All
-              <ChevronRight size={14} className="stroke-[2.5px]" />
-            </Link>
-
             {/* Arrow Slider Controls */}
             <div className="flex gap-2">
               <button
@@ -318,6 +308,13 @@ function FeaturedPropertiesContent() {
                 <ChevronRight size={20} className="stroke-[2px]" />
               </button>
             </div>
+            <Link
+              href={getViewAllLink()}
+              className="px-4 py-1.5 border border-gray-200 rounded-full text-xs font-bold text-primary hover:bg-gray-50 transition-colors flex items-center gap-0.5 shadow-sm"
+            >
+              View All
+              <ChevronRight size={14} className="stroke-[2.5px]" />
+            </Link>
           </div>
         </motion.div>
 
@@ -333,7 +330,7 @@ function FeaturedPropertiesContent() {
         ) : (
           <div 
             ref={scrollContainer}
-            className="flex overflow-x-auto gap-6 pb-6 snap-x snap-mandatory scroll-smooth scrollbar-hide w-full"
+            className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide w-full"
           >
             {/* Style block to hide scrollbar */}
             <style dangerouslySetInnerHTML={{ __html: `
@@ -347,7 +344,7 @@ function FeaturedPropertiesContent() {
             `}} />
             {properties.length > 0 ? (
               properties.slice(0, 6).map((property) => (
-                <div key={property.id} className="snap-start flex-none w-[290px] md:w-[340px]">
+                <div key={property.id} className="flex-none w-[290px] md:w-[340px]">
                   <Link href={property.permalink ? `/properties/${property.permalink}` : `/properties/${property.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl">
                     <FeaturedPropertyCard property={property} />
                   </Link>

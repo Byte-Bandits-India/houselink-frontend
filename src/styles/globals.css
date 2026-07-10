@@ -1,4 +1,7 @@
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css');
+@import url('https://cdn-uicons.flaticon.com/2.1.0/uicons-solid-straight/css/uicons-solid-straight.css');
+@import url('https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -294,5 +297,36 @@
         font-weight: 800;
         color: #111827;
         margin: 0;
+    }
+}
+
+@layer utilities {
+    .font-inter {
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    .image-anime {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .image-anime::after {
+        content: "";
+        position: absolute;
+        width: 200%;
+        height: 0%;
+        left: 50%;
+        top: 50%;
+        background-color: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%) rotate(-45deg);
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    .image-anime:hover::after,
+    .group:hover .image-anime::after {
+        height: 250%;
+        transition: all 600ms linear;
+        background-color: transparent;
     }
 }

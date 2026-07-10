@@ -52,7 +52,7 @@ export default function WhatWeDo() {
               }`}
             >
               {/* Image Section (Top half, max-h-300px) */}
-              <div className="relative w-full h-[290px] rounded-xl overflow-hidden shadow-sm">
+              <div className="relative w-full h-[290px] rounded-xl overflow-hidden shadow-sm image-anime">
                 <Image
                   src={item.image}
                   alt={item.title}

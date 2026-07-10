@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Image from "next/image";
+import { smoothScrollBy } from "@/lib/smoothScroll";
 import { MapPin, ArrowRight, Building, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/animations";
@@ -19,7 +20,7 @@ function UpcomingPropertyCard({ property }: { property: UpcomingProperty }) {
   return (
     <div className="group relative flex h-[396px] w-full max-w-[300px] flex-col rounded-[28px] border border-gray-150 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.08)] transition-all duration-300 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.12)] bg-white select-none">
       {/* Top portion: Image */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-[28px]">
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-[28px] image-anime">
         <Image
           src={property.image}
           alt={property.title}
@@ -91,10 +92,11 @@ export default function UpcomingProperties() {
   const handleScroll = (direction: "left" | "right") => {
     if (scrollContainer.current) {
       const scrollAmount = 320; // card width (300) + gap (20) approx
-      scrollContainer.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
+      smoothScrollBy(
+        scrollContainer.current,
+        direction === "left" ? -scrollAmount : scrollAmount,
+        450
+      );
     }
   };
 
@@ -128,7 +130,7 @@ export default function UpcomingProperties() {
         </motion.div>
       </div>
 
-      <div className="mb-10 w-full">
+      <div className="mb-10 w-full image-anime">
         <img
           src="/assets/home/upComming.png"
           alt="upcoming-properties"
@@ -157,7 +159,7 @@ export default function UpcomingProperties() {
         {/* Properties Carousel */}
         <div
           ref={scrollContainer}
-          className="flex overflow-x-auto gap-6 pt-5 pb-6 snap-x snap-mandatory scroll-smooth scrollbar-hide w-full"
+          className="flex overflow-x-auto gap-6 pt-5 pb-6 scrollbar-hide w-full"
         >
           {/* Style block to hide scrollbar */}
           <style dangerouslySetInnerHTML={{ __html: `
@@ -171,7 +173,7 @@ export default function UpcomingProperties() {
           `}} />
 
           {upcomingProperties.map((property) => (
-            <div key={property.id} className="snap-start flex-none w-[300px]">
+            <div key={property.id} className="flex-none w-[300px]">
               <UpcomingPropertyCard property={property} />
             </div>
           ))}

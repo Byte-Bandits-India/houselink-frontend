@@ -124,7 +124,7 @@ const Banner = () => {
       className="relative container mx-auto h-[520px] overflow-hidden select-none rounded-[50px]
         border border-gray-200
         shadow-[0_20px_30px_0px_rgba(0,0,0,0.25)]
-        p-0                      
+        p-0 image-anime                     
       "
     >
       <AnimatePresence initial={false} custom={direction}>

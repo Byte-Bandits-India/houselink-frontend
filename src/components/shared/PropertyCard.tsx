@@ -121,7 +121,7 @@ export default function PropertyCard(props: PropertyCardProps) {
   return (
     <Card className="group relative flex h-[380px] max-w-[420px] w-full flex-col overflow-hidden rounded-xl border border-gray-150 shadow-sm transition-all duration-300 hover:shadow-md bg-white">
       {/* Image container */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-xl select-none">
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-xl select-none image-anime">
         <Image
           src={props.image && props.image !== "/assets/blur.png" ? getImageUrl(props.image) : getDefaultImage(props.categoryName)}
           alt={props.name}

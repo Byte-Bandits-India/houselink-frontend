@@ -2,6 +2,7 @@ import { useRef } from "react";
 import Image from "next/image";
 import { MapPin, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { highDemandProperties } from "./Options";
+import { smoothScrollBy } from "@/lib/smoothScroll";
 
 interface PropertyCardProps {
   image: string;
@@ -13,7 +14,7 @@ interface PropertyCardProps {
 
 function PropertyCard({ image, type, title, price, location }: PropertyCardProps) {
   return (
-    <div className="relative rounded-[20px] overflow-hidden shadow-[0_1px_10px_rgba(0,0,0,0.25)] w-[360px] sm:w-[460px] md:w-[540px] lg:w-[888px] h-[240px] sm:h-[300px] md:h-[340px] lg:h-[396px] flex-shrink-0 cursor-pointer group">
+    <div className="relative rounded-[20px] overflow-hidden shadow-[0_1px_10px_rgba(0,0,0,0.25)] w-[360px] sm:w-[460px] md:w-[540px] lg:w-[888px] h-[240px] sm:h-[300px] md:h-[340px] lg:h-[396px] flex-shrink-0 cursor-pointer group image-anime">
       {/* Category Tag */}
       <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm text-[11px] md:text-xs font-bold text-primary px-4 py-1.5 rounded-full shadow-sm z-10 select-none">
         {type}
@@ -24,7 +25,7 @@ function PropertyCard({ image, type, title, price, location }: PropertyCardProps
         src={image}
         alt={title}
         fill
-        className="object-cover scale-105 transition-transform duration-500"
+        className="object-cover scale-105 group-hover:scale-110 transition-transform duration-500"
         draggable={false}
       />
 
@@ -55,10 +56,11 @@ export default function HighDemandProperties() {
   const handleScroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
       const scrollAmount = 420; // approximate scroll step (card width + gap)
-      scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
+      smoothScrollBy(
+        scrollRef.current,
+        direction === "left" ? -scrollAmount : scrollAmount,
+        450
+      );
     }
   };
 
@@ -97,7 +99,7 @@ export default function HighDemandProperties() {
       {/* Cards list (Carousel) */}
       <div 
         ref={scrollRef}
-        className="flex overflow-x-auto gap-6 pb-6 snap-x snap-mandatory scroll-smooth scrollbar-hide w-full"
+        className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide w-full"
       >
         {/* Style block to hide scrollbar */}
         <style dangerouslySetInnerHTML={{ __html: `
@@ -110,7 +112,7 @@ export default function HighDemandProperties() {
           }
         `}} />
         {highDemandProperties.map((property, idx) => (
-          <div key={idx} className="snap-start flex-shrink-0">
+          <div key={idx} className="flex-shrink-0">
             <PropertyCard
               image={property.image}
               type={property.type}

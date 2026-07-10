@@ -4,13 +4,13 @@
 
 export * from "./type";
 import type {
-  HeroBadge,
-  HeroSlide,
-  WhatWeDoItem,
-  TrendingCity,
-  HighDemandProperty,
-  UpcomingProperty,
-  IntroVideoConfig,
+    HeroBadge,
+    HeroSlide,
+    WhatWeDoItem,
+    TrendingCity,
+    HighDemandProperty,
+    UpcomingProperty,
+    IntroVideoConfig,
 } from "./type";
 
 // ── Hero Badges (HomePageClient) ──────────────────────────────────────────────
@@ -146,6 +146,19 @@ export const trendingCities: TrendingCity[] = [
         growthRate: "22%",
         image: "/assets/home/topCIties/5.png",
     },
+    {
+        name: "Guindy",
+        propertiesCount: 165,
+        growthRate: "9%",
+        image: "/assets/home/topCIties/1.png",
+    },
+    {
+        name: "Tambaram",
+        propertiesCount: 220,
+        growthRate: "16%",
+        image: "/assets/home/topCIties/2.png",
+    },
+
 ];
 
 // ── High Demand Properties (HighDemandProperties.tsx) ────────────────────────

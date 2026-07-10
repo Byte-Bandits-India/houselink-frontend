@@ -33,9 +33,27 @@ export default function HomePageClient() {
       >
         <div className="container mx-auto px-4 flex flex-col items-center text-center relative z-10">
           {/* Subtitle */}
-          <span className="text-secondary text-sm md:text-base lg:text-lg font-bold mb-4 md:mb-6 lg:mb-10 tracking-wider">
-            Find your dream property in just a few clicks
-          </span>
+          <div className="flex items-center justify-center gap-2 md:gap-3 mb-4 md:mb-6 lg:mb-10">
+            <Image
+              src="/assets/home/icons/left.png"
+              alt="Left decorative icon"
+              width={20}
+              height={20}
+              className="object-contain w-6 h-6 md:w-[124px] md:h-[15px] shrink-0"
+              unoptimized
+            />
+            <span className="text-secondary text-sm md:text-base lg:text-lg font-bold tracking-wider">
+              Find your dream property in just a few clicks
+            </span>
+            <Image
+              src="/assets/home/icons/right.png"
+              alt="Right decorative icon"
+              width={20}
+              height={20}
+              className="object-contain w-6 h-6 md:w-[124px] md:h-[15px] shrink-0"
+              unoptimized
+            />
+          </div>
           
           {/* Heading */}
           <h1 className="text-5xl lg:text-[68px] font-extrabold tracking-tight mb-4 md:mb-6 lg:mb-10">

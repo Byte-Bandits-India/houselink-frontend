@@ -8,6 +8,7 @@ import { getStates, getCities, getFeatures } from "@/lib/api";
 import { useHomeFilter } from "@/contexts/HomeFilterContext";
 import { Button } from "@/components/ui/button";
 import ActionSearchBar from "@/components/kokonutui/action-search-bar";
+import PropertyTypeSwitch from "./PropertyTypeSwitch";
 
 const categories = [
   { id: "all", name: "All" },
@@ -415,25 +416,12 @@ export default function PropertySearch() {
         {/* Tabs & City */}
         <div className="flex flex-wrap items-center justify-center gap-4 mb-6">
           {/* Buy / Rent Toggle */}
-          <div className="flex bg-white rounded-full p-1 shadow-sm border border-gray-100 w-[270px]">
-            {[
-              { key: "sell", label: "Buy" },
-              { key: "rent", label: "Rent / Lease" },
-            ].map(({ key, label }) => (
-              <Button
-                key={key}
-                type="button"
-                onClick={() => handleTabClick(key)}
-                className={cn(
-                  "flex-1 py-3 text-sm font-bold rounded-full transition-all duration-200 cursor-pointer text-center",
-                  activeTab === key
-                    ? "bg-gradient-to-r from-primary to-secondary text-white hover:bg-gradient-to-r hover:from-primary hover:to-secondary"
-                    : "bg-transparent text-gray-700 hover:text-black hover:bg-whiteBG"
-                )}
-              >
-                {label}
-              </Button>
-            ))}
+          <div className="w-[280px]">
+            <PropertyTypeSwitch
+              activeTab={activeTab as "sell" | "rent"}
+              onChange={handleTabClick}
+              variant="header"
+            />
           </div>
 
           {/* City Dropdown */}

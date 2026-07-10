@@ -1,7 +1,8 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import Image from "next/image";
 import { MapPin, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { trendingCities } from "./Options";
+import { smoothScrollBy } from "@/lib/smoothScroll";
 
 interface CityCardProps {
   image: string;
@@ -14,7 +15,7 @@ function CityCard({ image, name, propertiesCount, growthRate }: CityCardProps) {
   return (
     <div className="flex flex-col bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 overflow-hidden w-full max-w-[280px] sm:max-w-none">
       {/* Image Container */}
-      <div className="relative h-[180px] w-full overflow-hidden select-none">
+      <div className="relative h-[180px] w-full overflow-hidden select-none image-anime">
         {/* High Demand Badge */}
         <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-[10px] font-bold text-red-500 px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm border border-red-50/50 z-10">
           <span>🔥</span> High Demand
@@ -33,15 +34,15 @@ function CityCard({ image, name, propertiesCount, growthRate }: CityCardProps) {
       <div className="p-5 text-left flex flex-col gap-3">
         {/* Location Row */}
         <div className="flex items-center gap-1.5">
-          <MapPin size={18} className="text-blue-500" />
+          <MapPin size={18} className="text-blue-500 -mt-2" />
           <h3 className="text-primary font-extrabold text-base tracking-tight">{name}</h3>
         </div>
 
         {/* Subtitle properties */}
-        <p className="text-xs text-gray-500 font-medium -mt-1">{propertiesCount}+ Properties</p>
+        <p className="text-xs text-gray-500 font-medium -mt-3">{propertiesCount}+ Properties</p>
 
         {/* Trend badge */}
-        <div className="inline-flex items-center gap-1 bg-[#EAEAFE] text-primary text-[10px] font-bold px-2.5 py-1.5 rounded-full w-fit">
+        <div className="inline-flex items-center -mt-3 gap-1 bg-[#EAEAFE] text-primary text-[10px] font-bold px-2.5 py-1.5 rounded-full w-fit">
           <TrendingUp size={12} />
           {growthRate} Growth
         </div>
@@ -52,14 +53,72 @@ function CityCard({ image, name, propertiesCount, growthRate }: CityCardProps) {
 
 export default function TopTrendingCities() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const autoplayTimeoutRef = useRef<any>(null);
+  const isAutoplayEnabledRef = useRef(true);
+
+  // Auto carousel effect with smooth requestAnimationFrame scrolling
+  useEffect(() => {
+    let animationFrameId: number;
+    let isHovered = false;
+
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const step = () => {
+      if (isAutoplayEnabledRef.current && !isHovered && container) {
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        if (maxScroll > 0) {
+          container.scrollLeft += 0.8; // Butter-smooth continuous scroll increment
+          if (container.scrollLeft >= maxScroll - 1) {
+            container.scrollLeft = 0; // Wrap around to the start
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(step);
+    };
+
+    const handleMouseEnter = () => { isHovered = true; };
+    const handleMouseLeave = () => { isHovered = false; };
+
+    container.addEventListener("mouseenter", handleMouseEnter);
+    container.addEventListener("mouseleave", handleMouseLeave);
+    
+    // Start animation loop
+    animationFrameId = requestAnimationFrame(step);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      if (autoplayTimeoutRef.current) {
+        clearTimeout(autoplayTimeoutRef.current);
+      }
+      if (container) {
+        container.removeEventListener("mouseenter", handleMouseEnter);
+        container.removeEventListener("mouseleave", handleMouseLeave);
+      }
+    };
+  }, []);
 
   const handleScroll = (direction: "left" | "right") => {
+    // Pause auto carousel scroll upon clicking arrow slider controls
+    isAutoplayEnabledRef.current = false;
+
+    // Reset previous restart timeout
+    if (autoplayTimeoutRef.current) {
+      clearTimeout(autoplayTimeoutRef.current);
+    }
+
+    // Set a timeout to restart autoplay after 5 seconds of inactivity
+    autoplayTimeoutRef.current = setTimeout(() => {
+      isAutoplayEnabledRef.current = true;
+    }, 5000);
+
     if (scrollRef.current) {
       const scrollAmount = 300; // approximate scroll step (card width + gap)
-      scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
+      smoothScrollBy(
+        scrollRef.current,
+        direction === "left" ? -scrollAmount : scrollAmount,
+        450
+      );
     }
   };
 
@@ -98,7 +157,7 @@ export default function TopTrendingCities() {
       {/* Cards list (Carousel on all screens) */}
       <div 
         ref={scrollRef}
-        className="flex overflow-x-auto gap-6 pb-6 snap-x snap-mandatory scroll-smooth scrollbar-hide w-full"
+        className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide w-full"
       >
         {/* Style block to hide scrollbar */}
         <style dangerouslySetInnerHTML={{ __html: `
@@ -111,7 +170,7 @@ export default function TopTrendingCities() {
           }
         `}} />
         {trendingCities.map((city) => (
-          <div key={city.name} className="snap-start flex-shrink-0 w-[260px] md:w-[280px]">
+          <div key={city.name} className="flex-shrink-0 w-[260px] md:w-[280px]">
             <CityCard
               image={city.image}
               name={city.name}
