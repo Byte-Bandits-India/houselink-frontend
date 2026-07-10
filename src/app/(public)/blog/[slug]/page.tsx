@@ -8,13 +8,18 @@ import { formatDate } from "@/lib/utils"
 export const revalidate = 60 // revalidate every minute (ISR)
 
 export async function generateStaticParams() {
+  // Skip API calls during CI builds since the backend API is offline at compile time
+  if (process.env.GITHUB_ACTIONS === "true" || process.env.NEXT_PHASE === "phase-production-build") {
+    return []
+  }
+
   try {
     const res = await getBlogs({ limit: 100 })
-    if (res.success && res.data?.posts) {
+    if (res && res.success && res.data?.posts) {
       return res.data.posts.map((blog) => ({ slug: blog.slug }))
     }
   } catch (err) {
-    console.error("Failed to generate static params for blogs:", err)
+    console.warn("Failed to generate static params for blogs (API may be offline):", err instanceof Error ? err.message : String(err))
   }
   return []
 }
