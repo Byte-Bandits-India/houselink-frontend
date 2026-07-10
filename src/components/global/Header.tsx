@@ -238,15 +238,6 @@ export default function Header() {
               }
             />
 
-            {/* Blogs */}
-            <Link
-              href="/blog"
-              className="flex flex-col items-center gap-1 px-5 py-2 rounded-xl hover:bg-blue-50 text-[#1a3a6b] transition-colors"
-            >
-              <img src="/assets/header/3.svg" alt="3" />
-              <span className="text-sm font-semibold">Blogs</span>
-            </Link>
-
             {/* Partner With Us */}
             <Link
               href="/partner-with-us"
@@ -270,17 +261,6 @@ export default function Header() {
               <img src="/assets/header/plus.svg" alt="plus" />
               Post Your property
             </Button>
-
-            {/* Support */}
-            <HoverDropdown
-              content={supportContent}
-              align="end"
-              trigger={
-                <Button variant="gradient" className="w-11 h-11">
-                  <img src="/assets/header/Headphone.svg" alt="headset" />
-                </Button>
-              }
-            />
 
             {/* Login / User */}
             {!isLoggedIn ? (
@@ -307,6 +287,17 @@ export default function Header() {
                 }
               />
             )}
+
+            {/* Support */}
+            <HoverDropdown
+              content={supportContent}
+              align="end"
+              trigger={
+                <Button variant="gradient" className="w-11 h-11">
+                  <img src="/assets/header/Headphone.svg" alt="headset" />
+                </Button>
+              }
+            />
           </div>
 
           {/* ── MOBILE HAMBURGER ────────────────────────────────────────────── */}

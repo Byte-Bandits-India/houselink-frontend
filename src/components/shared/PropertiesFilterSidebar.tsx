@@ -73,7 +73,7 @@ export default function PropertiesFilterSidebar() {
   ];
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-gray-150 p-5 text-left shadow-sm flex flex-col gap-6">
+    <div className="w-full max-w-[318px] bg-white rounded-2xl border border-gray-150 p-5 text-left shadow-sm flex flex-col gap-6">
       
       {/* ── PRICE RANGE SECTION ── */}
       <div>

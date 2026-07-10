@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import PropertyCard from "@/components/shared/PropertyCard";
 import { getProperties, mapApiPropertyToCardProps, getCityIdByName } from "@/lib/api";
 import { fadeUp } from "@/lib/animations";
@@ -243,9 +243,19 @@ function FeaturedPropertiesContent() {
     loadProperties();
   }, [activeTab, activeCategory, city, keyword, location, categoryType, maxPrice, maxArea, amenities, homeFilters]);
 
+  const handleScroll = (direction: "left" | "right") => {
+    if (scrollContainer.current) {
+      const scrollAmount = 360; // card width + gap approx
+      scrollContainer.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
-    <section className="py-16 bg-whiteBG" id="featured-properties">
-      <div className="container mx-auto px-4">
+    <section className="py-24 bg-surface" id="featured-properties">
+      <div className="container mx-auto px-4 max-w-[1440px]">
         {/* Sale/Rent Toggle (Top Center) */}
         <motion.div
           initial="hidden"
@@ -261,35 +271,54 @@ function FeaturedPropertiesContent() {
               className={`w-40 py-3 text-sm font-bold rounded-full transition-all duration-300 cursor-pointer text-center ${activeTab === tab
                 ? "bg-primary text-white shadow-md border-none"
                 : "bg-white text-gray-800 hover:text-black border border-gray-200/80 shadow-sm"
-                }`}
+              }`}
             >
-              {tab === "sell" ? "Buy" : "Rent / Lease"}
+              {tab === "sell" ? "Buy" : "Rent"}
             </button>
           ))}
         </motion.div>
-
-        {/* Featured Properties Title and View All */}
+        {/* Header */}
         <motion.div
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: true }}
           variants={fadeUp}
-          className="flex items-center justify-between gap-6 mb-8"
+          className="flex justify-between items-center mb-10"
         >
-          <div className="flex items-center gap-1">
+          <div className="text-left">
             <h2 className="text-xl md:text-2xl font-extrabold text-primary flex items-center gap-0.5">
               Featured Properties
               <ChevronRight size={22} className="stroke-[2.5px]" />
             </h2>
           </div>
 
-          <Link
-            href={getViewAllLink()}
-            className="px-4 py-1.5 border border-gray-200 rounded-full text-xs font-bold text-primary hover:bg-gray-50 transition-colors flex items-center gap-0.5 shadow-sm"
-          >
-            View All
-            <ChevronRight size={14} className="stroke-[2.5px]" />
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href={getViewAllLink()}
+              className="px-4 py-1.5 border border-gray-200 rounded-full text-xs font-bold text-primary hover:bg-gray-50 transition-colors flex items-center gap-0.5 shadow-sm"
+            >
+              View All
+              <ChevronRight size={14} className="stroke-[2.5px]" />
+            </Link>
+
+            {/* Arrow Slider Controls */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleScroll("left")}
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft size={20} className="stroke-[2px]" />
+              </button>
+              <button
+                onClick={() => handleScroll("right")}
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+                aria-label="Scroll right"
+              >
+                <ChevronRight size={20} className="stroke-[2px]" />
+              </button>
+            </div>
+          </div>
         </motion.div>
 
         {/* Property Carousel */}

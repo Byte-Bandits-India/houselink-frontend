@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { heroSlides, HERO_SLIDE_DURATION_MS } from "@/components/home/Options";
-import type { HeroSlide } from "@/components/home/Options";
 
 type SlideState = "entering" | "active" | "exiting";
 

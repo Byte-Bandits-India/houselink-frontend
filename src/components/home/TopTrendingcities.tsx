@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import Image from "next/image";
-import { MapPin, TrendingUp } from "lucide-react";
+import { MapPin, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { trendingCities } from "./Options";
 
 interface CityCardProps {
@@ -50,9 +50,18 @@ function CityCard({ image, name, propertiesCount, growthRate }: CityCardProps) {
   );
 }
 
-
 export default function TopTrendingCities() {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const scrollAmount = 300; // approximate scroll step (card width + gap)
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
 
   return (
     <section id="trending-cities" className="py-12 container mx-auto px-4 md:px-6">
@@ -65,6 +74,24 @@ export default function TopTrendingCities() {
           <p className="text-sm md:text-base text-[#918B8B] font-medium">
             Top locations with great demand and promising returns
           </p>
+        </div>
+
+        {/* Arrow Slider Controls */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleScroll("left")}
+            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft size={20} className="stroke-[2px]" />
+          </button>
+          <button
+            onClick={() => handleScroll("right")}
+            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={20} className="stroke-[2px]" />
+          </button>
         </div>
       </div>
 

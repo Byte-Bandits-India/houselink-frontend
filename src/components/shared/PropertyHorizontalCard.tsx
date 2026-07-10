@@ -43,7 +43,7 @@ export default function PropertyHorizontalCard(props: PropertyHorizontalCardProp
     <div className="relative flex flex-col md:flex-row border border-gray-205 rounded-2xl p-4 gap-6 bg-white shadow-xs select-none">
       
       {/* ── IMAGE SECTION ── */}
-      <div className="relative w-full md:w-[320px] h-[200px] md:h-[250px] rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 select-none">
+      <div className="relative w-full md:w-[320px] h-[200px] md:h-[250px] lg:w-[390px] lg:h-[278px] rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 select-none">
         <Link href={url} className="block w-full h-full relative">
           <Image
             src={props.image && props.image !== "/assets/blur.png" ? getImageUrl(props.image) : getDefaultImage(props.categoryName)}
@@ -73,7 +73,7 @@ export default function PropertyHorizontalCard(props: PropertyHorizontalCardProp
 
           {/* Mobile Category Tag */}
           {props.categoryName && (
-            <span className="flex md:hidden items-center gap-1.5 px-3 py-1 bg-[#bfdbfe]/80 text-[#163D75] rounded-full font-bold text-[9px] uppercase tracking-wider select-none border border-gray-150 shrink-0">
+            <span className="flex md:hidden items-center gap-1.5 px-3 py-1 bg-[#bfdbfe]/80 text-[#000000] rounded-full font-bold text-[9px] uppercase tracking-wider select-none border border-gray-150 shrink-0">
               <Tag size={10} className="stroke-[2.5px]" />
               {props.categoryName}
             </span>
@@ -82,7 +82,7 @@ export default function PropertyHorizontalCard(props: PropertyHorizontalCardProp
 
         {/* Desktop Category Tag */}
         {props.categoryName && (
-          <div className="hidden md:flex absolute top-0 right-0 items-center gap-1.5 px-4 py-1.5 bg-[#bfdbfe]/80 text-[#163D75] rounded-bl-xl rounded-tr-2xl font-bold text-[11px] uppercase tracking-wider select-none border-b border-l border-gray-150">
+          <div className="hidden md:flex absolute top-0 right-0 items-center gap-1.5 px-4 py-1.5 bg-[#bfdbfe]/80 text-[#000000] rounded-bl-xl rounded-tr-2xl font-bold text-[11px] uppercase tracking-wider select-none border-b border-l border-gray-150">
             <Tag size={12} className="stroke-[2.5px]" />
             {props.categoryName}
           </div>
@@ -91,7 +91,7 @@ export default function PropertyHorizontalCard(props: PropertyHorizontalCardProp
         {/* Title & Description Excerpt */}
         <div className="my-2 select-text">
           <Link href={url}>
-            <h3 className="font-extrabold text-base md:text-[17px] text-gray-900 tracking-tight hover:text-[#163D75] transition-colors leading-snug line-clamp-2">
+            <h3 className="font-extrabold text-base md:text-lg text-gray-900 tracking-tight hover:text-[#000000] transition-colors leading-snug line-clamp-2">
               {props.name}
             </h3>
           </Link>

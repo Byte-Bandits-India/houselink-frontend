@@ -121,9 +121,9 @@ const Banner = () => {
 
   return (
     <section
-      className="relative container mx-auto h-[520px] overflow-hidden select-none rounded-lg
+      className="relative container mx-auto h-[520px] overflow-hidden select-none rounded-[50px]
         border border-gray-200
-        shadow-[0_4px_24px_rgba(0,0,0,0.13),_0_1.5px_6px_rgba(0,0,0,0.07)]
+        shadow-[0_20px_30px_0px_rgba(0,0,0,0.25)]
         p-0                      
       "
     >

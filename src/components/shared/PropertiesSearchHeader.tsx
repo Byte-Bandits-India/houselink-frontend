@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { usePageFilter } from "@/contexts/HomeFilterContext";
 import { getStates, getCities } from "@/lib/api";
-import PropertyTypeSwitch from "./PropertyTypeSwitch";
 import TypewriterTitle from "@/components/ui/TypewriterTitle";
 
 export default function PropertiesSearchHeader() {
@@ -71,7 +70,7 @@ export default function PropertiesSearchHeader() {
 
   return (
     <div className="w-full bg-gradient-to-r from-primary to-secondary py-5 px-4 md:px-8 shadow-md">
-      <div className="container mx-auto flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-4 md:gap-6">
+      <div className="container mx-auto flex flex-col lg:flex-row items-stretch px-6 lg:items-end justify-between gap-4 md:gap-6">
         
         {/* City Select Column */}
         <div className="flex flex-col w-full lg:w-auto min-w-[160px] text-left">
@@ -149,11 +148,30 @@ export default function PropertiesSearchHeader() {
             <label className="text-[11px] uppercase font-bold text-white/70 mb-1.5 tracking-wider truncate">
               Choose the Property Type
             </label>
-            <PropertyTypeSwitch
-              activeTab={localActiveTab}
-              onChange={handleToggleTab}
-              variant="header"
-            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => handleToggleTab("sell")}
+                className={`rounded-full h-11 px-8 text-sm font-extrabold transition-all duration-200 cursor-pointer ${
+                  localActiveTab === "sell"
+                    ? "bg-[#DCE5F1] text-primary border border-primary"
+                    : "bg-white text-black border border-transparent hover:bg-white/95"
+                }`}
+              >
+                Sell
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleTab("rent")}
+                className={`rounded-full h-11 px-8 text-sm font-extrabold transition-all duration-200 cursor-pointer ${
+                  localActiveTab === "rent"
+                    ? "bg-[#DCE5F1] text-primary border border-primary"
+                    : "bg-white text-black border border-transparent hover:bg-white/95"
+                }`}
+              >
+                Rent / Lease
+              </button>
+            </div>
           </div>
 
           {/* Search Action Column */}

@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import Image from "next/image";
-import { MapPin, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { highDemandProperties } from "./Options";
 
 interface PropertyCardProps {
@@ -13,7 +13,7 @@ interface PropertyCardProps {
 
 function PropertyCard({ image, type, title, price, location }: PropertyCardProps) {
   return (
-    <div className="relative rounded-3xl overflow-hidden border border-gray-100 shadow-sm w-[360px] sm:w-[460px] md:w-[540px] lg:w-[888px] h-[240px] sm:h-[300px] md:h-[340px] lg:h-[396px] flex-shrink-0 cursor-pointer group">
+    <div className="relative rounded-[20px] overflow-hidden shadow-[0_1px_10px_rgba(0,0,0,0.25)] w-[360px] sm:w-[460px] md:w-[540px] lg:w-[888px] h-[240px] sm:h-[300px] md:h-[340px] lg:h-[396px] flex-shrink-0 cursor-pointer group">
       {/* Category Tag */}
       <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm text-[11px] md:text-xs font-bold text-primary px-4 py-1.5 rounded-full shadow-sm z-10 select-none">
         {type}
@@ -24,13 +24,12 @@ function PropertyCard({ image, type, title, price, location }: PropertyCardProps
         src={image}
         alt={title}
         fill
-        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 480px, 888px"
-        className="object-cover group-hover:scale-105 transition-transform duration-500"
+        className="object-cover scale-105 transition-transform duration-500"
         draggable={false}
       />
 
       {/* Bottom Floating Info Capsule */}
-      <div className="absolute bottom-4 left-4 right-4 bg-white rounded-2xl p-3 md:p-4 flex items-center justify-between shadow-md border border-gray-100/50 z-10">
+      <div className="absolute bottom-5 left-5 right-5 bg-white rounded-2xl p-3 md:p-4 flex items-center justify-between shadow-md border border-gray-100/50 z-10">
         <div className="text-left flex-1 min-w-0 pr-2">
           <h3 className="text-primary font-extrabold text-sm md:text-base leading-tight truncate">
             {title} - <span className="text-[#2448B7] font-black">{price}</span>
@@ -53,6 +52,16 @@ function PropertyCard({ image, type, title, price, location }: PropertyCardProps
 export default function HighDemandProperties() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const handleScroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const scrollAmount = 420; // approximate scroll step (card width + gap)
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <section id="high-demand-properties" className="py-12 container mx-auto px-4 md:px-6">
       {/* Title and Controls block */}
@@ -64,6 +73,24 @@ export default function HighDemandProperties() {
           <p className="text-sm md:text-base text-[#918B8B] font-medium">
             Top Properties with high demand and promising returns
           </p>
+        </div>
+
+        {/* Arrow Slider Controls */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleScroll("left")}
+            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft size={20} className="stroke-[2px]" />
+          </button>
+          <button
+            onClick={() => handleScroll("right")}
+            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={20} className="stroke-[2px]" />
+          </button>
         </div>
       </div>
 
@@ -97,4 +124,3 @@ export default function HighDemandProperties() {
     </section>
   );
 }
-

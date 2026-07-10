@@ -35,9 +35,9 @@ export default function PropertiesListingLayout({
         
         {/* Title and Breadcrumbs */}
         <div className="flex flex-col text-left py-6 border-b border-gray-150/80 mb-6">
-          <h1 className="text-2xl font-black text-gray-900 mb-1">{title}</h1>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold select-none">
-            <Link href="/" className="hover:text-primary transition-colors">
+          <h1 className="text-2xl font-black text-gray-900 mb-2">{title}</h1>
+          <div className="flex items-center gap-1.5 text-xs select-none">
+            <Link href="/" className="text-primary">
               Home
             </Link>
             <span>&gt;</span>
@@ -46,15 +46,15 @@ export default function PropertiesListingLayout({
         </div>
 
         {/* Two-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+        <div className="flex flex-col lg:flex-row gap-6 items-start justify-between">
           
           {/* Left Column: Filter Sidebar */}
-          <div className="lg:col-span-1 lg:sticky lg:top-6">
+          <div className="w-full lg:w-[318px] lg:flex-shrink-0 lg:sticky lg:top-6">
             <PropertiesFilterSidebar />
           </div>
 
           {/* Right Column: Properties List */}
-          <div className="lg:col-span-3">
+          <div className="w-full">
             {isLoading ? (
               <div className="flex flex-col gap-5">
                 {[1, 2, 3].map((n) => (

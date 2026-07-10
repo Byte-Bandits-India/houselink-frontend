@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Image from "next/image";
-import { MapPin, ArrowRight, Building } from "lucide-react";
+import { MapPin, ArrowRight, Building, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/animations";
 import { Button } from "@/components/ui/button";
@@ -88,8 +88,18 @@ function UpcomingPropertyCard({ property }: { property: UpcomingProperty }) {
 export default function UpcomingProperties() {
   const scrollContainer = useRef<HTMLDivElement>(null);
 
+  const handleScroll = (direction: "left" | "right") => {
+    if (scrollContainer.current) {
+      const scrollAmount = 320; // card width (300) + gap (20) approx
+      scrollContainer.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
-    <section className="py-16 bg-whiteBG" id="upcoming-properties">
+    <section className="py-10 bg-whiteBG" id="upcoming-properties">
       <div className="container mx-auto px-4 max-w-[1440px]">
         {/* Header Block */}
         <motion.div
@@ -127,6 +137,23 @@ export default function UpcomingProperties() {
       </div>
 
       <div className="container mx-auto px-4 max-w-[1440px]">
+        {/* Arrow Slider Controls */}
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => handleScroll("left")}
+              className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft size={20} className="stroke-[2px]" />
+            </button>
+            <button
+              onClick={() => handleScroll("right")}
+              className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+              aria-label="Scroll right"
+            >
+              <ChevronRight size={20} className="stroke-[2px]" />
+            </button>
+          </div>
         {/* Properties Carousel */}
         <div
           ref={scrollContainer}
