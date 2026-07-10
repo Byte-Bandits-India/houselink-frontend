@@ -45,6 +45,7 @@ RUN npm run build
 FROM base AS production
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # Copy minimal standalone build files
 COPY --from=builder /app/public ./public
