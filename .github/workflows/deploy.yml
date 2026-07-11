@@ -6,9 +6,40 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: production
+          push: true
+          build-args: |
+            NEXT_PUBLIC_WEB_API_URL=https://nextjs.houselink360.com
+            NEXT_PUBLIC_SITE_URL=https://nextjs.houselink360.com
+          tags: ghcr.io/byte-bandits-india/houselink-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
     steps:
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v0.1.10
@@ -20,30 +51,18 @@ jobs:
           port: 2244
           script: |
             set -e
-
-            git config --global --add safe.directory /home/houselink360/nextjs
-
-            cd /home/houselink360/nextjs
-
-            echo "Resetting local changes..."
-            git reset --hard
-
-            echo "Pulling latest code..."
-            git pull origin main
-
-            echo "Installing dependencies..."
-            npm install
-            npm install sharp
-
-            echo "Building project..."
-            npm run build
-
-            echo "Fixing permissions for web server..."
-            chmod -R 755 .next public
-
-            echo "Restarting app..."
-            pm2 delete nextjs-app || true
-            pm2 delete houselink-nextjs || true
-            pm2 start npm --name "houselink-nextjs" -- start
-
-            echo "Deployment complete"
+            cd /home/houselink360/houselink
+            
+            # Login to GitHub Packages on the remote VM
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            
+            # Pull latest frontend image
+            export REGISTRY_OWNER="ghcr.io/byte-bandits-india"
+            export IMAGE_TAG="latest"
+            docker compose -f docker-compose.prod.yml pull frontend
+            
+            # Restart frontend container
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans frontend
+            
+            # Clean up old unused images
+            docker image prune -f
