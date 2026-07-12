@@ -29,21 +29,6 @@ export interface WhatWeDoItem {
     image: string;
 }
 
-export interface TrendingCity {
-    name: string;
-    propertiesCount: number;
-    growthRate: string;
-    image: string;
-}
-
-export interface HighDemandProperty {
-    type: string;
-    title: string;
-    price: string;
-    location: string;
-    image: string;
-}
-
 export interface UpcomingProperty {
     id: string;
     title: string;

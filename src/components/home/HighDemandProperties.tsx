@@ -1,7 +1,7 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { MapPin, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { highDemandProperties } from "./Options";
+import { getPopularProperties, getImageUrl, type PopularPropertyApiItem } from "@/lib/api";
 import { smoothScrollBy } from "@/lib/smoothScroll";
 
 interface PropertyCardProps {
@@ -25,6 +25,7 @@ function PropertyCard({ image, type, title, price, location }: PropertyCardProps
         src={image}
         alt={title}
         fill
+        unoptimized={true}
         className="object-cover scale-105 group-hover:scale-110 transition-transform duration-500"
         draggable={false}
       />
@@ -52,6 +53,25 @@ function PropertyCard({ image, type, title, price, location }: PropertyCardProps
 
 export default function HighDemandProperties() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [properties, setProperties] = useState<PopularPropertyApiItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    getPopularProperties()
+      .then((data) => {
+        if (isMounted) setProperties(data);
+      })
+      .catch((err) => {
+        console.error("Error loading high demand properties:", err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleScroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -63,6 +83,10 @@ export default function HighDemandProperties() {
       );
     }
   };
+
+  if (!isLoading && properties.length === 0) {
+    return null;
+  }
 
   return (
     <section id="high-demand-properties" className="py-12 container mx-auto px-4 md:px-6">
@@ -111,10 +135,10 @@ export default function HighDemandProperties() {
             scrollbar-width: none;
           }
         `}} />
-        {highDemandProperties.map((property, idx) => (
-          <div key={idx} className="flex-shrink-0">
+        {properties.map((property) => (
+          <div key={property.id} className="flex-shrink-0">
             <PropertyCard
-              image={property.image}
+              image={getImageUrl(property.image)}
               type={property.type}
               title={property.title}
               price={property.price}

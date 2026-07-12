@@ -1,7 +1,7 @@
-import { useRef, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { MapPin, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
-import { trendingCities } from "./Options";
+import { getPopularRegions, getImageUrl, type PopularRegionApiItem } from "@/lib/api";
 import { smoothScrollBy } from "@/lib/smoothScroll";
 
 interface CityCardProps {
@@ -25,6 +25,7 @@ function CityCard({ image, name, propertiesCount, growthRate }: CityCardProps) {
           alt={name}
           fill
           sizes="(max-width: 640px) 100vw, 240px"
+          unoptimized={true}
           className="object-cover hover:scale-105 transition-transform duration-500"
           draggable={false}
         />
@@ -55,6 +56,25 @@ export default function TopTrendingCities() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoplayTimeoutRef = useRef<any>(null);
   const isAutoplayEnabledRef = useRef(true);
+  const [cities, setCities] = useState<PopularRegionApiItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    getPopularRegions()
+      .then((data) => {
+        if (isMounted) setCities(data);
+      })
+      .catch((err) => {
+        console.error("Error loading high demand regions:", err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Auto carousel effect with smooth requestAnimationFrame scrolling
   useEffect(() => {
@@ -122,6 +142,10 @@ export default function TopTrendingCities() {
     }
   };
 
+  if (!isLoading && cities.length === 0) {
+    return null;
+  }
+
   return (
     <section id="trending-cities" className="py-12 container mx-auto px-4 md:px-6">
       {/* Title and Controls block */}
@@ -169,10 +193,10 @@ export default function TopTrendingCities() {
             scrollbar-width: none;
           }
         `}} />
-        {trendingCities.map((city) => (
-          <div key={city.name} className="flex-shrink-0 w-[260px] md:w-[280px]">
+        {cities.map((city) => (
+          <div key={city.id} className="flex-shrink-0 w-[260px] md:w-[280px]">
             <CityCard
-              image={city.image}
+              image={getImageUrl(city.image)}
               name={city.name}
               propertiesCount={city.propertiesCount}
               growthRate={city.growthRate}

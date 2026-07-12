@@ -7,8 +7,6 @@ import type {
     HeroBadge,
     HeroSlide,
     WhatWeDoItem,
-    TrendingCity,
-    HighDemandProperty,
     UpcomingProperty,
     IntroVideoConfig,
 } from "./type";
@@ -110,73 +108,6 @@ export const whatWeDoItems: WhatWeDoItem[] = [
         linkText: "Partner With US",
         href: "/partner-with-us",
         image: "/assets/home/partner.png",
-    },
-];
-
-// ── Trending Cities (TopTrendingCities.tsx) ───────────────────────────────────
-
-export const trendingCities: TrendingCity[] = [
-    {
-        name: "Adyar",
-        propertiesCount: 247,
-        growthRate: "12%",
-        image: "/assets/home/topCIties/1.png",
-    },
-    {
-        name: "Porur",
-        propertiesCount: 180,
-        growthRate: "15%",
-        image: "/assets/home/topCIties/2.png",
-    },
-    {
-        name: "Velachery",
-        propertiesCount: 310,
-        growthRate: "18%",
-        image: "/assets/home/topCIties/3.png",
-    },
-    {
-        name: "Anna Nagar",
-        propertiesCount: 150,
-        growthRate: "10%",
-        image: "/assets/home/topCIties/4.png",
-    },
-    {
-        name: "OMR",
-        propertiesCount: 420,
-        growthRate: "22%",
-        image: "/assets/home/topCIties/5.png",
-    },
-    {
-        name: "Guindy",
-        propertiesCount: 165,
-        growthRate: "9%",
-        image: "/assets/home/topCIties/1.png",
-    },
-    {
-        name: "Tambaram",
-        propertiesCount: 220,
-        growthRate: "16%",
-        image: "/assets/home/topCIties/2.png",
-    },
-
-];
-
-// ── High Demand Properties (HighDemandProperties.tsx) ────────────────────────
-
-export const highDemandProperties: HighDemandProperty[] = [
-    {
-        type: "Apartments",
-        title: "Skyline 2BHK Apartments",
-        price: "₹72 Lakhs",
-        location: "Porur, Chennai",
-        image: "/assets/home/highDemand.png",
-    },
-    {
-        type: "Villas",
-        title: "Emerald 3BHK Luxury Villa",
-        price: "₹1.5 Crores",
-        location: "Adyar, Chennai",
-        image: "/assets/home/highDemand.png",
     },
 ];
 

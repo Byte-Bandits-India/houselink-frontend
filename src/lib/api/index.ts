@@ -74,6 +74,13 @@ export {
   getAds,
 } from "./ads";
 
+// Popular Properties / Popular Regions API
+export {
+  getPopularProperties,
+  getPopularRegions,
+} from "./popular";
+export type { PopularPropertyApiItem, PopularRegionApiItem } from "./popular";
+
 // FAQs API
 export {
   getFaqs,
