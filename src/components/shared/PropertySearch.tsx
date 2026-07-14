@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getStates, getCities, getFeatures } from "@/lib/api";
+import { getStates, getCities, getFeatures, recordSearch } from "@/lib/api";
 import { useHomeFilter } from "@/contexts/HomeFilterContext";
 import { Button } from "@/components/ui/button";
 import ActionSearchBar from "@/components/kokonutui/action-search-bar";
@@ -293,6 +293,10 @@ export default function PropertySearch() {
   }, [searchParams]);
 
   const handleSearch = () => {
+    if (keyword && keyword.trim()) {
+      recordSearch(keyword.trim()).catch((err) => console.error("Error recording search query:", err));
+    }
+
     const params = new URLSearchParams();
     params.set("property_purpose", activeTab);
     if (city) params.set("city", city);

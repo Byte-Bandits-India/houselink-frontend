@@ -115,6 +115,14 @@ export {
   removeFromWishlist,
 } from "./wishlist";
 
+// Searches API
+export {
+  getSearches,
+  recordSearch,
+  deleteSearchHistory,
+} from "./searches";
+export type { SearchApiItem, SearchApiResponse } from "./searches";
+
 
 
 

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Clock, MapPin, Building, X, Home, Flame, Tag, CheckSquare } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { getPopularProperties, getPopularRegions, getSearches, deleteSearchHistory } from "@/lib/api";
+import type { PopularPropertyApiItem, PopularRegionApiItem, SearchApiItem } from "@/lib/api";
 
 interface SearchSuggestionsProps {
   query?: string;
@@ -41,29 +43,51 @@ export default function SearchSuggestions({
   onClose,
 }: SearchSuggestionsProps) {
   const router = useRouter();
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [recentSearches, setRecentSearches] = useState<SearchApiItem[]>([]);
+  const [popularProperties, setPopularProperties] = useState<PopularPropertyApiItem[]>([]);
+  const [popularRegions, setPopularRegions] = useState<PopularRegionApiItem[]>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("recent_searches");
-    if (saved) {
-      setRecentSearches(JSON.parse(saved));
-    } else {
-      const fallback = [
-        "2 BHK apartment in Adyar",
-        "Flats in porur",
-        "Lands in Kundrathur",
-        "3 BHK Villas in ECR",
-      ];
-      setRecentSearches(fallback);
-      localStorage.setItem("recent_searches", JSON.stringify(fallback));
-    }
+    // Load popular properties and regions from API
+    getPopularProperties().then(setPopularProperties).catch(err => console.error("Error loading popular properties:", err));
+    getPopularRegions().then(setPopularRegions).catch(err => console.error("Error loading popular regions:", err));
+
+    getSearches()
+      .then((res) => {
+        if (res.success && res.data.length > 0) {
+          setRecentSearches(res.data);
+        } else {
+          setRecentSearches([
+            { id: -1, query: "2 BHK apartment in Adyar" },
+            { id: -2, query: "Flats in porur" },
+            { id: -3, query: "Lands in Kundrathur" },
+            { id: -4, query: "3 BHK Villas in ECR" },
+          ]);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching searches:", err);
+        setRecentSearches([
+          { id: -1, query: "2 BHK apartment in Adyar" },
+          { id: -2, query: "Flats in porur" },
+          { id: -3, query: "Lands in Kundrathur" },
+          { id: -4, query: "3 BHK Villas in ECR" },
+        ]);
+      });
   }, []);
 
-  const handleRemoveItem = (indexToRemove: number, e: React.MouseEvent) => {
+  const handleRemoveItem = async (indexToRemove: number, e: React.MouseEvent) => {
     e.stopPropagation();
+    const item = recentSearches[indexToRemove];
+    if (item && item.id && item.id > 0) {
+      try {
+        await deleteSearchHistory(item.id);
+      } catch (err) {
+        console.error("Error deleting search history:", err);
+      }
+    }
     const updated = recentSearches.filter((_, i) => i !== indexToRemove);
     setRecentSearches(updated);
-    localStorage.setItem("recent_searches", JSON.stringify(updated));
   };
 
   const handleScrollOrNavigate = (targetId: string) => {
@@ -128,22 +152,36 @@ export default function SearchSuggestions({
 
   // 1. High Demand Properties containing the query
   const defaultProperties = [
-    "Skyline Apartments",
-    "Grand Plaza Office",
-    "Oceanic Luxury Villa",
-    "Signature Residencies",
+    { title: "Skyline Apartments" },
+    { title: "Grand Plaza Office" },
+    { title: "Oceanic Luxury Villa" },
+    { title: "Signature Residencies" },
   ];
-  const filteredProperties = isSearching
-    ? defaultProperties.filter((p) => p.toLowerCase().includes(q))
+
+  const propertiesSource = popularProperties.length > 0
+    ? popularProperties
     : defaultProperties;
 
+  const filteredProperties = isSearching
+    ? propertiesSource.filter((p) => p.title.toLowerCase().includes(q))
+    : propertiesSource;
+
   // 2. High Demand Regions / Cities containing the query
-  const defaultRegions = ["Adyar", "OMR", "Porur", "Velachery"];
+  const defaultRegions = [
+    { name: "Adyar" },
+    { name: "OMR" },
+    { name: "Porur" },
+    { name: "Velachery" },
+  ];
   const staticCities = ["Chennai", "Bangalore", "Mumbai", "Hyderabad"];
 
-  const filteredRegions = isSearching
-    ? defaultRegions.filter((r) => r.toLowerCase().includes(q))
+  const regionsSource = popularRegions.length > 0
+    ? popularRegions
     : defaultRegions;
+
+  const filteredRegions = isSearching
+    ? regionsSource.filter((r) => r.name.toLowerCase().includes(q))
+    : regionsSource;
 
   const filteredCities = isSearching
     ? staticCities.filter((c) => c.toLowerCase().includes(q))
@@ -151,7 +189,7 @@ export default function SearchSuggestions({
 
   // 3. Recent searches containing the query
   const filteredRecent = isSearching
-    ? recentSearches.filter((s) => s.toLowerCase().includes(q))
+    ? recentSearches.filter((s) => s.query.toLowerCase().includes(q))
     : recentSearches;
 
   // 4. Categories matching the query
@@ -203,14 +241,14 @@ export default function SearchSuggestions({
               <motion.div
                 variants={itemVariants}
                 key={index}
-                onClick={() => handleScrollOrNavigate("high-demand-properties")}
+                onClick={() => handleRecentClick(prop.title)}
                 className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
               >
                 <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
                   <Building size={14} className="stroke-[2.5px]" />
                 </div>
                 <span className="text-[13px] font-semibold text-left text-gray-700 leading-tight truncate group-hover:text-gray-900 transition-colors">
-                  {prop}
+                  {prop.title}
                 </span>
               </motion.div>
             ))}
@@ -243,14 +281,14 @@ export default function SearchSuggestions({
               <motion.div
                 variants={itemVariants}
                 key={index}
-                onClick={() => handleScrollOrNavigate("trending-cities")}
+                onClick={() => handleRegionClick(region.name)}
                 className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
               >
                 <div className="w-7 h-7 rounded-lg bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
                   <MapPin size={14} className="stroke-[2.5px]" />
                 </div>
                 <span className="text-[13px] font-semibold text-gray-700 text-left leading-tight group-hover:text-gray-900 transition-colors">
-                  {region}
+                  {region.name}
                 </span>
               </motion.div>
             ))}
@@ -299,7 +337,7 @@ export default function SearchSuggestions({
                 <motion.div
                   variants={itemVariants}
                   key={index}
-                  onClick={() => handleRecentClick(item)}
+                  onClick={() => handleRecentClick(item.query)}
                   className="flex items-center justify-between group cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150"
                 >
                   <div className="flex items-center gap-2.5">
@@ -307,7 +345,7 @@ export default function SearchSuggestions({
                       <Home size={14} className="stroke-[2.5px]" />
                     </div>
                     <span className="text-[13px] font-semibold text-gray-700 text-left leading-tight group-hover:text-gray-900 transition-colors">
-                      {item}
+                      {item.query}
                     </span>
                   </div>
                   <button
