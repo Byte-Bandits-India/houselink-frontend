@@ -10,7 +10,9 @@
  */
 
 const WEB_BASE_URL =
-  process.env.NEXT_PUBLIC_WEB_API_URL ?? "http://localhost:4000";
+  typeof window === "undefined"
+    ? (process.env.NEXT_SERVER_API_URL ?? "http://backend:4000")
+    : (process.env.NEXT_PUBLIC_WEB_API_URL ?? "http://localhost");
 
 const WEB_API_PREFIX = "/api/v1";
 

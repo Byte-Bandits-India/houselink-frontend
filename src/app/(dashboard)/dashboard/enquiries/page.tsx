@@ -6,6 +6,16 @@ import { cn } from "@/lib/utils";
 import { getMyEnquiries } from "@/lib/api/leads";
 import { message } from "antd";
 import Pagination from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+import PurposeToggle from "@/components/shared/PurposeToggle";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 type Filter = "sell" | "rent" | "lease";
 
@@ -105,30 +115,18 @@ export default function EnquiriesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-ink">My Enquiries</h1>
         {filtered.length > 0 && (
-          <button 
+          <Button 
             onClick={handleDownloadCSV}
-            className="flex items-center gap-2 bg-brand hover:bg-brand/80 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors duration-200"
+            variant="gradient"
+            className="flex items-center gap-2 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors duration-200"
           >
             <Download className="w-4 h-4" /> Download
-          </button>
+          </Button>
         )}
       </div>
 
       {/* For Sale / Rent-Lease toggle */}
-      <div className="flex gap-2">
-        {(["sell", "rent"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={cn(
-              "px-6 py-2 rounded-lg text-sm font-bold border-2 transition-colors duration-200",
-              filter === f ? "bg-brand border-brand text-white" : "bg-white border-brand text-brand hover:bg-brand hover:text-white"
-            )}
-          >
-            {f === "sell" ? "For Sale" : "Rent/Lease"}
-          </button>
-        ))}
-      </div>
+      <PurposeToggle value={filter as "sell" | "rent"} onChange={(val) => setFilter(val)} sellLabel="For Sale" />
 
       {/* Table */}
       {filtered.length === 0 ? (
@@ -138,35 +136,35 @@ export default function EnquiriesPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-brand text-white">
-                  <th className="text-center px-4 py-3 font-semibold w-10">#</th>
-                  <th className="text-left px-4 py-3 font-semibold">Date</th>
-                  <th className="text-left px-4 py-3 font-semibold">Property</th>
-                  <th className="text-left px-4 py-3 font-semibold">Owner Name</th>
-                  <th className="text-left px-4 py-3 font-semibold">Owner Phone</th>
-                  <th className="text-left px-4 py-3 font-semibold">Owner Email</th>
-                  <th className="text-left px-4 py-3 font-semibold">My Message</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gradient-to-r from-primary to-secondary text-white hover:bg-transparent">
+                  <TableHead className="text-center font-bold text-white w-12 py-3">#</TableHead>
+                  <TableHead className="text-left font-bold text-white py-3">Date</TableHead>
+                  <TableHead className="text-left font-bold text-white py-3">Property</TableHead>
+                  <TableHead className="text-left font-bold text-white py-3">Owner Name</TableHead>
+                  <TableHead className="text-left font-bold text-white py-3">Owner Phone</TableHead>
+                  <TableHead className="text-left font-bold text-white py-3">Owner Email</TableHead>
+                  <TableHead className="text-left font-bold text-white py-3">My Message</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {paginatedEnquiries.map((enq, idx) => (
-                  <tr key={enq.id} className={cn("border-t border-gray-100", idx % 2 === 0 ? "bg-white" : "bg-gray-50")}>
-                    <td className="px-4 py-4 text-center font-semibold text-ink">
+                  <TableRow key={enq.id} className="border-b border-gray-100 hover:bg-slate-50/50 transition-colors">
+                    <TableCell className="text-center font-semibold text-gray-700 py-4">
                       {(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}
-                    </td>
-                    <td className="px-4 py-4 text-ink-secondary whitespace-nowrap">{enq.date}</td>
-                    <td className="px-4 py-4 font-medium text-ink">{enq.property}</td>
-                    <td className="px-4 py-4 text-ink">{enq.ownerName}</td>
-                    <td className="px-4 py-4 text-ink whitespace-nowrap">{enq.ownerPhone}</td>
-                    <td className="px-4 py-4 text-ink">{enq.ownerEmail}</td>
-                    <td className="px-4 py-4 text-ink-secondary max-w-[200px]">{enq.myMessage}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className="text-gray-600 whitespace-nowrap py-4">{enq.date}</TableCell>
+                    <TableCell className="font-bold text-slate-800 py-4">{enq.property}</TableCell>
+                    <TableCell className="text-gray-700 py-4">{enq.ownerName}</TableCell>
+                    <TableCell className="text-gray-600 whitespace-nowrap py-4">{enq.ownerPhone}</TableCell>
+                    <TableCell className="text-gray-600 py-4">{enq.ownerEmail}</TableCell>
+                    <TableCell className="text-gray-500 max-w-[220px] leading-normal py-4">{enq.myMessage}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           <Pagination

@@ -5,31 +5,33 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { getCustomerInvoices, type UserInvoice } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import PurposeToggle from "@/components/shared/PurposeToggle";
 
 type Filter = "sell" | "rent";
 
 /* ── Inline SVG illustrations matching the PHP dashboard icons ── */
 function OwnerIcon() {
   return (
-    <img className="w-20 h-20 mx-auto" src="/icon/accountant.png" alt="accountant" />
+    <img className="w-24 h-24 mx-auto" src="/icon/accountant.png" alt="accountant" />
   );
 }
 
 function BuilderIcon() {
   return (
-    <img className="w-20 h-20 mx-auto" src="/icon/house-builder.png" alt="builder" />
+    <img className="w-24 h-24 mx-auto" src="/icon/house-builder.png" alt="builder" />
   );
 }
 
 function ConsultantIcon() {
   return (
-    <img className="w-20 h-20 mx-auto" src="/icon/consultation (1).png" alt="consultant" />
+    <img className="w-24 h-24 mx-auto" src="/icon/consultation (1).png" alt="consultant" />
   );
 }
 
 function EnquiryIcon() {
   return (
-    <img className="w-20 h-20 mx-auto" src="/icon/accountant.png" alt="accountant" />
+    <img className="w-24 h-24 mx-auto" src="/icon/accountant.png" alt="accountant" />
   );
 }
 
@@ -47,36 +49,81 @@ function CreditCard({ entry }: { entry: CreditEntry }) {
   const { Icon } = entry;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 flex flex-col items-center text-center min-h-[260px] hover:shadow-md transition-shadow duration-300">
-      <Icon />
-
-      <h4 className="text-base lg:text-xl font-bold text-brand mt-1">{entry.title}</h4>
-
-      {isActive ? (
-        <>
-          <p className="text-4xl font-bold text-ink leading-none my-2">{entry.credits}</p>
-          <p className="text-sm text-ink-secondary mb-1">
-            {entry.expiry ? `Expiry-Date: ${entry.expiry}` : "Active Listing Points"}
-          </p>
-        </>
-      ) : (
-        <p className="text-sm font-semibold text-ink my-3">No package found</p>
+    <div
+      className={cn(
+        "relative rounded-3xl p-6 flex flex-col items-center text-center h-[390px] justify-between shadow-sm transition-all duration-300 border",
+        isActive
+          ? "bg-white border-[#163D75] hover:shadow-md"
+          : "bg-gradient-to-b from-[#243555] to-[#141E30] border-transparent hover:shadow-md text-white"
+      )}
+    >
+      {/* "Post a Property" Badge for Inactive Card */}
+      {!isActive && (
+        <div className="absolute top-0 right-0 bg-[#347ED7] text-white text-[12px] font-medium px-4 py-1.5 rounded-tr-[24px] rounded-bl-2xl shadow-sm">
+          Post a Property
+        </div>
       )}
 
-      <div className="mt-auto w-full pt-1">
+      {/* Icon Area */}
+      <div className={cn("shrink-0", !isActive && "brightness-0 invert")}>
+        <Icon />
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 flex flex-col justify-center my-3 w-full">
+        <h4
+          className={cn(
+            "text-base lg:text-xl font-bold leading-tight",
+            isActive ? "text-[#163D75]" : "text-white"
+          )}
+        >
+          {entry.title}
+        </h4>
+
         {isActive ? (
-          <button
+          <div className="mt-2.5">
+            <p className="text-3xl font-extrabold text-[#163D75] leading-none mb-1">
+              {entry.credits} Credits
+            </p>
+            <p className="text-sm font-medium text-ink-muted">
+              {entry.expiry ? `Expiry-Date: ${entry.expiry}` : "Active Listing Points"}
+            </p>
+          </div>
+        ) : (
+          <div className="mt-2 px-1">
+            <p className="text-sm font-semibold text-white/80 leading-none mb-1.5">
+              No Package Found
+            </p>
+            <p className="text-sm leading-relaxed text-white/60">
+              Purchase a Package to post a property and list in our platform
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Dotted Divider */}
+      <div
+        className={cn(
+          "w-full border-t border-dashed mb-4 shrink-0",
+          isActive ? "border-gray-200" : "border-white/20"
+        )}
+      />
+
+      {/* Button Action */}
+      <div className="w-full shrink-0">
+        {isActive ? (
+          <Button
             disabled
-            className="w-full bg-emerald-600 text-white font-semibold text-sm py-2.5 rounded-lg opacity-95 cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold text-sm py-2.5 rounded-[50px] cursor-not-allowed shadow-sm shadow-primary/20 opacity-80"
           >
             Active
-          </button>
+          </Button>
         ) : (
           <Link
             href={entry.buyHref}
-            className="inline-block w-full border border-gray-300 text-ink-secondary font-medium text-sm px-6 py-2 rounded-lg hover:border-brand hover:text-brand transition-colors duration-200"
+            className="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold text-sm py-2.5 rounded-[50px] transition-all duration-200 flex items-center justify-center shadow-sm shadow-primary/20 hover:brightness-110"
           >
-            Buy Package
+            Buy Plan
           </Link>
         )}
       </div>
@@ -238,30 +285,7 @@ export default function PackageDetailsPage() {
       <h1 className="text-2xl font-bold text-brand">Dashboard</h1>
 
       {/* Sell / Rent/Lease toggle */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setFilter("sell")}
-          className={cn(
-            "px-6 py-2 rounded-lg text-sm font-bold border-2 transition-colors duration-200",
-            filter === "sell"
-              ? "bg-brand border-brand text-white"
-              : "bg-white border-gray-300 text-ink hover:border-brand hover:text-brand"
-          )}
-        >
-          Sell
-        </button>
-        <button
-          onClick={() => setFilter("rent")}
-          className={cn(
-            "px-6 py-2 rounded-lg text-sm font-bold border-2 transition-colors duration-200",
-            filter === "rent"
-              ? "bg-brand border-brand text-white"
-              : "bg-white border-gray-300 text-ink hover:border-brand hover:text-brand"
-          )}
-        >
-          Rent/Lease
-        </button>
-      </div>
+      <PurposeToggle value={filter} onChange={setFilter} />
 
       {/* Credit point cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

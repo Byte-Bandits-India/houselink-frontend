@@ -443,8 +443,7 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
       {/* Phone Number Entry */}
       <p className="text-xs text-gray-400 mb-2">Phone Number</p>
       <div className="flex gap-2 mb-1">
-        <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap select-none">
-          🇮🇳 +91
+        <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap select-none">+91
         </div>
         <input
           type="tel"

@@ -106,11 +106,17 @@ function OwnerPropertiesListContent() {
         }
 
         // 8. Amenities Filter
+        // 8. Amenities & Facilities Filter
         if (amenities) {
           const requested = amenities.split(",");
           data = data.filter((p) => {
-            const features: string[] = (p.propertyFeatures || []).map((pf: any) => (pf.feature?.name || "").toLowerCase());
-            return requested.every((req) => features.some((pa) => pa.includes(req.toLowerCase()) || req.toLowerCase().includes(pa)));
+            const featuresAndFacilities: string[] = [
+              ...(p.propertyFeatures || []).map((pf: any) => (pf.feature?.name || "").toLowerCase()),
+              ...(p.propertyFacilities || []).map((pf: any) => (pf.facility?.name || "").toLowerCase()),
+            ];
+            return requested.every((req) =>
+              featuresAndFacilities.some((pa) => pa.includes(req.toLowerCase()) || req.toLowerCase().includes(pa))
+            );
           });
         }
 

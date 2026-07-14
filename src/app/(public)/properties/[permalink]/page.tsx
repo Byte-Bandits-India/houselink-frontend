@@ -4,6 +4,7 @@ import PropertyTabs from "@/components/shared/PropertyTabs";
 import PropertyEnquirySidebar from "@/components/shared/PropertyEnquirySidebar";
 import PropertyImageGallery from "@/components/shared/PropertyImageGallery";
 import { notFound } from "next/navigation";
+import Breadcrumb from "@/components/shared/Breadcrumb";
 import React from "react";
 import {
   Tag,
@@ -193,28 +194,26 @@ export default async function PropertyDetailPage({
     <div className="min-h-screen bg-white pb-20">
 
       {/* ── BREADCRUMB BAR ── */}
-      <div className="w-full bg-[#163D75] py-5 px-4 md:px-8 text-white/90 text-xs sm:text-sm font-medium select-none">
-        <div className="container mx-auto flex items-center gap-1.5 flex-wrap px-4">
-          <a href="/" className="hover:text-white transition-colors underline underline-offset-2">Home</a>
-          <span className="text-white/50">&gt;</span>
-          <a href="/properties" className="hover:text-white transition-colors underline underline-offset-2">Properties</a>
-          <span className="text-white/50">&gt;</span>
-          <span className="text-white/80 truncate">{property.name}</span>
-        </div>
-      </div>
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Properties", href: "/properties" },
+          { label: property.name },
+        ]}
+      />
 
       {/* ── TOP SECTION ── */}
       <div className="container mx-auto px-4 md:px-6 pt-6 pb-0">
 
         {/* ROW 1: Left = Title + Gallery | Right = Pills + RequestInfo card */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 mb-0 items-start">
-
-          {/* LEFT: Title + location + Gallery */}
-          <div className="min-w-0">
+        <div className="flex items-center justify-between xl:h-[70dvh] 2xl:h-[700px] mb-0">
+          <div className="flex flex-col xl:flex-row gap-6 h-[80%] w-full">
+            {/* LEFT: Title + location + Gallery */}
+          <div className="flex-1 min-w-0 flex flex-col xl:h-full pb-4">
             <div className="md:flex items-center justify-between">
               <div>
               {/* Title + location */}
-            <h1 className="text-lg md:text-2xl font-black text-gray-900 leading-snug tracking-tight mb-1">
+            <h1 className="text-lg md:text-2xl lg:text-[28px] font-black text-gray-900 leading-snug tracking-tight mb-1">
               {property.name}
             </h1>
             <p className="text-sm text-gray-500 font-medium flex items-center gap-1 mb-4">
@@ -232,11 +231,6 @@ export default async function PropertyDetailPage({
                 </span>
                 <span className="text-sm font-black text-gray-900 leading-none">{listedDate}</span>
               </div>
-              {/* Views */}
-              <div className="flex items-center gap-2 bg-gradient-to-r from-primary to-secondary text-white rounded-lg px-4 py-3.5 shadow-xs select-none shrink-0">
-                <Eye size={16} className="shrink-0" />
-                <span className="font-black text-sm">{property.views ?? 871} Views</span>
-              </div>
             </div>
             </div>
 
@@ -245,7 +239,7 @@ export default async function PropertyDetailPage({
           </div>
 
           {/* RIGHT: Pills on top, RequestInfo card below */}
-          <div className="flex flex-col gap-4 xl:w-[280px] shrink-0">
+          <div className="w-full xl:w-[380px] shrink-0 flex flex-col gap-4">
             {/* Request Info card */}
             <RequestInfoCard
               priceFormatted={priceFormatted}
@@ -254,19 +248,19 @@ export default async function PropertyDetailPage({
               property={property}
             />
           </div>
+          </div>
         </div>
-
-        {/* Tabs — full width below the two-column top row */}
-        <PropertyTabs />
       </div>
 
+      {/* Tabs — sticky top below header */}
+      <PropertyTabs />
 
       {/* ── BODY: Two-column layout ── */}
       <div className="container mx-auto px-4 md:px-6 mt-8 pb-8">
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-8 items-start">
+        <div className="flex flex-col xl:flex-row gap-8 items-start">
 
           {/* LEFT COLUMN */}
-          <div className="space-y-5 min-w-0">
+          <div className="flex-1 min-w-0 space-y-5">
 
             {/* Card: Description header + specs strip */}
             <div id="overview" className="border border-gray-200 rounded-xl p-5 bg-white scroll-mt-24">
@@ -408,7 +402,11 @@ export default async function PropertyDetailPage({
           </div>
 
           {/* RIGHT COLUMN: Sticky enquiry form */}
-          <div id="enquiry-form" className="xl:sticky xl:top-6">
+          <div
+            id="enquiry-form"
+            className="w-full xl:w-[380px] shrink-0 xl:sticky transition-[top] duration-300 ease-in-out"
+            style={{ top: "var(--sticky-offset, 144px)" }}
+          >
             <div className="border border-gray-200 rounded-xl bg-white shadow-xs overflow-hidden">
               <PropertyEnquirySidebar property={{ ...property, id: Number(property.id) }} />
             </div>

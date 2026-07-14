@@ -156,9 +156,8 @@ export default function Header() {
 
   const userMenu = [
     { key: "1", label: <Link href="/dashboard/enquiries">My Enquiries</Link> },
-    { key: "2", label: <Link href="/dashboard/leads">Property Leads</Link> },
-    { key: "3", label: <Link href="/dashboard">Dashboard</Link> },
-    { key: "4", label: <Link href="/dashboard/profile">Settings</Link> },
+    { key: "2", label: <Link href="/dashboard">Property Leads</Link> },
+    { key: "3", label: <Link href="/dashboard/profile">Settings</Link> },
     { type: "divider" },
     {
       key: "5",
@@ -293,7 +292,7 @@ export default function Header() {
               content={supportContent}
               align="end"
               trigger={
-                <Button variant="gradient" className="w-11 h-11">
+                <Button variant="gradient" className="w-12 h-12">
                   <img src="/assets/header/Headphone.svg" alt="headset" />
                 </Button>
               }

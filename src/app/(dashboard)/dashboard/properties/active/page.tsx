@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { getUserProperties, deleteProperty } from "@/lib/api";
 import { message } from "antd";
+import PurposeToggle from "@/components/shared/PurposeToggle";
 
 type Purpose = "sell" | "rent";
 type OwnerType = "owner" | "builder" | "consultant";
@@ -155,22 +156,7 @@ export default function ActivePropertiesPage() {
       </div>
 
       {/* Sell / Rent toggle */}
-      <div className="flex gap-2">
-        {(["sell", "rent"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => { setPurpose(f); setOwnerType("owner"); }}
-            className={cn(
-              "px-6 py-2 rounded-lg text-sm font-bold border-2 transition-colors duration-200",
-              purpose === f
-                ? "bg-brand border-brand text-white"
-                : "bg-white border-brand text-brand hover:bg-brand hover:text-white"
-            )}
-          >
-            {f === "sell" ? "Sell" : "Rent/Lease"}
-          </button>
-        ))}
-      </div>
+      <PurposeToggle value={purpose} onChange={(val) => { setPurpose(val); setOwnerType("owner"); }} />
 
       {/* Owner type tabs */}
       <div className="flex border border-gray-200 rounded-lg overflow-hidden">

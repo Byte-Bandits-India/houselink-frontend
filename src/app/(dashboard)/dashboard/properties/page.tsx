@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Pencil, Trash2, Plus, Loader2, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import PropertyCharts from "@/components/shared/PropertyCharts";
+import PropertiesTable from "@/components/shared/PropertiesTable";
 import { useAuth } from "@/context/AuthContext";
 import { getUserProperties, deleteProperty } from "@/lib/api";
+import { getLeads } from "@/lib/api/leads";
 
 /* ── Types ───────────────────────────────────────────────── */
 type Purpose = "sell" | "rent_lease";
@@ -23,30 +25,19 @@ interface Property {
   moderationStatus: string;
   purpose: Purpose;
   ownerType: OwnerType;
+  categoriesId?: number;
 }
-
-const moderationBadge: Record<string, string> = {
-  approved: "bg-blue-100 text-blue-700",
-  pending: "bg-amber-100 text-amber-700",
-  rejected: "bg-red-100 text-red-700",
-};
-
-const statusBadge: Record<string, string> = {
-  Selling: "bg-cyan-100 text-cyan-700",
-  Renting: "bg-purple-100 text-purple-700",
-  Leasing: "bg-emerald-100 text-emerald-700",
-};
 
 export default function PropertiesPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   
   const [properties, setProperties] = useState<Property[]>([]);
+  const [leads, setLeads] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [purpose, setPurpose] = useState<Purpose>("sell");
-  const [ownerType, setOwnerType] = useState<OwnerType>("owner");
+
 
   const loadProperties = async (showLoadingState: boolean | React.MouseEvent<any> = true) => {
     if (!user) return;
@@ -102,6 +93,7 @@ export default function PropertiesPage() {
             moderationStatus: p.moderationStatus || "pending",
             purpose: purposeVal,
             ownerType: ownerTypeVal,
+            categoriesId: p.categoriesId ? Number(p.categoriesId) : 1,
           };
         });
         setProperties(mapped);
@@ -109,6 +101,16 @@ export default function PropertiesPage() {
         if (shouldShow) {
           setError("Failed to parse user properties from API response.");
         }
+      }
+
+      // Fetch leads
+      try {
+        const leadsRes = await getLeads();
+        if (leadsRes.success && Array.isArray(leadsRes.data)) {
+          setLeads(leadsRes.data);
+        }
+      } catch (leadsErr) {
+        console.error("Error fetching leads:", leadsErr);
       }
     } catch (err: any) {
       console.error("Error fetching properties:", err);
@@ -157,15 +159,7 @@ export default function PropertiesPage() {
     }
   };
 
-  const ownerTypeTabs: { key: OwnerType; label: string }[] = [
-    { key: "owner", label: "Owner" },
-    ...(purpose === "sell" ? [{ key: "builder" as OwnerType, label: "Builder" }] : []),
-    { key: "consultant", label: "Consultant" },
-  ];
 
-  const filtered = properties.filter(
-    (p) => p.purpose === purpose && p.ownerType === ownerType && p.moderationStatus !== "archived"
-  );
 
   if (authLoading || isLoading) {
     return (
@@ -184,147 +178,26 @@ export default function PropertiesPage() {
         </div>
         <h3 className="text-lg font-bold text-ink mb-2">Failed to load properties</h3>
         <p className="text-sm text-ink-muted mb-6">{error}</p>
-        <button
+        <Button
           onClick={loadProperties}
-          className="px-5 py-2.5 bg-brand text-white font-semibold text-sm rounded-xl hover:bg-brand/90 transition-colors shadow-sm"
+          variant="gradient"
+          className="px-5 py-2.5 text-white font-semibold text-sm rounded-[50px] transition-colors shadow-sm"
         >
           Try Again
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-5">
-      {/* Title + Add Property */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-ink">Property</h1>
-        <button
-          onClick={() => router.push("/dashboard/properties/new")}
-          className="flex items-center gap-2 border-2 border-brand text-brand font-bold text-sm px-4 py-2 rounded-lg hover:bg-brand hover:text-white transition-colors duration-200"
-        >
-          <Plus className="w-4 h-4" /> Add Property
-        </button>
-      </div>
+      {/* Title */}
+      <h1 className="text-2xl font-bold text-ink">Property</h1>
 
-      <PropertyCharts properties={filtered} />
+      <PropertyCharts properties={properties.filter((p) => p.moderationStatus !== "archived")} />
 
-      {/* Sell / Rent-Lease toggle */}
-      <div className="flex gap-2">
-        {(["sell", "rent_lease"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => { setPurpose(f); setOwnerType("owner"); }}
-            className={cn(
-              "px-6 py-2 rounded-lg text-sm font-bold border-2 transition-colors duration-200",
-              purpose === f ? "bg-brand border-brand text-white" : "bg-white border-brand text-brand hover:bg-brand hover:text-white"
-            )}
-          >
-            {f === "sell" ? "Sell" : "Rent/Lease"}
-          </button>
-        ))}
-      </div>
-
-      {/* Owner / Builder / Consultant tabs */}
-      <div className="flex border border-gray-200 rounded-lg overflow-hidden">
-        {ownerTypeTabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setOwnerType(tab.key)}
-            className={cn(
-              "flex-1 py-3 text-sm font-semibold transition-colors duration-200 border-r border-gray-200 last:border-r-0",
-              ownerType === tab.key ? "bg-brand text-white" : "bg-white text-brand hover:bg-brand/10"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Table */}
-      {filtered.length === 0 ? (
-        <div className="text-center py-16 text-ink-muted">
-          <p className="font-medium mb-3">No properties found.</p>
-          <button
-            onClick={() => router.push("/dashboard/properties/new")}
-            className="text-sm font-semibold text-white bg-brand px-4 py-2 rounded-lg hover:bg-brand/90 transition-colors"
-          >
-            Add Property
-          </button>
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-brand text-white">
-                <th className="text-left px-4 py-3 font-semibold">Property Name</th>
-                <th className="text-center px-4 py-3 font-semibold w-20">Views</th>
-                <th className="text-center px-4 py-3 font-semibold w-24">Unique ID</th>
-                <th className="text-center px-4 py-3 font-semibold w-32">Expiry Date</th>
-                <th className="text-center px-4 py-3 font-semibold w-28">Created At</th>
-                <th className="text-center px-4 py-3 font-semibold w-28">Status</th>
-                <th className="text-center px-4 py-3 font-semibold w-28">Moderation</th>
-                <th className="text-center px-4 py-3 font-semibold w-32">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((p, idx) => (
-                <tr key={p.id} className={cn("border-t border-gray-100", idx % 2 === 0 ? "bg-white" : "bg-gray-50")}>
-                  <td className="px-4 py-4">
-                    <p
-                      className="font-bold text-ink hover:text-brand cursor-pointer transition-colors"
-                      onClick={() => router.push(`/dashboard/properties/${p.id}`)}
-                    >
-                      {p.name}
-                    </p>
-                  </td>
-                  <td className="px-4 py-4 text-center text-ink">{p.views}</td>
-                  <td className="px-4 py-4 text-center font-bold text-ink">{p.id}</td>
-                  <td className="px-4 py-4 text-center font-bold text-emerald-600">{p.expiredAt}</td>
-                  <td className="px-4 py-4 text-center text-ink-secondary">{p.createdAt}</td>
-                  <td className="px-4 py-4 text-center">
-                    <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full", statusBadge[p.status] || "bg-gray-100 text-gray-700")}>
-                      {p.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full", moderationBadge[p.moderationStatus] || "bg-gray-100 text-gray-700")}>
-                      {p.moderationStatus}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="flex flex-col gap-1.5 items-center">
-                      {p.moderationStatus === "pending" ? (
-                        /* Pending: view-only, no editing allowed */
-                        <button
-                          onClick={() => router.push(`/dashboard/properties/${p.id}`)}
-                          className="flex items-center gap-1 text-xs font-semibold border border-brand text-brand px-3 py-1.5 rounded-lg hover:bg-brand hover:text-white transition-colors w-full justify-center"
-                        >
-                          <Eye className="w-3 h-3" /> View
-                        </button>
-                      ) : (
-                        /* Approved / rejected: edit page doubles as the detail view */
-                        <button
-                          onClick={() => router.push(`/dashboard/properties/${p.id}/edit`)}
-                          className="flex items-center gap-1 text-xs font-semibold border border-brand text-brand px-3 py-1.5 rounded-lg hover:bg-brand hover:text-white transition-colors w-full justify-center"
-                        >
-                          <Pencil className="w-3 h-3" /> Edit
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => handleDelete(p.id, p.name)}
-                        className="flex items-center gap-1 text-xs font-semibold border border-red-400 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white transition-colors w-full justify-center"
-                      >
-                        <Trash2 className="w-3 h-3" /> Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Extracted table and filters component */}
+      <PropertiesTable properties={properties} leads={leads} onDelete={handleDelete} />
     </div>
   );
 }

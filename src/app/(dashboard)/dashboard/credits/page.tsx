@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
 import { getPackagesList, createCheckoutOrder, verifyCheckoutPayment, getCustomerInvoices, type Package, type UserInvoice } from "@/lib/api";
 import { message } from "antd";
+import PurposeToggle from "@/components/shared/PurposeToggle";
 
 type Filter = "sell" | "rent";
 type UserTab = "owners" | "builders" | "consultants";
@@ -291,35 +293,24 @@ export default function CreditsPage() {
       <h1 className="text-2xl font-bold text-ink">Buy Packages</h1>
 
       {/* Sell / Rent-Lease toggle */}
-      <div className="flex gap-2">
-        {(["sell", "rent"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={cn(
-              "px-6 py-2 rounded-lg text-sm font-bold border-2 transition-colors duration-200",
-              filter === f ? "bg-brand border-brand text-white" : "bg-white border-brand text-brand hover:bg-brand hover:text-white"
-            )}
-          >
-            {f === "sell" ? "Sell" : "Rent/Lease"}
-          </button>
-        ))}
-      </div>
+      <PurposeToggle value={filter} onChange={setFilter} />
 
       {/* Owner / Builder / Consultant tabs — only for sell */}
       {filter === "sell" && (
         <div className="flex border border-gray-200 rounded-lg overflow-hidden">
-          {sellTabs.map((tab) => (
-            <button
+           {sellTabs.map((tab) => (
+            <Button
               key={tab.key}
               onClick={() => setUserTab(tab.key)}
               className={cn(
-                "flex-1 py-3 text-sm font-semibold transition-colors duration-200 border-r border-gray-200 last:border-r-0",
-                userTab === tab.key ? "bg-brand text-white" : "bg-white text-brand hover:bg-brand/10"
+                "flex-1 py-3 text-sm font-semibold transition-colors duration-200 border-r border-gray-200 last:border-r-0 rounded-none h-auto",
+                userTab === tab.key
+                  ? "bg-gradient-to-r from-primary to-secondary text-white"
+                  : "bg-white text-ink hover:bg-slate-50"
               )}
             >
               {tab.label}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -327,7 +318,7 @@ export default function CreditsPage() {
       {/* Cards */}
       {activePackages.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-          {activePackages.map((pkg) => {
+          {activePackages.map((pkg, idx) => {
             const numPrice = Number(pkg.price);
             const numFinalPrice = pkg.finalPrice !== null ? Number(pkg.finalPrice) : null;
             const priceVal = numFinalPrice !== null ? numFinalPrice : numPrice;
@@ -347,78 +338,143 @@ export default function CreditsPage() {
             const activePackageId = getActivePackageId(pkg.userType || "Owner", pkg.type === "rent");
             const isThisPackageActive = activePackageId === pkg.id;
 
+            const uType = pkg.userType?.toLowerCase();
+            const alreadyHasCredits =
+              (uType === "owner" && hasOwnerCredits) ||
+              (uType === "builder" && hasBuilderCredits) ||
+              (uType === "consultant" && hasConsultantCredits) ||
+              (pkg.type === "rent" && hasRentCredits);
+
+            const isDarkCard = (hasSavings || idx === 1) && !isThisPackageActive && !alreadyHasCredits;
+
             return (
               <div
                 key={pkg.id}
                 className={cn(
-                  "relative bg-white border rounded-2xl p-4 flex flex-col items-center text-center shadow-md transition-all duration-200",
-                  isThisPackageActive 
-                    ? "border-emerald-200/80 bg-emerald-50/10 shadow-sm"
-                    : "border-gray-100 hover:shadow-lg"
+                  "relative rounded-3xl p-6 flex flex-col justify-between shadow-sm transition-all duration-300 border h-[380px] text-left",
+                  isThisPackageActive
+                    ? "bg-white border-[#163D75] shadow-sm text-ink"
+                    : isDarkCard
+                      ? "bg-gradient-to-b from-[#243555] to-[#141E30] border-transparent hover:shadow-md text-white"
+                      : "bg-white border-[#163D75]/35 hover:shadow-md text-ink"
                 )}
               >
                 {hasSavings && (
-                  <div className="absolute top-0 right-0 z-10 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-tr-2xl rounded-bl-xl animate-bounce">
-                    SAVE {savingsPercent}%
+                  <div className="absolute top-0 right-0 z-10 bg-[#347ED7] text-white text-[12px] font-semibold px-4 py-1.5 rounded-tr-[24px] rounded-bl-2xl shadow-sm">
+                    save {savingsPercent}%
                   </div>
                 )}
 
-                <div className="mt-2 mb-2">
-                  <div className="w-16 h-16 flex items-center justify-center mx-auto">
-                    <img className="w-16 h-16" src="/icon/award.png" alt="" />
+                {/* Top Section: Icon, Plan Name, Target Role, Price */}
+                <div className="flex flex-col items-start w-full">
+                  {/* Icon Box */}
+                  <div
+                    className={cn(
+                      "rounded-xl w-10 h-10 flex items-center justify-center mb-4 shrink-0",
+                      isDarkCard ? "bg-[#2563eb]/20 text-[#38bdf8]" : "bg-[#e0e7ff] text-[#163D75]"
+                    )}
+                  >
+                    <i
+                      className={cn(
+                        "fa-solid text-base",
+                        idx === 1 ? "fa-fire" : idx === 2 ? "fa-star" : "fa-bolt"
+                      )}
+                    />
+                  </div>
+
+                  {/* Plan Details */}
+                  <h4
+                    className={cn(
+                      "text-xl font-bold leading-tight tracking-tight",
+                      isDarkCard ? "text-white" : "text-[#163D75]"
+                    )}
+                  >
+                    {pkg.name}
+                  </h4>
+                  <p className={cn("text-xs mt-1", isDarkCard ? "text-white/60" : "text-ink-muted")}>
+                    For {pkg.userType || "Users"}
+                  </p>
+
+                  {/* Price info */}
+                  <div className="flex items-baseline gap-2 mt-3 w-full">
+                    <span
+                      className={cn(
+                        "text-3xl font-extrabold tracking-tight",
+                        isDarkCard ? "text-white" : "text-[#163D75]"
+                      )}
+                    >
+                      {formattedPrice}
+                    </span>
+                    {hasSavings && (
+                      <span
+                        className={cn(
+                          "text-base line-through font-medium",
+                          isDarkCard ? "text-white/40" : "text-slate-400"
+                        )}
+                      >
+                        {new Intl.NumberFormat("en-IN", {
+                          style: "currency",
+                          currency: "INR",
+                          maximumFractionDigits: 0,
+                        }).format(originalVal)}
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                <p className="text-lg font-bold text-ink">
-                  {formattedPrice}{" "}
-                  <span className="text-ink-secondary font-normal text-sm">/ {pkg.noOfCredit} credits</span>
-                </p>
-                {hasSavings && (
-                  <p className="text-xs line-through text-slate-400">
-                    {new Intl.NumberFormat("en-IN", {
-                      style: "currency",
-                      currency: "INR",
-                      maximumFractionDigits: 0,
-                    }).format(originalVal)}
-                  </p>
-                )}
-                <p className="text-base font-semibold text-ink mt-0.5">{pkg.name}</p>
-                {pkg.description && <p className="text-sm text-ink-secondary mt-0.5">{pkg.description}</p>}
-                {pkg.totalDaysLimit && (
-                  <p className="text-sm text-ink-secondary mb-3">{pkg.totalDaysLimit} Days validity</p>
-                )}
+                {/* Button Action */}
+                <div className="w-full shrink-0 my-3">
+                  <Button
+                    onClick={() => handleBuyPackage(pkg)}
+                    disabled={alreadyHasCredits || buyingId === pkg.id}
+                    className={cn(
+                      "w-full font-bold text-sm py-2 rounded-[50px] transition-all duration-200 shadow-sm border",
+                      isThisPackageActive
+                        ? "border-[#163D75] bg-[#163D75]/10 text-[#163D75] cursor-not-allowed shadow-none"
+                        : alreadyHasCredits
+                          ? isDarkCard
+                            ? "bg-slate-800 text-slate-500 border-transparent cursor-not-allowed"
+                            : "bg-slate-100 text-slate-400 border-transparent cursor-not-allowed"
+                          : "bg-gradient-to-r from-primary to-secondary text-white border-transparent hover:brightness-110 shadow-primary/20"
+                    )}
+                  >
+                    {buyingId === pkg.id
+                      ? "Processing..."
+                      : isThisPackageActive
+                        ? "Active Plan"
+                        : "Buy Plan"
+                    }
+                  </Button>
+                </div>
 
-                {/* Compute alreadyHasCredits inside the loop */}
-                {(() => {
-                  const uType = pkg.userType?.toLowerCase();
-                  const alreadyHasCredits =
-                    (uType === "owner" && hasOwnerCredits) ||
-                    (uType === "builder" && hasBuilderCredits) ||
-                    (uType === "consultant" && hasConsultantCredits) ||
-                    (pkg.type === "rent" && hasRentCredits);
+                {/* Dotted Divider */}
+                <div
+                  className={cn(
+                    "w-full border-t border-dashed mb-3 shrink-0",
+                    isDarkCard ? "border-white/20" : "border-gray-200"
+                  )}
+                />
 
-                  return (
-                    <button
-                      onClick={() => handleBuyPackage(pkg)}
-                      disabled={alreadyHasCredits || buyingId === pkg.id}
-                      className={cn(
-                        "w-full mt-auto border-2 font-bold text-sm py-2.5 rounded-lg transition-colors duration-200",
-                        isThisPackageActive
-                          ? "border-emerald-600 bg-emerald-50 text-emerald-700 cursor-not-allowed"
-                          : alreadyHasCredits
-                            ? "border-slate-300 bg-slate-100 text-slate-400 cursor-not-allowed"
-                            : "border-brand text-brand hover:bg-brand hover:text-white disabled:opacity-50"
-                      )}
-                    >
-                      {buyingId === pkg.id
-                        ? "Processing..."
-                        : isThisPackageActive
-                          ? "Active Package"
-                          : "Buy Package"
-                      }
-                    </button>
-                  );
-                })()}
+                {/* Feature Bullet List */}
+                <ul
+                  className={cn(
+                    "text-xs space-y-1.5 w-full shrink-0",
+                    isDarkCard ? "text-white/80" : "text-ink-secondary"
+                  )}
+                >
+                  <li className="flex items-center gap-2">
+                    <i className="fa-regular fa-circle-check text-sm opacity-80" />
+                    <span>{pkg.noOfCredit} posts till the plan expires</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <i className="fa-regular fa-circle-check text-sm opacity-80" />
+                    <span>Valid up-to {pkg.totalDaysLimit ? `${Math.round(pkg.totalDaysLimit / 30)} month${Math.round(pkg.totalDaysLimit / 30) > 1 ? 's' : ''}` : "1 month"}</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <i className="fa-regular fa-circle-check text-sm opacity-80" />
+                    <span>Basic Listings</span>
+                  </li>
+                </ul>
               </div>
             );
           })}

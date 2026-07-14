@@ -24,7 +24,6 @@ const navItems = [
   { label: "Package Details", href: "/dashboard/packages", icon: FileText, exact: false },
   { label: "Buy Packages", href: "/dashboard/credits", icon: ShoppingBag, exact: false },
   { label: "My Properties", href: "/dashboard/properties", icon: Home, exact: true },
-  { label: "Property Leads", href: "/dashboard/leads", icon: Users, exact: false },
   { label: "My Enquiries", href: "/dashboard/enquiries", icon: MessageCircle, exact: false },
   { label: "Expired Properties", href: "/dashboard/properties/expired", icon: Clock, exact: false },
   { label: "History", href: "/dashboard/history", icon: LayoutGrid, exact: false },
@@ -80,9 +79,9 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
               href={item.href}
               onClick={onClose}
               className={cn(
-                "flex items-center gap-3 px-4 py-4 mx-1 text-sm font-medium rounded-lg transition-colors duration-150",
+                "flex items-center gap-3 px-4 py-4 mx-1 text-sm font-medium rounded-[50px] transition-colors duration-150",
                 isActive
-                  ? "bg-brand text-white"
+                  ? "bg-gradient-to-r from-primary to-secondary text-white shadow-sm"
                   : "text-ink-secondary hover:bg-brand/5 hover:text-brand"
               )}
             >
@@ -100,7 +99,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
             await logout();
             window.location.href = "/";
           }}
-          className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors duration-200"
+          className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2.5 rounded-[50px] transition-colors duration-200"
         >
           <LogOut className="w-4 h-4" />
           Logout

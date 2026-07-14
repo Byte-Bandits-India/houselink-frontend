@@ -24,6 +24,8 @@ export interface Customer {
   avatarImage?: string | null;
   state: string;
   city: string;
+  stateId?: number | null;
+  cityId?: number | null;
   status: "active" | "inactive" | "suspended";
   creditPointsOwner?: number;
   creditPointsBuilder?: number;

@@ -5,6 +5,8 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { getCustomerInvoices, type UserInvoice } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import PurposeToggle from "@/components/shared/PurposeToggle";
 
 type Filter = "sell" | "rent";
 type Status = "live" | "expired";
@@ -19,6 +21,7 @@ interface HistoryPkg {
   remainingPoints?: number;
   totalPoints?: number;
   rawInvoice: UserInvoice;
+  formattedDate: string;
 }
 
 export default function HistoryPage() {
@@ -95,9 +98,12 @@ export default function HistoryPage() {
       isExpired = new Date() > expiryDate && allocatedCredits <= 0;
     }
 
+    const options: Intl.DateTimeFormatOptions = { day: "numeric", month: "long", year: "numeric" };
+    const dateFormatted = new Date(inv.created_at).toLocaleDateString("en-GB", options);
+
     return {
       id: `INV-${inv.id}`,
-      name: `${inv.name} / Rs. ${Number(inv.amount).toFixed(2)}`,
+      name: inv.name || "Joining Package",
       price: String(inv.amount),
       userType,
       type,
@@ -105,6 +111,7 @@ export default function HistoryPage() {
       totalPoints,
       remainingPoints: allocatedCredits,
       rawInvoice: inv,
+      formattedDate: dateFormatted,
     };
   });
 
@@ -123,84 +130,67 @@ export default function HistoryPage() {
       <h1 className="text-2xl font-bold text-ink">History</h1>
 
       {/* Sell / Rent toggle */}
-      <div className="flex gap-2">
-        {(["sell", "rent"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => { setFilter(f); setStatus("live"); }}
-            className={cn(
-              "px-6 py-2 rounded-md text-sm font-semibold border transition-colors duration-200",
-              filter === f ? "bg-primary border-primary text-white" : "bg-white border-primary text-primary hover:bg-primary hover:text-white"
-            )}
-          >
-            {f === "sell" ? "Sell" : "Rent/Lease"}
-          </button>
-        ))}
-      </div>
+      <PurposeToggle value={filter} onChange={(val) => { setFilter(val); setStatus("live"); }} />
 
       {/* Live / Expired tabs */}
-      <div className="flex border border-gray-200 rounded-md overflow-hidden mt-6">
+      <div className="flex border border-gray-200 rounded-lg overflow-hidden mt-6 bg-white shadow-sm p-1">
         {(["live", "expired"] as const).map((s) => (
-          <button
+          <Button
             key={s}
             onClick={() => setStatus(s)}
             className={cn(
-              "flex-1 py-3 text-sm font-semibold transition-colors duration-200 border-r border-gray-200 last:border-r-0",
-               status === s ? "bg-primary text-white" : "bg-white text-primary hover:bg-gray-50"
+              "flex-1 py-3 text-sm font-semibold transition-all duration-200 rounded-lg border-none h-auto shadow-none hover:shadow-none",
+              status === s
+                ? "bg-gradient-to-r from-primary to-secondary text-white"
+                : "bg-white text-primary hover:bg-slate-50"
             )}
           >
             {s === "live" ? "Live Packages" : "Expired Packages List"}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Package list */}
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-ink-muted">
+        <div className="text-center py-12 text-ink-muted bg-white border border-gray-100 rounded-2xl shadow-sm mt-6">
           <p className="font-medium">No packages found.</p>
         </div>
       ) : (
-        <div className="space-y-4 mt-6">
+        <div className="divide-y divide-gray-100 mt-6 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
           {filtered.map((pkg) => (
-            <div key={pkg.id} className="bg-white border border-gray-100 rounded-lg shadow-sm p-5 flex flex-col md:flex-row gap-5">
-              <div className="shrink-0 flex items-start justify-center">
-                <img src="/icon/validating-ticket.png" alt="Invoice Icon" className="w-16 h-16 object-contain" />
-              </div>
-
-              <div className="flex-1 min-w-0 flex flex-col items-start">
-                <h3 className="text-base font-bold text-gray-900 mb-2">{pkg.name}</h3>
-
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {pkg.type === "rent" ? (
-                    <span className="text-xs font-bold px-2 py-1 rounded bg-[#0dcaf0] text-white">Type: Rent/Lease</span>
-                  ) : (
-                    <span className="text-xs font-bold px-2 py-1 rounded bg-[#ef4444] text-white">
-                      User Type: {pkg.userType}
-                    </span>
-                  )}
-
-                  <>
-                    <span className="text-xs font-bold px-2 py-1 rounded bg-gray-500 text-white">Total Points: {pkg.totalPoints}</span>
-                    <span className="text-xs font-bold px-2 py-1 rounded bg-[#ffc107] text-white">Remaining: {pkg.remainingPoints}</span>
-                  </>
-
-                  {pkg.status === "live" ? (
-                    <span className="text-xs font-bold px-2.5 py-1 rounded bg-[#198754] text-white">
-                      Live
-                    </span>
-                  ) : (
-                    <span className="text-xs font-bold px-2.5 py-1 rounded bg-[#dc3545] text-white">
-                      Expired
-                    </span>
-                  )}
+            <div
+              key={pkg.id}
+              onClick={() => setSelectedInvoice(pkg.rawInvoice)}
+              className="px-4 py-3 flex items-center justify-between hover:bg-slate-50/60 transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-4">
+                {/* Left Side Icon Box */}
+                <div className="w-18 h-18 flex items-center justify-center text-primary shrink-0">
+                  <img src="/assets/home/icons/note.png" alt="Package" className="w-9 h-9 object-contain" />
                 </div>
 
-                <button
-                  onClick={() => setSelectedInvoice(pkg.rawInvoice)}
-                  className="mt-1 text-sm font-semibold border border-primary text-primary px-4 py-1.5 rounded-md hover:bg-primary hover:text-white transition-colors duration-200"
-                >
-                  View Details
-                </button>
+                {/* Middle Details */}
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-semibold text-slate-400 mb-1">
+                    {pkg.formattedDate}
+                  </span>
+                  <h3 className="text-lg font-bold text-slate-800 leading-tight">
+                    {pkg.name}
+                  </h3>
+                  <p className="text-xs font-semibold text-slate-400 mt-1.5">
+                    User Type: {pkg.userType}
+                  </p>
+                  <p className="text-xs font-semibold text-slate-400 mt-1">
+                    No of Credits : {pkg.totalPoints}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right Side Price Indicator */}
+              <div className="text-right shrink-0">
+                <p className="text-xl font-extrabold text-[#22c55e]">
+                  +₹{Number(pkg.price).toFixed(0)}
+                </p>
               </div>
             </div>
           ))}
@@ -212,7 +202,7 @@ export default function HistoryPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
-            <div className="bg-primary text-white px-6 py-4 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-4 flex justify-between items-center">
               <h2 className="text-lg font-bold">Invoice Details</h2>
               <button
                 onClick={() => setSelectedInvoice(null)}
@@ -298,13 +288,13 @@ export default function HistoryPage() {
 
             {/* Modal Actions */}
             <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
-              <button
+              <Button
                 onClick={() => setSelectedInvoice(null)}
                 className="px-4 py-2 border rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors"
               >
                 Close
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   const printContent = document.getElementById("printable-invoice")?.innerHTML;
                   if (printContent) {
@@ -327,10 +317,11 @@ export default function HistoryPage() {
                     }
                   }
                 }}
-                className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-semibold transition-colors"
+                variant="gradient"
+                className="px-4 py-2 text-white rounded-lg text-sm font-semibold transition-colors"
               >
                 Print Invoice
-              </button>
+              </Button>
             </div>
           </div>
         </div>

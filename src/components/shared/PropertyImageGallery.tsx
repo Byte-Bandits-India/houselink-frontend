@@ -93,10 +93,10 @@ export default function PropertyImageGallery({
       </div>
 
       {/* ── DESKTOP: 3-panel grid ── */}
-      <div className="hidden md:flex gap-3 h-[340px]">
+      <div className="hidden md:flex gap-3 h-[350px] xl:h-auto xl:flex-1 w-full min-h-[300px]">
         {/* Large image — left */}
         <div
-          className="relative flex-[2] rounded-xl overflow-hidden border border-gray-200 cursor-zoom-in group"
+          className="relative flex-[2] max-w-[700px] rounded-xl overflow-hidden border border-gray-200 cursor-zoom-in group"
           onClick={() => openLightbox(0)}
         >
           <Image
@@ -114,7 +114,7 @@ export default function PropertyImageGallery({
         </div>
 
         {/* Two stacked images — right */}
-        <div className="flex flex-col gap-3 flex-1">
+        <div className="flex flex-col gap-3 flex-1 max-w-[290px]">
           {[1, 2].map((imgIdx) => (
             <div
               key={imgIdx}

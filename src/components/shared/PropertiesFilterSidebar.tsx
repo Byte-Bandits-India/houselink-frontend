@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { usePageFilter } from "@/contexts/HomeFilterContext";
 import PropertyTypeSwitch from "./PropertyTypeSwitch";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
+import { getFeatures, getFacilities } from "@/lib/api";
 
 export default function PropertiesFilterSidebar() {
   const { filters, setFilters } = usePageFilter();
@@ -13,6 +14,27 @@ export default function PropertiesFilterSidebar() {
   const [priceExpanded, setPriceExpanded] = useState(true);
   const [categoryExpanded, setCategoryExpanded] = useState(true);
   const [featuresExpanded, setFeaturesExpanded] = useState(true);
+  const [facilitiesExpanded, setFacilitiesExpanded] = useState(true);
+
+  // Dynamic filter lists fetched from backend
+  const [dbFeatures, setDbFeatures] = useState<Array<{ id: number; name: string }>>([]);
+  const [dbFacilities, setDbFacilities] = useState<Array<{ id: number; name: string }>>([]);
+
+  useEffect(() => {
+    async function loadFilterData() {
+      try {
+        const [featRes, facRes] = await Promise.all([
+          getFeatures(),
+          getFacilities(),
+        ]);
+        if (featRes?.success) setDbFeatures(featRes.data || []);
+        if (facRes?.success) setDbFacilities(facRes.data || []);
+      } catch (err) {
+        console.error("Failed to load filter items:", err);
+      }
+    }
+    loadFilterData();
+  }, []);
 
   // Local values synchronized with page filter context
   const initialPrice = filters.maxPrice ? Number(filters.maxPrice) / 10000000 : 100;
@@ -63,14 +85,7 @@ export default function PropertiesFilterSidebar() {
     { value: "all", label: "Show All Properties" },
   ];
 
-  const amenities = [
-    "Wifi",
-    "Parking",
-    "Security",
-    "Garden",
-    "Swimming Pool",
-    "Balcony",
-  ];
+  // Static amenities array removed in favor of dynamic DB features & facilities
 
   return (
     <div className="w-full max-w-[318px] bg-white rounded-2xl border border-gray-150 p-5 text-left shadow-sm flex flex-col gap-6 font-inter">
@@ -169,20 +184,53 @@ export default function PropertiesFilterSidebar() {
         </button>
         {featuresExpanded && (
           <div className="pt-4 flex flex-wrap gap-2">
-            {amenities.map((amenity) => {
-              const isSelected = activeAmenitiesList.includes(amenity.toLowerCase());
+            {dbFeatures.map((feat) => {
+              const isSelected = activeAmenitiesList.includes(feat.name.toLowerCase());
               return (
                 <Button
                   variant="gradient"
-                  key={amenity}
-                  onClick={() => handleToggleAmenity(amenity)}
+                  key={feat.id}
+                  onClick={() => handleToggleAmenity(feat.name)}
                   className={`px-4 py-2 rounded-full border text-[11px] font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
                     isSelected
                       ? "bg-gradient-to-r from-primary to-secondary text-white shadow-sm"
                       : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
                   }`}
                 >
-                  + {amenity}
+                  + {feat.name}
+                </Button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── FACILITIES SECTION ── */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setFacilitiesExpanded(!facilitiesExpanded)}
+          className="w-full flex items-center justify-between font-bold text-sm text-gray-800 uppercase tracking-wider pb-3 border-b border-gray-100 cursor-pointer"
+        >
+          <span>Facilities</span>
+          {facilitiesExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+        {facilitiesExpanded && (
+          <div className="pt-4 flex flex-wrap gap-2">
+            {dbFacilities.map((fac) => {
+              const isSelected = activeAmenitiesList.includes(fac.name.toLowerCase());
+              return (
+                <Button
+                  variant="gradient"
+                  key={fac.id}
+                  onClick={() => handleToggleAmenity(fac.name)}
+                  className={`px-4 py-2 rounded-full border text-[11px] font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
+                    isSelected
+                      ? "bg-gradient-to-r from-primary to-secondary text-white shadow-sm"
+                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
+                  }`}
+                >
+                  + {fac.name}
                 </Button>
               );
             })}
