@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const navItems = [
   { label: "Package Details", href: "/dashboard/packages", icon: FileText, exact: false },
@@ -35,22 +36,32 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
+  const displayName = user ? `${user.firstName} ${user.lastName || ""}`.trim() : "Loading...";
+  const avatarUrl = user?.avatarImage ? getImageUrl(user.avatarImage) : null;
+  const initials = user
+    ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`
+        .trim()
+        .toUpperCase() || "U"
+    : "U";
+
   return (
     <div className="flex flex-col h-full">
       {/* User */}
       <div className="flex items-center gap-2.5 px-4 py-4 border-b border-gray-100">
-        <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center shrink-0 overflow-hidden">
-          <img
-            src={user?.avatarImage ? getImageUrl(user.avatarImage) : "/assets/images/about-us/unknown.jpg"}
-            alt="Avatar"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src = "/assets/images/about-us/unknown.jpg";
-            }}
-          />
-        </div>
+        <Avatar className="w-8 h-8 shrink-0">
+          {avatarUrl && (
+            <AvatarImage
+              src={avatarUrl}
+              alt={displayName}
+              className="object-cover"
+            />
+          )}
+          <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-xs font-bold">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
         <span className="text-sm font-semibold text-ink truncate">
-          {user ? `${user.firstName} ${user.lastName || ""}`.trim() : "Loading..."}
+          {displayName}
         </span>
 
         {/* Close button — only visible inside the mobile drawer */}
