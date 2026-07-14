@@ -292,24 +292,38 @@ export default function PropertySearch() {
     }
   }, [searchParams]);
 
-  const handleSearch = () => {
-    if (keyword && keyword.trim()) {
-      recordSearch(keyword.trim()).catch((err) => console.error("Error recording search query:", err));
+  const handleSearch = (overrides?: {
+    keyword?: string;
+    location?: string;
+    category?: string;
+    city?: string;
+    amenities?: string[];
+  }) => {
+    const searchKeyword = overrides && overrides.keyword !== undefined ? overrides.keyword : keyword;
+    const searchLocation = overrides && overrides.location !== undefined ? overrides.location : location;
+    const searchCategory = overrides && overrides.category !== undefined ? overrides.category : activeCategory;
+    const searchCity = overrides && overrides.city !== undefined ? overrides.city : city;
+    const searchAmenities = overrides && overrides.amenities !== undefined ? overrides.amenities : selectedAmenities;
+
+    if (searchKeyword && searchKeyword.trim()) {
+      recordSearch(searchKeyword.trim()).catch((err) => console.error("Error recording search query:", err));
     }
 
     const params = new URLSearchParams();
     params.set("property_purpose", activeTab);
-    if (city) params.set("city", city);
-    if (keyword) params.set("keyword", keyword);
-    if (location) params.set("location", location);
+    if (searchCity) params.set("city", searchCity);
+    if (searchKeyword) params.set("keyword", searchKeyword);
+    if (searchLocation) params.set("location", searchLocation);
     if (categoryType) params.set("category_type", categoryType);
-    if (activeCategory !== "all") params.set("category", activeCategory);
+    if (searchCategory !== "all") params.set("category", searchCategory);
 
-    if (showAdvanced) {
+    const hasAdvanced = showAdvanced || (overrides && overrides.amenities !== undefined);
+
+    if (hasAdvanced) {
       params.set("max_price", String(priceRange * 10000000));
       params.set("max_area", String(areaRange));
-      if (selectedAmenities.length > 0) {
-        params.set("amenities", selectedAmenities.join(","));
+      if (searchAmenities.length > 0) {
+        params.set("amenities", searchAmenities.join(","));
       }
     }
 
@@ -317,14 +331,14 @@ export default function PropertySearch() {
       // On all listing pages: update context, keep URL clean
       setFilters({
         activeTab: activeTab as "sell" | "rent",
-        activeCategory,
-        city,
-        keyword,
-        location,
+        activeCategory: searchCategory,
+        city: searchCity,
+        keyword: searchKeyword,
+        location: searchLocation,
         categoryType,
-        maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
-        maxArea: showAdvanced ? String(areaRange) : "",
-        amenities: showAdvanced && selectedAmenities.length > 0 ? selectedAmenities.join(",") : "",
+        maxPrice: hasAdvanced ? String(priceRange * 10000000) : "",
+        maxArea: hasAdvanced ? String(areaRange) : "",
+        amenities: hasAdvanced && searchAmenities.length > 0 ? searchAmenities.join(",") : "",
       });
       scrollToResults();
     } else {
@@ -459,6 +473,7 @@ export default function PropertySearch() {
           setActiveCategory={setActiveCategory}
           setCity={setCity}
           setShowAdvanced={setShowAdvanced}
+          selectedAmenities={selectedAmenities}
           setSelectedAmenities={setSelectedAmenities}
         />
 
@@ -583,7 +598,7 @@ export default function PropertySearch() {
 
             <button
               type="button"
-              onClick={handleSearch}
+              onClick={() => handleSearch()}
               className="flex items-center gap-1.5 px-6 h-[42px] bg-[#153e75] hover:bg-[#1a4d8f] text-white text-sm font-semibold rounded-lg shadow-[0_4px_12px_rgba(21,62,117,0.3)] transition-colors duration-200 whitespace-nowrap"
             >
               <Search size={14} />

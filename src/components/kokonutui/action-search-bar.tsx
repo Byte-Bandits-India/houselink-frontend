@@ -10,11 +10,18 @@ interface ActionSearchBarProps {
   keyword: string;
   setKeyword: (val: string) => void;
   placeholderText: string;
-  onSearch: () => void;
+  onSearch: (overrides?: {
+    keyword?: string;
+    location?: string;
+    category?: string;
+    city?: string;
+    amenities?: string[];
+  }) => void;
   onSelectLocation: (location: string) => void;
   setActiveCategory?: (category: string) => void;
   setCity?: (city: string) => void;
   setShowAdvanced?: (val: boolean) => void;
+  selectedAmenities?: string[];
   setSelectedAmenities?: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
@@ -58,6 +65,7 @@ export default function ActionSearchBar({
   setActiveCategory,
   setCity,
   setShowAdvanced,
+  selectedAmenities,
   setSelectedAmenities,
 }: ActionSearchBarProps) {
   const [isFocused, setIsFocused] = useState(false);
@@ -164,6 +172,7 @@ export default function ActionSearchBar({
                   );
                 }
               }}
+              selectedAmenities={selectedAmenities}
               onSearch={onSearch}
               onClose={() => setIsFocused(false)}
             />

@@ -14,7 +14,14 @@ interface SearchSuggestionsProps {
   onSelectCategory?: (category: string) => void;
   onSelectCity?: (city: string) => void;
   onSelectAmenity?: (amenity: string) => void;
-  onSearch: () => void;
+  selectedAmenities?: string[];
+  onSearch: (overrides?: {
+    keyword?: string;
+    location?: string;
+    category?: string;
+    city?: string;
+    amenities?: string[];
+  }) => void;
   onClose: () => void;
 }
 
@@ -39,6 +46,7 @@ export default function SearchSuggestions({
   onSelectCategory,
   onSelectCity,
   onSelectAmenity,
+  selectedAmenities,
   onSearch,
   onClose,
 }: SearchSuggestionsProps) {
@@ -102,18 +110,14 @@ export default function SearchSuggestions({
 
   const handleRecentClick = (text: string) => {
     onSelectKeyword(text);
-    setTimeout(() => {
-      onSearch();
-      onClose();
-    }, 50);
+    onSearch({ keyword: text });
+    onClose();
   };
 
   const handleRegionClick = (region: string) => {
     onSelectLocation(region);
-    setTimeout(() => {
-      onSearch();
-      onClose();
-    }, 50);
+    onSearch({ location: region });
+    onClose();
   };
 
   const handleCategoryClick = (catVal: string) => {
@@ -121,30 +125,27 @@ export default function SearchSuggestions({
       onSelectCategory(catVal);
     }
     onSelectKeyword("");
-    setTimeout(() => {
-      onSearch();
-      onClose();
-    }, 50);
+    onSearch({ category: catVal, keyword: "" });
+    onClose();
   };
 
   const handleCityClick = (cityVal: string) => {
     if (onSelectCity) {
       onSelectCity(cityVal);
     }
-    setTimeout(() => {
-      onSearch();
-      onClose();
-    }, 50);
+    onSearch({ city: cityVal });
+    onClose();
   };
 
   const handleAmenityClick = (amenityVal: string) => {
     if (onSelectAmenity) {
       onSelectAmenity(amenityVal);
     }
-    setTimeout(() => {
-      onSearch();
-      onClose();
-    }, 50);
+    const nextAmenities = selectedAmenities
+      ? (selectedAmenities.includes(amenityVal) ? selectedAmenities : [...selectedAmenities, amenityVal])
+      : [amenityVal];
+    onSearch({ amenities: nextAmenities });
+    onClose();
   };
 
   const q = query.trim().toLowerCase();
@@ -241,7 +242,7 @@ export default function SearchSuggestions({
               <motion.div
                 variants={itemVariants}
                 key={index}
-                onClick={() => handleRecentClick(prop.title)}
+                onClick={() => handleScrollOrNavigate("high-demand-properties")}
                 className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
               >
                 <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
@@ -281,7 +282,7 @@ export default function SearchSuggestions({
               <motion.div
                 variants={itemVariants}
                 key={index}
-                onClick={() => handleRegionClick(region.name)}
+                onClick={() => handleScrollOrNavigate("trending-cities")}
                 className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
               >
                 <div className="w-7 h-7 rounded-lg bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
