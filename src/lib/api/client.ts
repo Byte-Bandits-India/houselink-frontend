@@ -10,11 +10,11 @@
  */
 
 const isProd = process.env.NODE_ENV === "production";
-const fallbackUrl = isProd ? "http://127.0.0.1:4000" : "http://backend:4000";
+const fallbackUrl = isProd ? "http://127.0.0.1:5000" : "http://backend:4000";
 
 const WEB_BASE_URL =
   typeof window === "undefined"
-    ? (process.env.NEXT_SERVER_API_URL ?? fallbackUrl)
+    ? (process.env.NEXT_SERVER_API_URL ?? process.env.NEXT_PUBLIC_WEB_API_URL ?? fallbackUrl)
     : (process.env.NEXT_PUBLIC_WEB_API_URL ?? "http://localhost");
 
 const WEB_API_PREFIX = "/api/v1";
