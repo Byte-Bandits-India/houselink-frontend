@@ -142,10 +142,6 @@ export default function PropertiesPage() {
   }, [user, authLoading]);
 
   const handleDelete = async (id: number, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
-      return;
-    }
-
     try {
       const res = await deleteProperty(id);
       if (res.success) {

@@ -206,7 +206,7 @@ export default async function PropertyDetailPage({
       <div className="container mx-auto px-4 md:px-6 pt-6 pb-0">
 
         {/* ROW 1: Left = Title + Gallery | Right = Pills + RequestInfo card */}
-        <div className="flex items-center justify-between xl:h-[70dvh] 2xl:h-[700px] mb-0">
+        <div className="flex items-center justify-between xl:h-[90dvh] mb-0">
           <div className="flex flex-col xl:flex-row gap-6 h-[80%] w-full">
             {/* LEFT: Title + location + Gallery */}
           <div className="flex-1 min-w-0 flex flex-col xl:h-full pb-4">

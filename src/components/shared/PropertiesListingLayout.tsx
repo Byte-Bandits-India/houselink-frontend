@@ -7,6 +7,14 @@ import PropertiesSearchHeader from "./PropertiesSearchHeader";
 import PropertiesFilterSidebar from "./PropertiesFilterSidebar";
 import PropertyHorizontalCard from "./PropertyHorizontalCard";
 import PropertyEnquirySidebar from "./PropertyEnquirySidebar";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 interface PropertiesListingLayoutProps {
   properties: any[];
@@ -34,15 +42,23 @@ export default function PropertiesListingLayout({
       <div className="container mx-auto px-4 md:px-6">
         
         {/* Title and Breadcrumbs */}
-        <div className="flex flex-col text-left py-6 border-b border-gray-150/80 mb-6">
+        <div className="flex flex-col text-left py-6 border-b border-gray-100 mb-6">
           <h1 className="text-2xl font-black text-gray-900 mb-2">{title}</h1>
-          <div className="flex items-center gap-1.5 text-xs select-none">
-            <Link href="/" className="text-primary">
-              Home
-            </Link>
-            <span>&gt;</span>
-            <span className="text-primary">{breadcrumbLabel}</span>
-          </div>
+          <Breadcrumb>
+            <BreadcrumbList className="text-xs">
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild className="text-primary hover:text-primary/80 font-medium">
+                  <Link href="/">Home</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="text-gray-400" />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="text-ink-secondary font-medium">
+                  {breadcrumbLabel}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
 
         {/* Two-Column Layout */}

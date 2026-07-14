@@ -15,6 +15,8 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import type { State, City } from "@/types/auth";
 
+import { PhoneInput } from "@/components/reui/phone-input";
+
 export default function RegisterPage() {
   const router = useRouter();
   const { setAuthUser } = useAuth();
@@ -47,6 +49,15 @@ export default function RegisterPage() {
   // UI State
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Helper to extract 10-digit phone number
+  const get10DigitPhone = (phoneVal: string) => {
+    const digits = phoneVal.replace(/\D/g, "");
+    if (digits.startsWith("91") && digits.length > 10) {
+      return digits.slice(-10);
+    }
+    return digits;
+  };
 
   // ── Fetch states on mount ──────────────────────────────────────────────────
   useEffect(() => {
@@ -88,7 +99,8 @@ export default function RegisterPage() {
     else if (!/^[A-Za-z\s]+$/.test(firstName))
       newErrors.firstName = "Only letters and spaces allowed";
 
-    if (!phone || phone.length !== 10)
+    const activePhone = get10DigitPhone(phone);
+    if (!activePhone || activePhone.length !== 10)
       newErrors.phone = "Valid 10-digit phone required";
     if (!email) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(email))
@@ -103,7 +115,8 @@ export default function RegisterPage() {
 
   // ── Send OTP (registration) ────────────────────────────────────────────────
   const handleSendOtp = async () => {
-    if (!phone || phone.length !== 10) {
+    const activePhone = get10DigitPhone(phone);
+    if (!activePhone || activePhone.length !== 10) {
       setErrors((e) => ({ ...e, phone: "Please enter a valid 10-digit phone number" }));
       return;
     }
@@ -111,7 +124,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await sendOtpRegister({ phone });
+      await sendOtpRegister({ phone: activePhone });
       setOtpSent(true);
       setTimeLeft(60);
       setOtp(["", "", "", ""]);
@@ -135,7 +148,7 @@ export default function RegisterPage() {
   const handleResendOtp = async () => {
     setIsLoading(true);
     try {
-      await retryOtp({ phone, retryType: "text" });
+      await retryOtp({ phone: get10DigitPhone(phone), retryType: "text" });
       setTimeLeft(60);
       setOtp(["", "", "", ""]);
     } catch {
@@ -171,7 +184,7 @@ export default function RegisterPage() {
       const res = await register({
         firstName,
         lastName: lastName || undefined,
-        phone,
+        phone: get10DigitPhone(phone),
         email,
         otp: otpValue,
         stateId: stateId as number,
@@ -355,20 +368,19 @@ export default function RegisterPage() {
               Phone Number <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2">
-              <input
-                type="tel"
-                maxLength={10}
+              <PhoneInput
+                defaultCountry="IN"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                onChange={(val) => setPhone(val || "")}
                 disabled={otpSent}
                 placeholder="Phone Number"
-                className="flex-1 h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand disabled:bg-gray-50 transition-colors"
+                className="flex-1 [&_button]:h-11 [&_input]:h-11"
               />
               {!otpSent && (
                 <button
                   type="button"
                   onClick={handleSendOtp}
-                  disabled={isLoading || phone.length !== 10}
+                  disabled={isLoading || get10DigitPhone(phone).length !== 10}
                   className="h-11 px-4 bg-brand text-white font-medium rounded-md hover:bg-primary-light disabled:bg-gray-400 whitespace-nowrap transition-colors"
                 >
                   {isLoading ? "Sending..." : "Send OTP"}

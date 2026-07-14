@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { message } from "antd";
 import { checkPermalinkAvailability } from "@/lib/api";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useFileUpload, type FileWithPreview, type FileMetadata } from "@/hooks/use-file-upload";
+import { ImageIcon, UploadIcon, ZoomInIcon, XIcon } from "lucide-react";
 import {
   PropertyFormData,
   HOUSE_TYPES,
@@ -27,6 +29,12 @@ import {
   OWNERSHIP_TYPES,
   getSchemaFields,
 } from "@/types/property";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Props {
   data: PropertyFormData;
@@ -159,6 +167,175 @@ function convertNumberToWords(num: number | string): string {
   const trimmed = str.trim();
   if (!trimmed) return "";
   return trimmed + " Rupees Only";
+}
+
+/* ── Multi-image gallery upload (c-file-upload-4 pattern) ────── */
+interface PropertyImagesUploadProps {
+  images: string[];
+  imageLimit: number;
+  disabled?: boolean;
+  onChange: (images: string[]) => void;
+}
+
+function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }: PropertyImagesUploadProps) {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const isInitialized = useRef(false);
+
+  // Seed existing image URLs as FileMetadata so the hook shows them on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const initialFiles: FileMetadata[] = useMemo(() => images.map((url, i) => ({
+    id: `existing-${i}-${url.slice(-20)}`,
+    name: `image-${i + 1}.jpg`,
+    size: 0,
+    type: "image/jpeg",
+    url,
+  })), []); // intentionally empty deps — only seed once on mount
+
+  const [
+    { files, isDragging },
+    { removeFile, handleDragEnter, handleDragLeave, handleDragOver, handleDrop, openFileDialog, getInputProps },
+  ] = useFileUpload({
+    multiple: true,
+    maxFiles: imageLimit,
+    maxSize: 2 * 1024 * 1024, // 2 MB
+    accept: "image/jpeg,image/jpg,image/png,image/webp",
+    initialFiles,
+    // ⚠️ Do NOT use onFilesChange here — the hook calls it inside a setState
+    // updater which triggers parent setState during render (React error).
+    // We use a useEffect below instead.
+  });
+
+  // Sync files → parent AFTER render (safe, avoids setState-in-render)
+  useEffect(() => {
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      return; // skip initial mount — images already seeded via initialFiles
+    }
+    const urls = files
+      .map((f) => f.preview ?? (f.file as FileMetadata).url ?? "")
+      .filter(Boolean);
+    onChange(urls);
+  }, [files]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const canAdd = !disabled && files.length < imageLimit;
+
+  return (
+    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+      <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2">
+        Property Images{" "}
+        <span className="text-gray-400 font-normal text-xs ml-1">
+          (Max 2MB each, up to {imageLimit})
+        </span>
+      </h4>
+
+      {/* Drag-and-drop zone — only shown when can add more */}
+      {canAdd && (
+        <div
+          className={cn(
+            "border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer",
+            isDragging
+              ? "border-brand bg-brand/5"
+              : "border-gray-200 bg-gray-50/50 hover:border-brand/40 hover:bg-brand/5"
+          )}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          <input {...getInputProps()} className="sr-only" disabled={disabled} />
+          <div className="flex flex-col items-center gap-3">
+            <div className={cn(
+              "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
+              isDragging ? "bg-brand/15 text-brand" : "bg-gray-100 text-gray-400"
+            )}>
+              <ImageIcon className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-gray-700">Drag & drop images here</p>
+              <p className="text-xs text-gray-400">
+                JPG, PNG, WEBP · Max 2MB each · {files.length}/{imageLimit} uploaded
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={openFileDialog}
+              className="flex items-center gap-1.5 px-4 py-2 bg-brand text-white text-xs font-semibold rounded-lg hover:bg-brand/90 transition-colors"
+            >
+              <UploadIcon className="h-3.5 w-3.5" />
+              Browse Files
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Disabled empty state */}
+      {disabled && files.length === 0 && (
+        <div className="border border-dashed border-gray-200 rounded-xl p-8 text-center bg-gray-50/50">
+          <p className="text-sm text-gray-400 font-medium">No images uploaded for this listing.</p>
+        </div>
+      )}
+
+      {/* Image grid */}
+      {files.length > 0 && (
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+          {files.map((fileItem) => {
+            const previewUrl = fileItem.preview ?? "";
+            return (
+              <div
+                key={fileItem.id}
+                className="group/item relative aspect-square rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={previewUrl}
+                  alt={fileItem.file.name}
+                  className="w-full h-full object-cover transition-transform duration-200 group-hover/item:scale-105"
+                />
+                {/* Hover overlay */}
+                {!disabled && (
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedImage(previewUrl)}
+                      className="bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white rounded-full p-1.5 transition-colors"
+                      title="Preview"
+                    >
+                      <ZoomInIcon className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(fileItem.id)}
+                      className="bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors"
+                      title="Remove"
+                    >
+                      <XIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Full-size preview dialog */}
+      <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
+        <DialogContent className="bg-transparent border-none shadow-none p-0 sm:max-w-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Image Preview</DialogTitle>
+          </DialogHeader>
+          {selectedImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={selectedImage}
+              alt="Preview"
+              className="rounded-xl w-full h-auto object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
 
 export default function Step2PropertyProfile({
@@ -1236,84 +1413,12 @@ export default function Step2PropertyProfile({
 
 
       {/* ─── SECTION 7: PROPERTY IMAGES ─── */}
-      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-        <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2">
-          Property Images <span className="text-gray-400 font-normal text-xs ml-1">(Max 2MB each, up to {imageLimit})</span>
-        </h4>
-
-        {data.images && data.images.length > 0 ? (
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-            {data.images.map((imgUrl, idx) => (
-              <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imgUrl} alt={`Property ${idx + 1}`} className="w-full h-full object-cover" />
-                {!disabled && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onChange({ images: data.images?.filter((_, i) => i !== idx) });
-                    }}
-                    className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md opacity-90 transition-opacity"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          disabled && (
-            <div className="border border-dashed border-gray-200 rounded-xl p-8 text-center bg-gray-50/50">
-              <p className="text-sm text-gray-400 font-medium">No images uploaded for this listing.</p>
-            </div>
-          )
-        )}
-
-        {!disabled && (
-          <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center bg-gray-50/50 hover:border-brand/40 transition-colors cursor-pointer relative">
-            <p className="text-sm text-gray-600 font-medium">
-              Click or drag images here
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              Accepted: JPG, JPEG, PNG, WEBP only
-            </p>
-            <label className="mt-3 inline-block cursor-pointer">
-              <input
-                type="file"
-                multiple
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files) {
-                    const filesArray = Array.from(e.target.files);
-                    const existingImages = data.images || [];
-                    const maxAllowed = imageLimit - existingImages.length;
-
-                    if (maxAllowed <= 0) {
-                      message.warning(`You can only upload up to ${imageLimit} images.`);
-                      return;
-                    }
-
-                    let filesToAdd = filesArray;
-                    if (filesArray.length > maxAllowed) {
-                      message.warning(`Only the first ${maxAllowed} images were added. Maximum limit is ${imageLimit}.`);
-                      filesToAdd = filesArray.slice(0, maxAllowed);
-                    }
-
-                    const newImages = filesToAdd.map(file => URL.createObjectURL(file));
-                    onChange({ images: [...existingImages, ...newImages] });
-                  }
-                }}
-              />
-              <span className="px-4 py-2 bg-brand text-white text-sm font-semibold rounded-lg hover:bg-brand/90 transition-colors">
-                Browse Files
-              </span>
-            </label>
-          </div>
-        )}
-      </div>
+      <PropertyImagesUpload
+        images={data.images || []}
+        imageLimit={imageLimit}
+        disabled={disabled}
+        onChange={(imgs) => onChange({ images: imgs })}
+      />
 
       {/* ─── SECTION: AUTO-RENEWAL OPTIONS ─── */}
       {data.property_for === "sell" && (

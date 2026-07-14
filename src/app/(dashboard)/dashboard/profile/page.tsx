@@ -5,6 +5,7 @@ import { Form, Input, DatePicker, Upload, Button, Select } from "antd";
 import dayjs from "dayjs";
 import { useAuth } from "@/context/AuthContext";
 import { updateMe, getImageUrl, getStates, getCities } from "@/lib/api";
+import { PhoneInput } from "@/components/reui/phone-input";
 
 type Tab = "update" | "password";
 
@@ -310,7 +311,10 @@ export default function ProfilePage() {
               rules={[{ required: true, message: "Please enter your phone number" }]}
               className="mb-0"
             >
-              <Input size="large" className="rounded-lg border-gray-300" />
+              <PhoneInput
+                defaultCountry="IN"
+                className="w-full rounded-lg border-gray-300 [&_button]:h-[40px] [&_input]:h-[40px] [&_input]:rounded-r-lg [&_button]:rounded-l-lg [&_input]:border-gray-300 [&_button]:border-gray-300"
+              />
             </Form.Item>
 
             {/* Email */}

@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { sendOtp, retryOtp, verifyOtpLogin, ApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
+import { PhoneInput } from "@/components/reui/phone-input";
+
 export default function LoginPage() {
   const router = useRouter();
   const { setAuthUser } = useAuth();
@@ -26,6 +28,15 @@ export default function LoginPage() {
     useRef<HTMLInputElement>(null),
   ];
 
+  // Helper to extract 10-digit phone number
+  const get10DigitPhone = (phoneVal: string) => {
+    const digits = phoneVal.replace(/\D/g, "");
+    if (digits.startsWith("91") && digits.length > 10) {
+      return digits.slice(-10);
+    }
+    return digits;
+  };
+
   // Countdown timer logic
   useEffect(() => {
     if (timeLeft > 0) {
@@ -35,7 +46,8 @@ export default function LoginPage() {
   }, [timeLeft]);
 
   const handleSendOtp = async () => {
-    if (!phone || phone.length !== 10) {
+    const activePhone = get10DigitPhone(phone);
+    if (!activePhone || activePhone.length !== 10) {
       setPhoneError("Please enter a valid 10-digit phone number");
       return;
     }
@@ -43,7 +55,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await sendOtp({ phone });
+      await sendOtp({ phone: activePhone });
       setOtpSent(true);
       setTimeLeft(60);
       setOtp(["", "", "", ""]);
@@ -63,7 +75,7 @@ export default function LoginPage() {
   const handleResendOtp = async () => {
     setIsLoading(true);
     try {
-      await retryOtp({ phone, retryType: "text" });
+      await retryOtp({ phone: get10DigitPhone(phone), retryType: "text" });
       setTimeLeft(60);
       setOtp(["", "", "", ""]);
     } catch {
@@ -83,7 +95,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await verifyOtpLogin({ phone, otp: otpValue });
+      const res = await verifyOtpLogin({ phone: get10DigitPhone(phone), otp: otpValue });
       // Tokens auto-saved; instantly update the auth context
       setAuthUser(res.customer);
       router.push("/");
@@ -144,20 +156,20 @@ export default function LoginPage() {
               Phone Number <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2">
-              <input
-                type="tel"
-                maxLength={10}
+              <PhoneInput
+                defaultCountry="IN"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                onChange={(val) => setPhone(val || "")}
                 disabled={otpSent}
                 placeholder="Enter your phone number"
-                className="flex-1 h-12 px-4 border border-gray-300 rounded-lg focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand disabled:bg-gray-50 disabled:text-gray-500 transition-colors"
+                variant="lg"
+                className="flex-1"
               />
               {!otpSent && (
                 <button
                   type="button"
                   onClick={handleSendOtp}
-                  disabled={isLoading || phone.length !== 10}
+                  disabled={isLoading || get10DigitPhone(phone).length !== 10}
                   className="h-12 px-6 bg-brand text-white font-medium rounded-lg hover:bg-primary-light disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                 >
                   {isLoading ? "Sending..." : "Send OTP"}

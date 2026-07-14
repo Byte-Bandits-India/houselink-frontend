@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getUserPropertiesWithParams, deleteProperty } from "@/lib/api/properties";
 import { message } from "antd";
 import { Button } from "@/components/ui/button";
+import { DeletePropertyDialog } from "@/components/shared/DeletePropertyDialog";
 import PurposeToggle from "@/components/shared/PurposeToggle";
 import {
   Table,
@@ -105,7 +106,6 @@ export default function ExpiredPropertiesPage() {
   }, [user?.id]);
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this property listing?")) return;
     try {
       const res = await deleteProperty(id);
       if (res.success) {
@@ -208,21 +208,24 @@ export default function ExpiredPropertiesPage() {
                       {p.moderationStatus}
                     </span>
                   </TableCell>
-                  <TableCell className="py-4">
+                  <TableCell className="py-2">
                     <div className="flex flex-col gap-1.5 items-center">
                       <Button
                         onClick={() => router.push(`/dashboard/properties/${p.id}/edit`)}
                         variant="gradient"
-                        className="flex items-center gap-1 text-xs font-semibold text-white px-3 py-1.5 rounded-lg transition-colors w-full justify-center"
+                        className="flex items-center gap-1 text-xs font-semibold text-white px-3 py-1 rounded-lg transition-colors w-full justify-center"
                       >
                         <Pencil className="w-3 h-3" /> Edit
                       </Button>
-                      <Button 
-                        onClick={() => handleDelete(p.id)}
-                        className="flex items-center gap-1 text-xs text-primary hover:text-white font-semibold bg-white border border-primary px-3 py-1.5 rounded-lg transition-colors w-full justify-center"
-                      >
-                        <Trash2 className="w-3 h-3" /> Delete
-                      </Button>
+                      <DeletePropertyDialog
+                        propertyName={p.name}
+                        onConfirm={() => handleDelete(p.id)}
+                        trigger={
+                          <Button className="flex items-center gap-1 text-xs text-danger hover:text-white hover:bg-danger font-semibold bg-white border border-danger px-3 py-1 rounded-lg transition-colors w-full justify-center">
+                            <Trash2 className="w-3 h-3" /> Delete
+                          </Button>
+                        }
+                      />
                     </div>
                   </TableCell>
                 </TableRow>

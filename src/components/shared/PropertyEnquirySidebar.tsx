@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { sendOtp, verifyOtpLogin, ApiError, createLead, checkEnquiryStatus } from "@/lib/api";
 import type { EnquiryStatusResponse } from "@/lib/api";
 import { Button } from "../ui/button";
+import { PhoneInput } from "@/components/reui/phone-input";
 
 interface PropertyEnquirySidebarProps {
   property: {
@@ -94,7 +95,6 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
       return () => clearTimeout(timerId);
     }
   }, [timeLeft]);
-
   // ── Logged-in state variables ─────────────────────────────────────────────
   const [formData, setFormData] = useState({
     name: "",
@@ -104,12 +104,21 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // Helper to extract 10-digit phone number
+  const get10DigitPhone = (phoneVal: string) => {
+    const digits = phoneVal.replace(/\D/g, "");
+    if (digits.startsWith("91") && digits.length > 10) {
+      return digits.slice(-10);
+    }
+    return digits;
+  };
+
   // Sync user details when logged in + fetch enquiry status
   useEffect(() => {
     if (isLoggedIn && user) {
       setFormData({
         name: `${user.firstName} ${user.lastName || ""}`.trim(),
-        phone: user.phone.replace(/^\+91/, ""),
+        phone: user.phone,
         email: user.email || "",
         message: "I'm interested in your property...",
       });
@@ -128,14 +137,15 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleSendOtp = async () => {
-    if (!phone || phone.length !== 10) {
+    const activePhone = get10DigitPhone(phone);
+    if (!activePhone || activePhone.length !== 10) {
       setPhoneError("Please enter a valid 10-digit phone number");
       return;
     }
     setPhoneError("");
     setIsLoading(true);
     try {
-      await sendOtp({ phone });
+      await sendOtp({ phone: activePhone });
       setOtpSent(true);
       setTimeLeft(60);
       setOtp(["", "", "", ""]);
@@ -181,7 +191,7 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     setOtpError("");
     setIsLoading(true);
     try {
-      const res = await verifyOtpLogin({ phone, otp: otpValue });
+      const res = await verifyOtpLogin({ phone: get10DigitPhone(phone), otp: otpValue });
       setAuthUser(res.customer);
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
@@ -206,7 +216,7 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
       await createLead({
         property_id: property.id,
         name: formData.name,
-        phone: formData.phone,
+        phone: get10DigitPhone(formData.phone),
         email: formData.email,
         message: formData.message,
       });
@@ -341,20 +351,13 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-600 block mb-1">Phone</label>
-                <div className="flex items-center bg-gray-100 border border-gray-200 rounded-lg overflow-hidden">
-                  <span className="text-xs text-gray-500 font-medium pl-3 pr-1 py-2.5 bg-gray-100 select-none">
-                    +91
-                  </span>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value.replace(/\D/g, "") })
-                    }
-                    className="w-full bg-gray-100 border-0 rounded-r-lg px-1 py-2.5 text-xs text-gray-700 font-medium outline-none focus:bg-white transition-colors min-w-0"
-                    required
-                  />
-                </div>
+                <PhoneInput
+                  defaultCountry="IN"
+                  value={formData.phone}
+                  onChange={(val) => setFormData({ ...formData, phone: val || "" })}
+                  className="w-full text-xs [&_button]:h-9 [&_input]:h-9 [&_input]:rounded-r-lg [&_button]:rounded-l-lg [&_input]:bg-gray-100 [&_button]:bg-gray-100 [&_input]:border-gray-200 [&_button]:border-gray-200"
+                  required
+                />
               </div>
             </div>
 
@@ -443,21 +446,18 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
       {/* Phone Number Entry */}
       <p className="text-xs text-gray-400 mb-2">Phone Number</p>
       <div className="flex gap-2 mb-1">
-        <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap select-none">+91
-        </div>
-        <input
-          type="tel"
-          maxLength={10}
+        <PhoneInput
+          defaultCountry="IN"
           value={phone}
-          onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+          onChange={(val) => setPhone(val || "")}
           disabled={otpSent || isLoading}
           placeholder="Enter 10-digit mobile number"
-          className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-600 placeholder-gray-400 outline-none focus:border-[#1a3c6b] focus:bg-white transition-colors min-w-0 disabled:opacity-75"
+          className="flex-1 text-sm [&_button]:h-[40px] [&_input]:h-[40px] [&_input]:rounded-r-lg [&_button]:rounded-l-lg [&_input]:bg-gray-50 [&_button]:bg-gray-50 [&_input]:border-gray-200 [&_button]:border-gray-200"
         />
         {!otpSent && (
           <button
             onClick={handleSendOtp}
-            disabled={isLoading || phone.length !== 10}
+            disabled={isLoading || get10DigitPhone(phone).length !== 10}
             className="bg-[#1a3c6b] hover:bg-[#142e52] disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors whitespace-nowrap"
           >
             {isLoading ? "Sending..." : "Send OTP"}
@@ -472,7 +472,7 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
         <div className="mt-4 mb-4 space-y-3 animate-fade-in">
           <label className="block text-xs font-medium text-gray-600 text-center">
             Enter 4-digit OTP sent to{" "}
-            <span className="font-semibold text-gray-800">+91 {phone}</span>
+            <span className="font-semibold text-gray-800">+91 {get10DigitPhone(phone)}</span>
           </label>
           <div className="flex justify-center gap-2">
             {otp.map((digit, index) => (

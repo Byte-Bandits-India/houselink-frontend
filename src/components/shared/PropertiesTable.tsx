@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Eye, Pencil, Trash2, Plus, Search, MoreVertical, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getImageUrl } from "@/lib/api";
+import { DeletePropertyDialog } from "@/components/shared/DeletePropertyDialog";
 import {
   Select,
   SelectContent,
@@ -279,6 +280,9 @@ export default function PropertiesTable({ properties, leads, onDelete }: Propert
   // Search input state
   const [searchInputValue, setSearchInputValue] = useState<string>("");
 
+  // Delete dialog state (lifted out of the dropdown to avoid Radix portal conflict)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
+
   // React Table states
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -536,7 +540,7 @@ export default function PropertiesTable({ properties, leads, onDelete }: Propert
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem
-                  onClick={() => onDelete(p.id, p.name)}
+                  onClick={() => setDeleteTarget({ id: p.id, name: p.name })}
                   className="flex items-center gap-2 cursor-pointer py-2 text-red-600 hover:bg-red-50 focus:bg-red-50 focus:text-red-700"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -549,7 +553,7 @@ export default function PropertiesTable({ properties, leads, onDelete }: Propert
         size: 70,
       },
     ],
-    [leads, router, onDelete]
+    [leads, router, onDelete, setDeleteTarget]
   );
 
   const table = useReactTable({
@@ -575,6 +579,17 @@ export default function PropertiesTable({ properties, leads, onDelete }: Propert
   });
 
   return (
+    <>
+    {/* Controlled delete dialog – rendered OUTSIDE DropdownMenu to avoid Radix portal conflict */}
+    <DeletePropertyDialog
+      propertyName={deleteTarget?.name ?? ""}
+      open={!!deleteTarget}
+      onOpenChange={(val) => { if (!val) setDeleteTarget(null); }}
+      onConfirm={async () => {
+        if (deleteTarget) await onDelete(deleteTarget.id, deleteTarget.name);
+        setDeleteTarget(null);
+      }}
+    />
     <div className="space-y-6">
       {/* ── Filter Card ─────────────────────────────────────── */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
@@ -695,5 +710,6 @@ export default function PropertiesTable({ properties, leads, onDelete }: Propert
         </DataGrid>
       </div>
     </div>
+    </>
   );
 }

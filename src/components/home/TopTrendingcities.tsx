@@ -1,3 +1,5 @@
+"use client";
+
 import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { MapPin, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
@@ -18,13 +20,13 @@ function CityCard({ image, name, propertiesCount, growthRate }: CityCardProps) {
       <div className="relative h-[180px] w-full overflow-hidden select-none image-anime">
         {/* High Demand Badge */}
         <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-[10px] font-bold text-red-500 px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm border border-red-50/50 z-10">
-          <span>🔥</span> High Demand
+          <img src="/assets/home/icons/fire.png" alt="fire" className="w-3.5 h-3.5 object-contain" /> High Demand
         </div>
         <Image
           src={image}
           alt={name}
           fill
-          sizes="(max-width: 640px) 100vw, 240px"
+          sizes="(max-width: 640px) 100vw, 280px"
           unoptimized={true}
           className="object-cover hover:scale-105 transition-transform duration-500"
           draggable={false}
@@ -52,6 +54,9 @@ function CityCard({ image, name, propertiesCount, growthRate }: CityCardProps) {
   );
 }
 
+const CARD_WIDTH = 296; // 280px card + 16px gap (gap-4)
+const GAP = 24; // gap-6 = 24px
+
 export default function TopTrendingCities() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoplayTimeoutRef = useRef<any>(null);
@@ -71,16 +76,18 @@ export default function TopTrendingCities() {
       .finally(() => {
         if (isMounted) setIsLoading(false);
       });
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
-  // Auto carousel effect with smooth requestAnimationFrame scrolling
+  // Duplicate cities 4× for a seamless infinite loop
+  const loopedCities = cities.length > 0
+    ? [...cities, ...cities, ...cities, ...cities]
+    : [];
+
+  // Auto-scroll via requestAnimationFrame (works with scrollLeft + arrow buttons)
   useEffect(() => {
     let animationFrameId: number;
     let isHovered = false;
-
     const container = scrollRef.current;
     if (!container) return;
 
@@ -88,9 +95,10 @@ export default function TopTrendingCities() {
       if (isAutoplayEnabledRef.current && !isHovered && container) {
         const maxScroll = container.scrollWidth - container.clientWidth;
         if (maxScroll > 0) {
-          container.scrollLeft += 0.8; // Butter-smooth continuous scroll increment
-          if (container.scrollLeft >= maxScroll - 1) {
-            container.scrollLeft = 0; // Wrap around to the start
+          container.scrollLeft += 0.8;
+          // Wrap: when we've scrolled past the 2nd copy, jump back to 1st copy
+          if (container.scrollLeft >= maxScroll * 0.75) {
+            container.scrollLeft = maxScroll * 0.25;
           }
         }
       }
@@ -102,41 +110,29 @@ export default function TopTrendingCities() {
 
     container.addEventListener("mouseenter", handleMouseEnter);
     container.addEventListener("mouseleave", handleMouseLeave);
-    
-    // Start animation loop
     animationFrameId = requestAnimationFrame(step);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      if (autoplayTimeoutRef.current) {
-        clearTimeout(autoplayTimeoutRef.current);
-      }
-      if (container) {
-        container.removeEventListener("mouseenter", handleMouseEnter);
-        container.removeEventListener("mouseleave", handleMouseLeave);
-      }
+      if (autoplayTimeoutRef.current) clearTimeout(autoplayTimeoutRef.current);
+      container.removeEventListener("mouseenter", handleMouseEnter);
+      container.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, []);
+  }, [loopedCities.length]);
 
   const handleScroll = (direction: "left" | "right") => {
-    // Pause auto carousel scroll upon clicking arrow slider controls
     isAutoplayEnabledRef.current = false;
+    if (autoplayTimeoutRef.current) clearTimeout(autoplayTimeoutRef.current);
 
-    // Reset previous restart timeout
-    if (autoplayTimeoutRef.current) {
-      clearTimeout(autoplayTimeoutRef.current);
-    }
-
-    // Set a timeout to restart autoplay after 5 seconds of inactivity
+    // Resume autoplay after 5s of inactivity
     autoplayTimeoutRef.current = setTimeout(() => {
       isAutoplayEnabledRef.current = true;
     }, 5000);
 
     if (scrollRef.current) {
-      const scrollAmount = 300; // approximate scroll step (card width + gap)
       smoothScrollBy(
         scrollRef.current,
-        direction === "left" ? -scrollAmount : scrollAmount,
+        direction === "left" ? -(CARD_WIDTH + GAP) : (CARD_WIDTH + GAP),
         450
       );
     }
@@ -152,7 +148,7 @@ export default function TopTrendingCities() {
       <div className="flex justify-between items-end mb-8">
         <div className="text-left">
           <h2 className="text-2xl md:text-3xl font-extrabold text-[#000000] flex items-center gap-2 mb-2">
-            <span>🔥</span> High Demand Regions
+            <img src="/assets/home/icons/fire.png" alt="fire" className="w-7 h-7 object-contain" /> High Demand Regions
           </h2>
           <p className="text-sm md:text-base text-[#918B8B] font-medium">
             Top locations with great demand and promising returns
@@ -178,31 +174,30 @@ export default function TopTrendingCities() {
         </div>
       </div>
 
-      {/* Cards list (Carousel on all screens) */}
-      <div 
+      {/* Cards list */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
+      <div
         ref={scrollRef}
         className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide w-full"
       >
-        {/* Style block to hide scrollbar */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-          .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-        `}} />
-        {cities.map((city) => (
-          <div key={city.id} className="flex-shrink-0 w-[260px] md:w-[280px]">
-            <CityCard
-              image={getImageUrl(city.image)}
-              name={city.name}
-              propertiesCount={city.propertiesCount}
-              growthRate={city.growthRate}
-            />
-          </div>
-        ))}
+        {isLoading
+          ? [1, 2, 3, 4].map((n) => (
+              <div key={n} className="flex-shrink-0 w-[260px] md:w-[280px] h-[280px] bg-gray-100 rounded-3xl animate-pulse" />
+            ))
+          : loopedCities.map((city, i) => (
+              <div key={`${city.id}-${i}`} className="flex-shrink-0 w-[260px] md:w-[280px]">
+                <CityCard
+                  image={getImageUrl(city.image)}
+                  name={city.name}
+                  propertiesCount={city.propertiesCount}
+                  growthRate={city.growthRate}
+                />
+              </div>
+            ))
+        }
       </div>
     </section>
   );

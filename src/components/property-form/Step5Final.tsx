@@ -1,10 +1,20 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { PropertyFormData, getSchemaFields } from "@/types/property";
 import { cn } from "@/lib/utils";
+import { useFileUpload } from "@/hooks/use-file-upload";
+import { ImageIcon, UploadIcon, XIcon, ZoomInIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Props {
   data: PropertyFormData;
@@ -40,6 +50,164 @@ const RadioPill = ({
   </button>
 );
 
+/* ── Single-image upload zone ───────────────────────────────── */
+interface SingleImageUploadProps {
+  /** The current image URL (controlled from parent) */
+  value: string;
+  /** Called with the new object URL when a file is selected, or "" to clear */
+  onValue: (url: string) => void;
+  label: string;
+  emptyLabel: string;
+  disabled?: boolean;
+  accept?: string;
+}
+
+function SingleImageUpload({
+  value,
+  onValue,
+  label,
+  emptyLabel,
+  disabled = false,
+  accept = "image/jpeg,image/jpg,image/png,image/webp",
+}: SingleImageUploadProps) {
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const isInitialized = useRef(false);
+
+  const [{ files, isDragging }, { removeFile, handleDragEnter, handleDragLeave, handleDragOver, handleDrop, openFileDialog, getInputProps }] =
+    useFileUpload({
+      multiple: false,
+      accept,
+      // ⚠️ Do NOT use onFilesChange — hook calls it inside setState updater
+      // which triggers parent setState during render. Use useEffect instead.
+    });
+
+  // Sync file selection → parent AFTER render (safe)
+  useEffect(() => {
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      return; // skip initial mount
+    }
+    if (files.length === 0) {
+      onValue("");
+    } else {
+      onValue(files[0].preview ?? "");
+    }
+  }, [files]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When a value comes in from outside (e.g. edit-mode server URL) but our
+  // internal files list is empty, show the value directly.
+  const previewUrl = files[0]?.preview ?? value ?? null;
+
+  if (previewUrl) {
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-gray-700 font-medium">{label}</Label>
+        <div className="relative w-44 aspect-video rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50 group">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewUrl}
+            alt={label}
+            className="w-full h-full object-cover"
+          />
+          {/* Hover overlay */}
+          {!disabled && (
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(true)}
+                className="bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white rounded-full p-1.5 transition-colors"
+                title="Preview"
+              >
+                <ZoomInIcon className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (files[0]) removeFile(files[0].id);
+                  onValue("");
+                }}
+                className="bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors"
+                title="Remove"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Full preview dialog */}
+        <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+          <DialogContent className="bg-transparent border-none shadow-none p-0 sm:max-w-2xl">
+            <DialogHeader className="sr-only">
+              <DialogTitle>{label} Preview</DialogTitle>
+            </DialogHeader>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewUrl}
+              alt={label}
+              className="rounded-xl w-full h-auto object-contain"
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-gray-700 font-medium">{label}</Label>
+      {/* Drag-and-drop zone */}
+      <div
+        className={cn(
+          "border border-dashed rounded-xl p-6 text-center transition-colors",
+          disabled
+            ? "opacity-60 cursor-not-allowed bg-gray-100 border-gray-200"
+            : isDragging
+            ? "border-brand bg-brand/5 cursor-pointer"
+            : "border-gray-300 bg-gray-50/50 hover:border-brand/50 hover:bg-brand/5 cursor-pointer"
+        )}
+        onDragEnter={!disabled ? handleDragEnter : undefined}
+        onDragLeave={!disabled ? handleDragLeave : undefined}
+        onDragOver={!disabled ? handleDragOver : undefined}
+        onDrop={!disabled ? handleDrop : undefined}
+      >
+        <input {...getInputProps()} className="sr-only" disabled={disabled} />
+
+        <div className="flex flex-col items-center gap-3">
+          <div
+            className={cn(
+              "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
+              isDragging ? "bg-brand/15 text-brand" : "bg-gray-100 text-gray-400"
+            )}
+          >
+            <ImageIcon className="h-5 w-5" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-gray-700">
+              {disabled ? emptyLabel : "Drag & drop or click to upload"}
+            </p>
+            {!disabled && (
+              <p className="text-xs text-gray-400">PNG, JPG, WEBP supported</p>
+            )}
+          </div>
+          {!disabled && (
+            <Button
+              type="button"
+              onClick={openFileDialog}
+              variant="outline"
+              className="flex items-center gap-1.5 text-xs font-semibold border-brand/40 text-brand hover:bg-brand/5 rounded-lg px-3 py-1.5 h-auto"
+            >
+              <UploadIcon className="h-3.5 w-3.5" />
+              Browse
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main component ─────────────────────────────────────────── */
 export default function Step5Final({ data, onChange, isEditMode, disabled = false }: Props) {
   const subtype = data.property_subtype || "";
   const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
@@ -47,12 +215,10 @@ export default function Step5Final({ data, onChange, isEditMode, disabled = fals
 
   const handleDecimalInput = (field: keyof PropertyFormData, val: string) => {
     if (/^\d*\.?\d*$/.test(val)) {
-      // Clamp brokerage percentage to 0–100
       if (field === "brokerage_percentage") {
         const num = parseFloat(val);
         if (!isNaN(num) && num > 100) return;
       }
-      // Clamp brokerage fee to 10 integer digits
       if (field === "brokerage_fee") {
         const parts = val.split(".");
         if (parts[0].length > 10) return;
@@ -166,53 +332,14 @@ export default function Step5Final({ data, onChange, isEditMode, disabled = fals
                   </div>
                 )}
 
-                <div className="space-y-1.5">
-                  <Label className="text-gray-700 font-medium">SEO Image</Label>
-                  {data.seo_img ? (
-                    <div className="relative w-40 aspect-video rounded-lg overflow-hidden border border-gray-100 shadow-sm bg-gray-50 mb-2">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={data.seo_img} alt="SEO Preview" className="w-full h-full object-cover" />
-                      {!disabled && (
-                        <button
-                          type="button"
-                          onClick={() => onChange({ seo_img: "" })}
-                          className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md opacity-90 transition-opacity"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className={cn(
-                      "border border-dashed border-gray-200 rounded-lg p-4 text-center bg-gray-50/50 hover:border-brand/40 transition-colors cursor-pointer relative max-w-sm",
-                      disabled && "opacity-60 cursor-not-allowed hover:border-gray-200 bg-gray-100"
-                    )}>
-                      <p className="text-xs text-gray-500 font-medium">
-                        {disabled ? "No SEO cover image uploaded" : "Upload SEO Cover Image"}
-                      </p>
-                      {!disabled && (
-                        <label className="mt-2 inline-block cursor-pointer">
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/jpg,image/png,image/webp"
-                            className="hidden"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                const fileUrl = URL.createObjectURL(e.target.files[0]);
-                                onChange({ seo_img: fileUrl });
-                              }
-                            }}
-                          />
-                          <span className="px-3 py-1 bg-brand text-white text-xs font-semibold rounded-md hover:bg-brand/90 transition-colors">
-                            Browse
-                          </span>
-                        </label>
-                      )}
-                    </div>
-                  )}
-                </div>
+                {/* SEO Image — file upload */}
+                <SingleImageUpload
+                  value={data.seo_img || ""}
+                  onValue={(url) => onChange({ seo_img: url })}
+                  label="SEO Image"
+                  emptyLabel="No SEO cover image uploaded"
+                  disabled={disabled}
+                />
               </div>
             </div>
           )}
@@ -236,51 +363,14 @@ export default function Step5Final({ data, onChange, isEditMode, disabled = fals
               </div>
 
               <div className="space-y-1.5 pt-2 border-t border-gray-100">
-                <Label className="text-gray-700 font-medium">Video Thumbnail Image</Label>
-                {data.video_thumbnail ? (
-                  <div className="relative w-40 aspect-video rounded-lg overflow-hidden border border-gray-100 shadow-sm bg-gray-50 mb-2 animate-in fade-in zoom-in-95 duration-200">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={data.video_thumbnail} alt="Video Thumbnail Preview" className="w-full h-full object-cover" />
-                    {!disabled && (
-                      <button
-                        type="button"
-                        onClick={() => onChange({ video_thumbnail: "" })}
-                        className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md opacity-90 transition-opacity"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className={cn(
-                    "border border-dashed border-gray-200 rounded-lg p-4 text-center bg-gray-50/50 hover:border-brand/40 transition-colors cursor-pointer relative max-w-sm",
-                    disabled && "opacity-60 cursor-not-allowed hover:border-gray-200 bg-gray-100"
-                  )}>
-                    <p className="text-xs text-gray-500 font-medium">
-                      {disabled ? "No custom video thumbnail image uploaded" : "Upload Custom Video Thumbnail Image"}
-                    </p>
-                    {!disabled && (
-                      <label className="mt-2 inline-block cursor-pointer">
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/jpg,image/png,image/webp"
-                          className="hidden"
-                          onChange={(e) => {
-                            if (e.target.files && e.target.files[0]) {
-                              const fileUrl = URL.createObjectURL(e.target.files[0]);
-                              onChange({ video_thumbnail: fileUrl });
-                            }
-                          }}
-                        />
-                        <span className="px-3 py-1 bg-brand text-white text-xs font-semibold rounded-md hover:bg-brand/90 transition-colors">
-                          Browse
-                        </span>
-                      </label>
-                    )}
-                  </div>
-                )}
+                {/* Video Thumbnail — file upload */}
+                <SingleImageUpload
+                  value={data.video_thumbnail || ""}
+                  onValue={(url) => onChange({ video_thumbnail: url })}
+                  label="Video Thumbnail Image"
+                  emptyLabel="No custom video thumbnail image uploaded"
+                  disabled={disabled}
+                />
                 {!data.video_url && !disabled && (
                   <p className="text-xs text-amber-500 font-medium mt-1">
                     Note: Video thumbnail requires a Property Video URL to be saved.

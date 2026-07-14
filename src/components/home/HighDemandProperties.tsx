@@ -94,7 +94,7 @@ export default function HighDemandProperties() {
       <div className="flex justify-between items-end mb-8">
         <div className="text-left">
           <h2 className="text-2xl md:text-3xl font-extrabold text-[#000000] flex items-center gap-2 mb-2">
-            <span>🔥</span> High Demand Properties
+            <img src="/assets/home/icons/fire.png" alt="fire" className="w-7 h-7 object-contain" /> High Demand Properties
           </h2>
           <p className="text-sm md:text-base text-[#918B8B] font-medium">
             Top Properties with high demand and promising returns
