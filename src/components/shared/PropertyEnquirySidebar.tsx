@@ -337,28 +337,28 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
               </div>
             </div>
 
-            {/* Name & Phone */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold text-gray-600 block mb-1">Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 text-xs text-gray-700 font-medium outline-none focus:border-[#1a3c6b] focus:bg-white transition-colors"
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600 block mb-1">Phone</label>
-                <PhoneInput
-                  defaultCountry="IN"
-                  value={formData.phone}
-                  onChange={(val) => setFormData({ ...formData, phone: val || "" })}
-                  className="w-full text-xs [&_button]:h-9 [&_input]:h-9 [&_input]:rounded-r-lg [&_button]:rounded-l-lg [&_input]:bg-gray-100 [&_button]:bg-gray-100 [&_input]:border-gray-200 [&_button]:border-gray-200"
-                  required
-                />
-              </div>
+            {/* Name */}
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">Name</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 text-xs text-gray-700 font-medium outline-none focus:border-[#1a3c6b] focus:bg-white transition-colors"
+                required
+              />
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">Phone</label>
+              <PhoneInput
+                defaultCountry="IN"
+                value={formData.phone}
+                onChange={(val) => setFormData({ ...formData, phone: val || "" })}
+                className="w-full text-xs [&_button]:h-9 [&_input]:h-9 [&_input]:rounded-r-lg [&_button]:rounded-l-lg [&_input]:bg-gray-100 [&_button]:bg-gray-100 [&_input]:border-gray-200 [&_button]:border-gray-200"
+                required
+              />
             </div>
 
             {/* Email */}
