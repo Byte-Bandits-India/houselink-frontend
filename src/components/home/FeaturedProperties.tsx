@@ -285,7 +285,7 @@ function FeaturedPropertiesContent() {
         >
           <div className="text-left">
             <h2 className="text-xl md:text-2xl font-extrabold text-primary flex items-center gap-0.5">
-              Featured Properties
+              All Properties
               <ChevronRight size={22} className="stroke-[2.5px]" />
             </h2>
           </div>
