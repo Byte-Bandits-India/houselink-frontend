@@ -4,8 +4,8 @@ import PropertyTabs from "@/components/shared/PropertyTabs";
 import PropertyEnquirySidebar from "@/components/shared/PropertyEnquirySidebar";
 import PropertyImageGallery from "@/components/shared/PropertyImageGallery";
 import { notFound } from "next/navigation";
-import Breadcrumb from "@/components/shared/Breadcrumb";
 import React from "react";
+import Link from "next/link";
 import {
   Tag,
   Eye,
@@ -193,21 +193,43 @@ export default async function PropertyDetailPage({
   return (
     <div className="min-h-screen bg-white pb-20">
 
-      {/* ── BREADCRUMB BAR ── */}
-      <Breadcrumb
-        items={[
-          { label: "Home", href: "/" },
-          { label: "Properties", href: "/properties" },
-          { label: property.name },
-        ]}
-      />
-
       {/* ── TOP SECTION ── */}
       <div className="container mx-auto px-4 md:px-6 pt-6 pb-0">
 
+        {/* Breadcrumbs */}
+        <nav className="mb-6" aria-label="Breadcrumb">
+          <ol className="flex items-center flex-wrap gap-2 text-xs md:text-sm font-medium text-ink-muted">
+            {[
+              { label: "Home", href: "/" },
+              { label: "Properties", href: "/properties" },
+              { label: property.name, href: property.permalink ? `/properties/${property.permalink}` : `/properties/${property.id}` }
+            ].map((crumb, idx, arr) => {
+              const isLast = idx === arr.length - 1;
+              return (
+                <li key={crumb.href} className="flex items-center gap-2">
+                  {idx > 0 && (
+                    <i className="fi fi-rr-angle-small-right text-gray-400 text-sm leading-none shrink-0"></i>
+                  )}
+                  {isLast ? (
+                    <span className="text-ink font-semibold">{crumb.label}</span>
+                  ) : (
+                    <Link
+                      href={crumb.href}
+                      className="hover:text-primary transition-colors flex items-center gap-1.5"
+                    >
+                      {idx === 0 && <i className="fi fi-rr-home text-xs leading-none"></i>}
+                      <span>{crumb.label}</span>
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
+
         {/* ROW 1: Left = Title + Gallery | Right = Pills + RequestInfo card */}
-        <div className="flex items-center justify-between xl:h-[90dvh] mb-0">
-          <div className="flex flex-col xl:flex-row gap-6 h-[80%] w-full">
+        <div className="flex items-start justify-between pt-4 xl:h-[90dvh] mb-0">
+          <div className="flex flex-col xl:flex-row gap-6 h-[90%] w-full">
             {/* LEFT: Title + location + Gallery */}
           <div className="flex-1 min-w-0 flex flex-col xl:h-full pb-4">
             <div className="md:flex items-center justify-between">

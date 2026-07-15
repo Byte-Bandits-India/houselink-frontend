@@ -31,13 +31,34 @@ export default function PropertiesListingLayout({
         {/* Title Block */}
         <div className="flex flex-col text-left py-6 border-b border-gray-100 mb-6">
           <h1 className="text-2xl font-black text-gray-900 mb-2">{title}</h1>
-          <Breadcrumb
-            variant="simple"
-            items={[
-              { label: "Home", href: "/" },
-              { label: breadcrumbLabel },
-            ]}
-          />
+          <nav className="mb-0" aria-label="Breadcrumb">
+            <ol className="flex items-center flex-wrap gap-2 text-xs md:text-sm font-medium text-ink-muted">
+              {[
+                { label: "Home", href: "/" },
+                { label: breadcrumbLabel, href: "/properties" }
+              ].map((crumb, idx, arr) => {
+                const isLast = idx === arr.length - 1;
+                return (
+                  <li key={crumb.href} className="flex items-center gap-2">
+                    {idx > 0 && (
+                      <i className="fi fi-rr-angle-small-right text-gray-400 text-sm leading-none shrink-0"></i>
+                    )}
+                    {isLast ? (
+                      <span className="text-ink font-semibold">{crumb.label}</span>
+                    ) : (
+                      <Link
+                        href={crumb.href}
+                        className="hover:text-primary transition-colors flex items-center gap-1.5"
+                      >
+                        {idx === 0 && <i className="fi fi-rr-home text-xs leading-none"></i>}
+                        <span>{crumb.label}</span>
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
         </div>
 
         {/* Two-Column Layout */}

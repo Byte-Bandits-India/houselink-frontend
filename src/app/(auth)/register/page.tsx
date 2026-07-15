@@ -16,6 +16,14 @@ import { useAuth } from "@/context/AuthContext";
 import type { State, City } from "@/types/auth";
 
 import { PhoneInput } from "@/components/reui/phone-input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -308,23 +316,25 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 State <span className="text-red-500">*</span>
               </label>
-              <select
-                value={stateId}
-                onChange={(e) =>
-                  setStateId(e.target.value ? Number(e.target.value) : "")
-                }
+              <Select
+                value={stateId ? String(stateId) : ""}
+                onValueChange={(val) => {
+                  setStateId(val ? Number(val) : "");
+                  setErrors((prev) => ({ ...prev, state: "" }));
+                }}
                 disabled={loadingStates}
-                className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white disabled:bg-gray-50"
               >
-                <option value="">
-                  {loadingStates ? "Loading states..." : "Select State"}
-                </option>
-                {states.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full h-11 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand bg-white disabled:bg-gray-50 text-left">
+                  <SelectValue placeholder={loadingStates ? "Loading states..." : "Select State"} />
+                </SelectTrigger>
+                <SelectContent className="bg-white max-h-[300px] z-[60]">
+                  {states.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {errors.state && (
                 <p className="mt-1 text-xs text-red-500">{errors.state}</p>
               )}
@@ -335,27 +345,33 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 City <span className="text-red-500">*</span>
               </label>
-              <select
-                value={cityId}
-                onChange={(e) =>
-                  setCityId(e.target.value ? Number(e.target.value) : "")
-                }
+              <Select
+                value={cityId ? String(cityId) : ""}
+                onValueChange={(val) => {
+                  setCityId(val ? Number(val) : "");
+                  setErrors((prev) => ({ ...prev, city: "" }));
+                }}
                 disabled={!stateId || loadingCities || cities.length === 0}
-                className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white disabled:bg-gray-50"
               >
-                <option value="">
-                  {loadingCities
-                    ? "Loading cities..."
-                    : !stateId
-                    ? "Select State first"
-                    : "Select City"}
-                </option>
-                {cities.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full h-11 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand bg-white disabled:bg-gray-50 text-left">
+                  <SelectValue
+                    placeholder={
+                      loadingCities
+                        ? "Loading cities..."
+                        : !stateId
+                        ? "Select State first"
+                        : "Select City"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent className="bg-white max-h-[300px] z-[60]">
+                  {cities.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {errors.city && (
                 <p className="mt-1 text-xs text-red-500">{errors.city}</p>
               )}
@@ -377,14 +393,16 @@ export default function RegisterPage() {
                 className="flex-1 [&_button]:h-11 [&_input]:h-11"
               />
               {!otpSent && (
-                <button
+                <Button
                   type="button"
                   onClick={handleSendOtp}
                   disabled={isLoading || get10DigitPhone(phone).length !== 10}
-                  className="h-11 px-4 bg-brand text-white font-medium rounded-md hover:bg-primary-light disabled:bg-gray-400 whitespace-nowrap transition-colors"
+                  size="lg"
+                  variant="gradient"
+                  className="rounded-[50px] h-11"
                 >
                   {isLoading ? "Sending..." : "Send OTP"}
-                </button>
+                </Button>
               )}
             </div>
             {errors.phone && (
@@ -444,13 +462,14 @@ export default function RegisterPage() {
           )}
 
           <div className="pt-2">
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 bg-brand text-white font-medium rounded-lg hover:bg-brand/90 disabled:bg-gray-400 transition-colors text-lg"
+              variant="gradient"
+              className="rounded-[50px] w-full text-lg h-12"
             >
               {isLoading ? "Registering..." : "Register"}
-            </button>
+            </Button>
           </div>
         </form>
 

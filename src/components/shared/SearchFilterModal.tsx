@@ -72,10 +72,11 @@ export default function SearchFilterModal({
   // Step 1 States
   const [region, setRegion] = useState("");
   const [purpose, setPurpose] = useState<"sell" | "rent">(initialPurpose);
-  const [category, setCategory] = useState("all");
+  const [category, setCategory] = useState("");
   const [popularRegions, setPopularRegions] = useState<PopularRegionApiItem[]>([]);
   const [categoriesList, setCategoriesList] = useState<Array<{ id: number; name: string }>>([]);
   const [regionError, setRegionError] = useState(false);
+  const [categoryError, setCategoryError] = useState(false);
 
   // Step 2 States
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]); // in Crores
@@ -93,8 +94,9 @@ export default function SearchFilterModal({
       setStep(1);
       setPurpose(initialPurpose);
       setRegion("");
-      setCategory("all");
+      setCategory("");
       setRegionError(false);
+      setCategoryError(false);
       setPriceRange([0, 1]);
       setAreaRange([0, 10000]);
       setSelectedAmenities([]);
@@ -166,7 +168,20 @@ export default function SearchFilterModal({
     }
   };
 
+  const handleCategoryChange = (val: string) => {
+    setCategory(val);
+    if (val && val !== "all") {
+      setCategoryError(false);
+    }
+  };
+
   const handleSubmit = () => {
+    if (!category || category === "all") {
+      setCategoryError(true);
+      return;
+    }
+    setCategoryError(false);
+
     onSearch({
       keyword: initialKeyword,
       location: region || undefined,
@@ -175,7 +190,7 @@ export default function SearchFilterModal({
       max_area: areaRange[1] === 10000 ? undefined : String(areaRange[1]),
       amenities: selectedAmenities.length > 0 ? selectedAmenities : undefined,
       house_type: selectedHouseType || undefined,
-      category: category !== "all" ? category : undefined,
+      category: category,
     });
     onClose();
   };
@@ -185,7 +200,7 @@ export default function SearchFilterModal({
       <DialogContent className={`w-full p-6 rounded-2xl bg-white border border-gray-100 shadow-2xl overflow-hidden font-inter select-none transition-all duration-300 ${
         step === 1 ? "max-w-[460px]" : "max-w-[880px]"
       }`}>
-        <DialogHeader className="text-left pb-3 border-b border-gray-100 mb-5">
+        <DialogHeader className="text-left">
           <DialogTitle className="text-lg font-medium text-gray-900 tracking-tight">
             Search Filters
           </DialogTitle>
@@ -239,30 +254,31 @@ export default function SearchFilterModal({
           </div>
         ) : (
           /* ─── STEP 2 ─── */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left max-h-[60vh] overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+          <div className="flex flex-col md:flex-row gap-6 text-left max-h-[60vh] overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
             
-            {/* Left Column: Category, Sliders & House Type */}
-            <div className="flex flex-col gap-5">
+            {/* Left Column: Category, Price Range, Area Range (max-w-[300px]) */}
+            <div className="flex flex-col gap-5 w-full md:max-w-[280px] md:flex-shrink-0">
               {/* Category */}
               <div className="border border-gray-100 rounded-xl p-4 md:p-5 bg-white shadow-xs">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center flex-shrink-0">
                     <Sliders className="w-5 h-5" />
                   </div>
-                  <span className="font-medium text-sm text-gray-800">Property Category</span>
+                  <span className="font-medium text-sm text-gray-800">
+                    Property Category <span className="text-red-500">*</span>
+                  </span>
                 </div>
                 
-                <div className="relative flex items-center w-full">
-                  <Select value={category} onValueChange={(val) => setCategory(val)}>
-                    <SelectTrigger className="w-full text-sm font-medium text-gray-700 bg-gray-50 border-gray-200 rounded-xl h-11 px-4 my-0 focus:ring-2 focus:ring-primary/20 transition-all duration-200 flex items-center gap-2">
+                <div className="relative flex flex-col items-start w-full">
+                  <Select value={category} onValueChange={handleCategoryChange}>
+                    <SelectTrigger className={`w-full text-sm font-medium text-gray-700 bg-gray-50 border rounded-xl h-11 px-4 my-0 focus:ring-2 focus:ring-primary/20 transition-all duration-200 flex items-center gap-2 ${
+                      categoryError ? "border-red-500 focus:ring-red-200" : "border-gray-200"
+                    }`}>
                       <div className="flex items-center gap-2">
                         <SelectValue placeholder="Select Category..." />
                       </div>
                     </SelectTrigger>
                     <SelectContent className="bg-white max-h-[220px] z-[60]">
-                      <SelectItem value="all" className="text-sm font-medium">
-                        All Categories
-                      </SelectItem>
                       {categoriesList.map((c) => (
                         <SelectItem key={c.id} value={c.name.toLowerCase()} className="text-sm font-medium">
                           {c.name}
@@ -270,6 +286,11 @@ export default function SearchFilterModal({
                       ))}
                     </SelectContent>
                   </Select>
+                  {categoryError && (
+                    <span className="text-[11px] font-medium text-red-500 mt-1 block">
+                      Please select a category to proceed.
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -338,40 +359,10 @@ export default function SearchFilterModal({
                   <span>{areaRange[1].toLocaleString()} sq.ft.</span>
                 </div>
               </div>
-
-              {/* House Type */}
-              <div className="border border-gray-100 rounded-xl p-4 md:p-5 bg-white shadow-xs">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center flex-shrink-0">
-                    <Home className="w-5 h-5" />
-                  </div>
-                  <span className="font-medium text-sm text-gray-800">House Type</span>
-                </div>
-                
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {houseTypes.map((type) => {
-                    const isSelected = selectedHouseType === type;
-                    return (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setSelectedHouseType(selectedHouseType === type ? "" : type)}
-                        className={`px-4 py-2 rounded-xl text-xs font-medium border transition-all duration-200 cursor-pointer ${
-                          isSelected
-                            ? "bg-gradient-to-r from-primary to-secondary border-transparent text-white shadow-xs"
-                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
 
-            {/* Right Column: Split Features & Facilities */}
-            <div className="flex flex-col gap-5">
+            {/* Right Column: Features, Facilities, House Type */}
+            <div className="flex flex-col gap-5 flex-1 min-w-0">
               {/* Features */}
               {dbFeatures.length > 0 && (
                 <div className="border border-gray-100 rounded-xl p-4 md:p-5 bg-white shadow-xs">
@@ -437,6 +428,36 @@ export default function SearchFilterModal({
                   </div>
                 </div>
               )}
+
+              {/* House Type */}
+              <div className="border border-gray-100 rounded-xl p-4 md:p-5 bg-white shadow-xs">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center flex-shrink-0">
+                    <Home className="w-5 h-5" />
+                  </div>
+                  <span className="font-medium text-sm text-gray-800">House Type</span>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {houseTypes.map((type) => {
+                    const isSelected = selectedHouseType === type;
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setSelectedHouseType(selectedHouseType === type ? "" : type)}
+                        className={`px-4 py-2 rounded-xl text-xs font-medium border transition-all duration-200 cursor-pointer ${
+                          isSelected
+                            ? "bg-gradient-to-r from-primary to-secondary border-transparent text-white shadow-xs"
+                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
           </div>

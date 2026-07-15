@@ -8,6 +8,7 @@ import { sendOtp, retryOtp, verifyOtpLogin, ApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
 import { PhoneInput } from "@/components/reui/phone-input";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -166,14 +167,15 @@ export default function LoginPage() {
                 className="flex-1"
               />
               {!otpSent && (
-                <button
-                  type="button"
+                <Button
                   onClick={handleSendOtp}
                   disabled={isLoading || get10DigitPhone(phone).length !== 10}
-                  className="h-12 px-6 bg-brand text-white font-medium rounded-lg hover:bg-primary-light disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                  size="lg"
+                  variant="gradient"
+                  className="rounded-[50px]"
                 >
                   {isLoading ? "Sending..." : "Send OTP"}
-                </button>
+                </Button>
               )}
             </div>
             {phoneError && (
@@ -187,7 +189,7 @@ export default function LoginPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
                   Enter 4-digit OTP sent to{" "}
-                  <span className="text-brand font-semibold">+91 {phone}</span>
+                  <span className="text-brand font-semibold">{phone}</span>
                 </label>
                 <div className="flex justify-center gap-2">
                   {otp.map((digit, index) => (
@@ -230,14 +232,15 @@ export default function LoginPage() {
                 )}
               </div>
 
-              <button
+              <Button
                 type="button"
                 onClick={handleVerifyOtp}
                 disabled={isLoading || otp.join("").length !== 4}
-                className="w-full h-12 bg-brand text-white font-medium rounded-lg hover:bg-brand/90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                variant="gradient"
+                className="rounded-[50px] w-full"
               >
                 {isLoading ? "Verifying..." : "Verify & Login"}
-              </button>
+              </Button>
             </div>
           )}
         </div>

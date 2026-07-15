@@ -330,7 +330,7 @@ function FeaturedPropertiesContent() {
         ) : (
           <div 
             ref={scrollContainer}
-            className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide w-full"
+            className="flex overflow-x-auto gap-6 pb-6 pt-4 scrollbar-hide w-full"
           >
             {/* Style block to hide scrollbar */}
             <style dangerouslySetInnerHTML={{ __html: `
@@ -345,7 +345,7 @@ function FeaturedPropertiesContent() {
             {properties.length > 0 ? (
               properties.slice(0, 6).map((property) => (
                 <div key={property.id} className="flex-none w-[290px] md:w-[340px]">
-                  <Link href={property.permalink ? `/properties/${property.permalink}` : `/properties/${property.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl">
+                  <Link href={property.permalink ? `/properties/${property.permalink}` : `/properties/${property.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl overflow-visible">
                     <FeaturedPropertyCard property={property} />
                   </Link>
                 </div>

@@ -62,8 +62,28 @@ export default function PropertyCard(props: PropertyCardProps) {
     toggleWishlist(Number(props.id));
   };
 
+  const getCategoryColor = (category?: string) => {
+    if (!category) return "text-primary";
+    const c = category.toLowerCase().trim();
+    if (c.includes("plot") || c.includes("land")) return "text-amber-500";
+    if (c.includes("villa")) return "text-emerald-600";
+    if (c.includes("individual house") || c.includes("individual_house") || c.includes("house")) return "text-rose-500";
+    if (c.includes("commercial") || c.includes("office") || c.includes("shop") || c.includes("godown") || c.includes("warehouse")) return "text-violet-600";
+    if (c.includes("apartment")) return "text-sky-600";
+    return "text-primary";
+  };
+  const getShortCategoryName = (category?: string) => {
+    if (!category) return "";
+    const name = category.trim();
+    if (name.toLowerCase() === "individual house") return "House";
+    if (name.toLowerCase() === "commercial property") return "Commercial";
+    return name;
+  };
+  const categoryColorClass = getCategoryColor(props.categoryName);
+  const displayName = getShortCategoryName(props.categoryName);
+
   return (
-    <Card className="group relative flex h-[380px] max-w-[420px] w-full flex-col overflow-hidden rounded-xl border border-gray-150 shadow-sm transition-all duration-300 hover:shadow-md bg-white">
+    <Card className="group relative flex h-[380px] max-w-[420px] w-full flex-col rounded-xl border border-gray-150 shadow-sm transition-all duration-300 hover:shadow-md bg-white overflow-visible">
       {/* Image container */}
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-xl select-none image-anime">
         <Image
@@ -74,23 +94,18 @@ export default function PropertyCard(props: PropertyCardProps) {
           unoptimized={true}
         />
         
-        {/* Heart button */}
+        {/* Heart button - moved to bottom-right of image container to avoid ribbon clash */}
         <button
           onClick={handleWishlistClick}
-          className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-neutral-700 hover:bg-white/90 hover:text-black shadow-sm transition-colors cursor-pointer border-none animate-none"
+          className="absolute bottom-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-neutral-700 hover:bg-white/90 hover:text-black shadow-sm transition-colors cursor-pointer border-none animate-none"
           type="button"
           aria-label="Add to favorites"
         >
           <Heart className={`h-4.5 w-4.5 stroke-[2px] ${wishlisted ? "fill-red-500 text-red-500" : "text-neutral-700"}`} />
         </button>
 
-        {/* Badges on top-left */}
+        {/* Badges on top-left - show only Featured, category is now in the ribbon */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-          {props.categoryName && (
-            <span className="rounded-md bg-primary-light text-primary px-2.5 py-1 font-bold text-[10px] uppercase tracking-wider shadow-sm">
-              {props.categoryName}
-            </span>
-          )}
           {props.isFeatured && (
             <span className="rounded-full bg-[#D1FAE5] text-emerald-800 px-2.5 py-1 font-bold text-[10px] uppercase tracking-wider shadow-sm">
               Featured
@@ -98,6 +113,18 @@ export default function PropertyCard(props: PropertyCardProps) {
           )}
         </div>
       </div>
+
+      {/* Category ribbon / badge */}
+      {displayName && (
+        <div className={`absolute -top-3.5 right-4 z-20 select-none filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.15)] ${categoryColorClass}`}>
+          <svg width="84" height="34" viewBox="0 0 84 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 8 0 H 76 C 80 0, 84 4, 84 8 C 80 12, 80 22, 84 26 C 84 30, 80 34, 76 34 H 8 C 4 34, 0 30, 0 26 C 4 22, 4 12, 0 8 C 0 4, 4 0, 8 0 Z" fill="currentColor" />
+          </svg>
+          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white tracking-wider uppercase">
+            {displayName}
+          </span>
+        </div>
+      )}
 
       {/* Info Content */}
       <div className="flex flex-1 flex-col justify-between p-4 text-left">
