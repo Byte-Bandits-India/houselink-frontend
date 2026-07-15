@@ -85,7 +85,9 @@ function FeaturedPropertiesListContent() {
         data = data.filter((p) => p.isFeatured === true);
 
         // 1. Property Purpose
-        if (propertyPurpose === "sell") {
+        if (keyword) {
+          data = data.filter((p) => p.propertyFor === "sell" || p.propertyFor === "rent" || p.propertyFor === "lease");
+        } else if (propertyPurpose === "sell") {
           data = data.filter((p) => p.propertyFor === "sell");
         } else if (propertyPurpose === "rent") {
           data = data.filter((p) => p.propertyFor === "rent" || p.propertyFor === "lease");
