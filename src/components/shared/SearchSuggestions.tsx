@@ -55,7 +55,6 @@ export default function SearchSuggestions({
     getSearches()
       .then((res) => {
         console.log("SearchSuggestions: getSearches response:", res);
-        const isLoggedIn = tokenStore.isLoggedIn();
         if (res.success && res.data) {
           if (res.data.length > 0) {
             const sorted = [...res.data].sort((a, b) => {
@@ -66,16 +65,15 @@ export default function SearchSuggestions({
             });
             setRecentSearches(sorted);
           } else {
-            setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
+            setRecentSearches(DEFAULT_TOP_SEARCHES);
           }
         } else {
-          setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
+          setRecentSearches(DEFAULT_TOP_SEARCHES);
         }
       })
       .catch((err) => {
         console.error("Error fetching searches:", err);
-        const isLoggedIn = tokenStore.isLoggedIn();
-        setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
+        setRecentSearches(DEFAULT_TOP_SEARCHES);
       });
   }, []);
 

@@ -283,7 +283,6 @@ export default function PropertySearch() {
       try {
         const searchesRes = await getSearches();
         console.log("PropertySearch: getSearches response:", searchesRes);
-        const isLoggedIn = tokenStore.isLoggedIn();
         if (searchesRes.success && searchesRes.data) {
           if (searchesRes.data.length > 0) {
             const sorted = [...searchesRes.data].sort((a, b) => {
@@ -294,15 +293,14 @@ export default function PropertySearch() {
             });
             setRecentSearches(sorted);
           } else {
-            setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
+            setRecentSearches(DEFAULT_TOP_SEARCHES);
           }
         } else {
-          setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
+          setRecentSearches(DEFAULT_TOP_SEARCHES);
         }
       } catch (e) {
         console.error("Failed to load searches from backend:", e);
-        const isLoggedIn = tokenStore.isLoggedIn();
-        setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
+        setRecentSearches(DEFAULT_TOP_SEARCHES);
       }
 
       try {
