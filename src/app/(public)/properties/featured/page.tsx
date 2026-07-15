@@ -15,7 +15,7 @@ function FeaturedPropertiesListContent() {
 
   useEffect(() => {
     if (searchParams) {
-      const activeTab = searchParams.get("property_purpose") as "sell" | "rent" || "sell";
+      let activeTab = searchParams.get("property_purpose") as "sell" | "rent" || "sell";
       const activeCategory = searchParams.get("category") || "all";
       const city = searchParams.get("city") || "";
       const keyword = searchParams.get("keyword") || "";
@@ -26,6 +26,15 @@ function FeaturedPropertiesListContent() {
       const amenities = searchParams.get("amenities") || "";
 
       const houseType = searchParams.get("house_type") || "";
+
+      if (keyword) {
+        const lower = keyword.toLowerCase();
+        if (lower.includes("rent") || lower.includes("lease") || lower.includes("rental") || lower.includes("renting")) {
+          activeTab = "rent";
+        } else if (lower.includes("sale") || lower.includes("sell") || lower.includes("selling") || lower.includes("buy") || lower.includes("purchase")) {
+          activeTab = "sell";
+        }
+      }
 
       setFilters({
         activeTab,
@@ -56,7 +65,7 @@ function FeaturedPropertiesListContent() {
           page_size: "100",
         };
 
-        if (propertyPurpose === "sell") fetchParams.property_for = "sell";
+        if (propertyPurpose === "sell" && !keyword) fetchParams.property_for = "sell";
 
         if (city) {
           const cityId = await getCityIdByName(city);

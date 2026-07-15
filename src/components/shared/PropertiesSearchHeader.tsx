@@ -80,7 +80,14 @@ export default function PropertiesSearchHeader() {
           <div className="relative bg-white rounded-full h-11 px-4 flex items-center shadow-sm border border-transparent focus-within:border-white/20">
             <select
               value={localCity}
-              onChange={(e) => setLocalCity(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setLocalCity(val);
+                setFilters({
+                  ...filters,
+                  city: val,
+                });
+              }}
               className="w-full appearance-none bg-transparent border-none outline-none text-sm text-gray-800 font-bold pr-6 cursor-pointer text-ellipsis overflow-hidden whitespace-nowrap"
             >
               <option value="">Chennai</option>
