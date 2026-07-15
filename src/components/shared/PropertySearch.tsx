@@ -406,12 +406,20 @@ export default function PropertySearch() {
       }
     }
 
-    if (searchKeyword && searchKeyword.trim()) {
-      const trimmed = searchKeyword.trim();
-      recordSearch(trimmed).catch((err) => console.error("Error recording search query:", err));
+    let queryToRecord = "";
+    if (searchKeyword && searchKeyword.trim() && searchLocation && searchLocation.trim()) {
+      queryToRecord = `${searchKeyword.trim()} in ${searchLocation.trim()}`;
+    } else if (searchKeyword && searchKeyword.trim()) {
+      queryToRecord = searchKeyword.trim();
+    } else if (searchLocation && searchLocation.trim()) {
+      queryToRecord = searchLocation.trim();
+    }
+
+    if (queryToRecord) {
+      recordSearch(queryToRecord).catch((err) => console.error("Error recording search query:", err));
       setRecentSearches((prev) => {
-        const filtered = prev.filter((s) => s.query.toLowerCase() !== trimmed.toLowerCase());
-        return [{ id: Date.now(), query: trimmed, updatedAt: new Date().toISOString() }, ...filtered].slice(0, 6);
+        const filtered = prev.filter((s) => s.query.toLowerCase() !== queryToRecord.toLowerCase());
+        return [{ id: Date.now(), query: queryToRecord, updatedAt: new Date().toISOString() }, ...filtered].slice(0, 6);
       });
     }
 
