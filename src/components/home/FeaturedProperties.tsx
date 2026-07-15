@@ -257,7 +257,7 @@ function FeaturedPropertiesContent() {
   };
 
   return (
-    <section className="py-24 bg-surface" id="featured-properties">
+    <section className="py-4 bg-surface" id="featured-properties">
       <div className="container mx-auto px-4 max-w-[1440px]">
         {/* Sale/Rent Toggle (Top Center) */}
         <motion.div

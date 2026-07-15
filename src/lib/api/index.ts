@@ -44,6 +44,7 @@ export {
   mapApiPropertyToCardProps,
   getCityIdByName,
   getImageUrl,
+  getPropertyCategories,
 } from "./properties";
 
 // Blogs API

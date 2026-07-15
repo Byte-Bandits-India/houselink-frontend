@@ -92,7 +92,7 @@ export default function PropertyCard(props: PropertyCardProps) {
             </span>
           )}
           {props.isFeatured && (
-            <span className="rounded-md bg-[#D1FAE5] text-emerald-800 px-2.5 py-1 font-bold text-[10px] uppercase tracking-wider shadow-sm">
+            <span className="rounded-full bg-[#D1FAE5] text-emerald-800 px-2.5 py-1 font-bold text-[10px] uppercase tracking-wider shadow-sm">
               Featured
             </span>
           )}

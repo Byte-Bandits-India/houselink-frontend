@@ -1,10 +1,107 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { usePageFilter } from "@/contexts/HomeFilterContext";
-import { getStates, getCities } from "@/lib/api";
+import { getStates, getCities, getPopularRegions, getPropertyCategories, getFeatures, getFacilities } from "@/lib/api";
 import TypewriterTitle from "@/components/ui/TypewriterTitle";
+import { AnimatePresence, motion } from "framer-motion";
+import SearchSuggestions from "@/components/shared/SearchSuggestions";
+
+function parseKeywordToFilters(
+  keyword: string, 
+  currentFilters: any, 
+  knownRegions: string[], 
+  categories: any[], 
+  features: any[], 
+  facilities: any[]
+) {
+  const updates: any = {};
+  if (!keyword) return updates;
+  const lower = keyword.toLowerCase();
+
+  // 1. Purpose
+  if (lower.includes("rent") || lower.includes("lease") || lower.includes("rental") || lower.includes("renting")) {
+    updates.activeTab = "rent";
+  } else if (lower.includes("sale") || lower.includes("sell") || lower.includes("selling") || lower.includes("buy") || lower.includes("purchase")) {
+    updates.activeTab = "sell";
+  }
+
+  // 2. Category (dynamic from API)
+  for (const cat of categories) {
+    const name = cat.name.toLowerCase();
+    let isMatched = false;
+    let val = name;
+
+    if (name.includes("apartment") && (lower.includes("apartment") || lower.includes("flat"))) {
+      isMatched = true;
+      val = "apartments";
+    } else if (name.includes("villa") && lower.includes("villa")) {
+      isMatched = true;
+      val = "villas";
+    } else if (name.includes("house") && (lower.includes("house") || lower.includes("home"))) {
+      isMatched = true;
+      val = "house";
+    } else if ((name.includes("plot") || name.includes("land")) && (lower.includes("plot") || lower.includes("land"))) {
+      isMatched = true;
+      val = "plots";
+    } else if (name.includes("commercial") && (lower.includes("commercial") || lower.includes("shop") || lower.includes("office") || lower.includes("warehouse") || lower.includes("godown"))) {
+      isMatched = true;
+      val = "commercial";
+    } else if (lower.includes(name)) {
+      isMatched = true;
+      if (name === "individual house") val = "house";
+    }
+
+    if (isMatched) {
+      updates.activeCategory = val;
+      break;
+    }
+  }
+
+  // 3. House Type
+  if (lower.includes("1 bhk") || lower.includes("1bhk")) updates.houseType = "1 BHK";
+  else if (lower.includes("2 bhk") || lower.includes("2bhk")) updates.houseType = "2 BHK";
+  else if (lower.includes("3 bhk") || lower.includes("3bhk")) updates.houseType = "3 BHK";
+  else if (lower.includes("4 bhk") || lower.includes("4bhk")) updates.houseType = "4 BHK";
+  else if (lower.includes("5 bhk") || lower.includes("5bhk") || lower.includes("5+ bhk") || lower.includes("5+bhk")) updates.houseType = "5+ BHK";
+  else if (lower.includes("1 rk") || lower.includes("1rk")) updates.houseType = "1 RK";
+
+  // 4. Location / Region (dynamic from API)
+  for (const reg of knownRegions) {
+    const regLower = reg.toLowerCase();
+    if (lower.includes(regLower)) {
+      updates.location = reg;
+      break;
+    }
+  }
+
+  // 5. Amenities (dynamic features & facilities from API)
+  const activeAmenitiesList = currentFilters.amenities ? currentFilters.amenities.split(",") : [];
+  let updatedAmenities = [...activeAmenitiesList];
+  const allDbAmenities = [...features, ...facilities];
+
+  for (const item of allDbAmenities) {
+    const nameLower = item.name.toLowerCase();
+    const isMatched = lower.includes(nameLower) ||
+      (nameLower.includes("swimming pool") && (lower.includes("pool") || lower.includes("swim"))) ||
+      (nameLower.includes("internet") && lower.includes("wifi")) ||
+      (nameLower.includes("ac") && lower.includes("air cond")) ||
+      (nameLower.includes("security") && lower.includes("guard"));
+
+    if (isMatched) {
+      if (!updatedAmenities.includes(nameLower)) {
+        updatedAmenities.push(nameLower);
+      }
+    }
+  }
+
+  if (updatedAmenities.length > activeAmenitiesList.length) {
+    updates.amenities = updatedAmenities.join(",");
+  }
+
+  return updates;
+}
 
 export default function PropertiesSearchHeader() {
   const { filters, setFilters } = usePageFilter();
@@ -13,12 +110,29 @@ export default function PropertiesSearchHeader() {
   const [localKeyword, setLocalKeyword] = useState(filters.keyword);
   const [localActiveTab, setLocalActiveTab] = useState(filters.activeTab);
   const [citiesList, setCitiesList] = useState<{ value: string; label: string }[]>([]);
+  const [popularRegionsList, setPopularRegionsList] = useState<string[]>([]);
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+  const [dbFeatures, setDbFeatures] = useState<any[]>([]);
+  const [dbFacilities, setDbFacilities] = useState<any[]>([]);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Load cities list dynamically from API on mount
+  // Load backend filter metadata dynamically on mount
   useEffect(() => {
-    async function loadBackendCities() {
+    async function loadBackendData() {
       try {
+        Promise.all([
+          getPopularRegions().catch(() => []),
+          getPropertyCategories().then(res => res?.success ? res.data : []).catch(() => []),
+          getFeatures().then(res => res?.success ? res.data : []).catch(() => []),
+          getFacilities().then(res => res?.success ? res.data : []).catch(() => []),
+        ]).then(([regions, categories, features, facilities]) => {
+          if (Array.isArray(regions)) setPopularRegionsList(regions.map(r => r.name));
+          setDbCategories(categories || []);
+          setDbFeatures(features || []);
+          setDbFacilities(facilities || []);
+        });
+
         const statesRes = await getStates();
         if (statesRes.success && statesRes.data) {
           const tamilNadu = statesRes.data.find(s => s.name.toLowerCase().includes("tamil nadu"));
@@ -37,10 +151,21 @@ export default function PropertiesSearchHeader() {
           }
         }
       } catch (e) {
-        console.error("Failed to load cities from backend, using default list:", e);
+        console.error("Failed to load cities/regions from backend:", e);
       }
     }
-    loadBackendCities();
+    loadBackendData();
+  }, []);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsInputFocused(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Sync with context changes (e.g., if filtered from sidebar)
@@ -51,12 +176,23 @@ export default function PropertiesSearchHeader() {
   }, [filters.city, filters.keyword, filters.activeTab]);
 
   const handleSearchCommit = () => {
+    const parsed = parseKeywordToFilters(
+      localKeyword, 
+      filters, 
+      popularRegionsList, 
+      dbCategories, 
+      dbFeatures, 
+      dbFacilities
+    );
     setFilters({
       ...filters,
       city: localCity,
       keyword: localKeyword,
       activeTab: localActiveTab,
+      location: "", // Clear conflicting region location on manual search commit
+      ...parsed,
     });
+    setIsInputFocused(false);
   };
 
   const handleToggleTab = (tab: "sell" | "rent") => {
@@ -105,7 +241,7 @@ export default function PropertiesSearchHeader() {
         </div>
 
         {/* Keyword Search Column */}
-        <div className="flex flex-col w-full lg:flex-1 text-left">
+        <div ref={containerRef} className="flex flex-col w-full lg:flex-1 text-left relative z-20">
           <label className="text-[11px] uppercase font-bold text-white/70 mb-1.5 tracking-wider">
             Keyword, Location, Property Name
           </label>
@@ -117,7 +253,6 @@ export default function PropertiesSearchHeader() {
                 value={localKeyword}
                 onChange={(e) => setLocalKeyword(e.target.value)}
                 onFocus={() => setIsInputFocused(true)}
-                onBlur={() => setIsInputFocused(false)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleSearchCommit();
                 }}
@@ -146,6 +281,125 @@ export default function PropertiesSearchHeader() {
               )}
             </div>
           </div>
+
+          {/* Search Suggestions Dropdown Overlay */}
+          <AnimatePresence>
+            {isInputFocused && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.99 }}
+                transition={{ duration: 0.15 }}
+                className="absolute left-0 right-0 top-full mt-3 bg-white rounded-2xl p-4 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-150 z-50 overflow-y-auto max-h-[360px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+              >
+                <SearchSuggestions
+                  query={localKeyword}
+                  onSelectKeyword={(kw) => {
+                    setLocalKeyword(kw);
+                    const parsed = parseKeywordToFilters(
+                      kw, 
+                      filters, 
+                      popularRegionsList, 
+                      dbCategories, 
+                      dbFeatures, 
+                      dbFacilities
+                    );
+                    setFilters({
+                      ...filters,
+                      keyword: kw,
+                      location: "", // Clear conflicting region location
+                      ...parsed,
+                    });
+                  }}
+                  onSelectLocation={(loc) => {
+                    setLocalKeyword(""); // Clear local keyword display for location suggestions
+                    setFilters({
+                      ...filters,
+                      location: loc,
+                      keyword: "", // Clear conflicting keyword
+                    });
+                  }}
+                  onSelectCategory={(cat) => {
+                    setFilters({
+                      ...filters,
+                      activeCategory: cat,
+                      keyword: "", // Clear conflicting keyword
+                      location: "", // Clear conflicting region location
+                    });
+                  }}
+                  onSelectCity={(cityVal) => {
+                    setLocalCity(cityVal.toLowerCase());
+                    setFilters({
+                      ...filters,
+                      city: cityVal.toLowerCase(),
+                      keyword: "",
+                      location: "",
+                    });
+                  }}
+                  onSelectAmenity={(amenityVal) => {
+                    const current = filters.amenities ? filters.amenities.split(",") : [];
+                    const updated = current.includes(amenityVal.toLowerCase()) ? current : [...current, amenityVal.toLowerCase()];
+                    setFilters({
+                      ...filters,
+                      amenities: updated.join(","),
+                    });
+                  }}
+                  selectedAmenities={filters.amenities ? filters.amenities.split(",") : []}
+                  onSearch={(overrides) => {
+                    const nextFilters = { ...filters };
+                    if (overrides) {
+                      if (overrides.keyword !== undefined) {
+                        nextFilters.keyword = overrides.keyword;
+                        if (overrides.keyword) {
+                          nextFilters.location = ""; // Clear conflicting location
+                          const parsed = parseKeywordToFilters(
+                            overrides.keyword, 
+                            nextFilters, 
+                            popularRegionsList, 
+                            dbCategories, 
+                            dbFeatures, 
+                            dbFacilities
+                          );
+                          Object.assign(nextFilters, parsed);
+                        }
+                      }
+                      if (overrides.location !== undefined) {
+                        nextFilters.location = overrides.location;
+                        if (overrides.location) {
+                          nextFilters.keyword = ""; // Clear conflicting keyword
+                          setLocalKeyword("");
+                        }
+                      }
+                      if (overrides.category !== undefined) {
+                        nextFilters.activeCategory = overrides.category;
+                      }
+                      if (overrides.city !== undefined) {
+                        nextFilters.city = overrides.city.toLowerCase();
+                        setLocalCity(overrides.city.toLowerCase());
+                      }
+                      if (overrides.property_purpose !== undefined) {
+                        nextFilters.activeTab = overrides.property_purpose;
+                      }
+                      if (overrides.max_price !== undefined) {
+                        nextFilters.maxPrice = overrides.max_price;
+                      }
+                      if (overrides.max_area !== undefined) {
+                        nextFilters.maxArea = overrides.max_area;
+                      }
+                      if (overrides.house_type !== undefined) {
+                        nextFilters.houseType = overrides.house_type;
+                      }
+                      if (Array.isArray(overrides.amenities)) {
+                        nextFilters.amenities = overrides.amenities.join(",");
+                      }
+                    }
+                    setFilters(nextFilters);
+                  }}
+                  onClose={() => setIsInputFocused(false)}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Row Container for Property Type Toggle & Search Button */}

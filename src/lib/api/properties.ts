@@ -1118,6 +1118,21 @@ export async function checkPermalinkAvailability(
   );
 }
 
+export async function getPropertyCategories(params?: Record<string, any>): Promise<{ success: boolean; data: any[] }> {
+  let query = "";
+  if (params) {
+    const cleanParams: Record<string, string> = {};
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        cleanParams[key] = String(value);
+      }
+    });
+    const searchParams = new URLSearchParams(cleanParams);
+    query = `?${searchParams.toString()}`;
+  }
+  return apiClient.get<{ success: boolean; data: any[] }>(`/categories${query}`, { skipAuth: true });
+}
+
 
 
 

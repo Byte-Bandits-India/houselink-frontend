@@ -13,7 +13,35 @@ import type { BreadcrumbItemProps, BreadcrumbProps } from "@/types/components";
 
 export type { BreadcrumbItemProps };
 
-export default function Breadcrumb({ items }: BreadcrumbProps) {
+export default function Breadcrumb({ items, variant = "default" }: BreadcrumbProps) {
+  if (variant === "simple") {
+    return (
+      <ShadcnBreadcrumb>
+        <BreadcrumbList className="text-sm">
+          {items.map((item, index) => {
+            const isLast = index === items.length - 1;
+            return (
+              <React.Fragment key={index}>
+                <BreadcrumbItem>
+                  {isLast || !item.href ? (
+                    <BreadcrumbPage className="text-ink-secondary font-medium">
+                      {item.label}
+                    </BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink asChild className="text-primary hover:text-primary/80 font-medium">
+                      <Link href={item.href}>{item.label}</Link>
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+                {!isLast && <BreadcrumbSeparator className="text-gray-400" />}
+              </React.Fragment>
+            );
+          })}
+        </BreadcrumbList>
+      </ShadcnBreadcrumb>
+    );
+  }
+
   return (
     <div className="w-full bg-[#163D75] py-5 px-4 md:px-8 text-white/90 text-xs sm:text-sm font-medium select-none">
       <div className="container mx-auto px-4">

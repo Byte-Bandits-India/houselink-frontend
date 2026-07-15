@@ -17,6 +17,7 @@ import {
 import {
   Building,
   ChevronLeft,
+  ChevronRight,
   Check,
   Wifi,
   Waves,
@@ -32,7 +33,7 @@ import {
   Sliders,
 } from "lucide-react";
 import PropertyTypeSwitch from "./PropertyTypeSwitch";
-import { getPopularRegions, getFeatures, getFacilities, type PopularRegionApiItem } from "@/lib/api";
+import { getPopularRegions, getFeatures, getFacilities, getPropertyCategories, type PopularRegionApiItem } from "@/lib/api";
 import { Button } from "../ui/button";
 
 import { SearchFilterModalProps } from "@/types/components";
@@ -71,10 +72,13 @@ export default function SearchFilterModal({
   // Step 1 States
   const [region, setRegion] = useState("");
   const [purpose, setPurpose] = useState<"sell" | "rent">(initialPurpose);
+  const [category, setCategory] = useState("all");
   const [popularRegions, setPopularRegions] = useState<PopularRegionApiItem[]>([]);
+  const [categoriesList, setCategoriesList] = useState<Array<{ id: number; name: string }>>([]);
+  const [regionError, setRegionError] = useState(false);
 
   // Step 2 States
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]); // in Crores
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]); // in Crores
   const [areaRange, setAreaRange] = useState<[number, number]>([0, 10000]); // in sq.ft.
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedHouseType, setSelectedHouseType] = useState<string>("");
@@ -83,13 +87,15 @@ export default function SearchFilterModal({
   const [dbFeatures, setDbFeatures] = useState<Array<{ id: number; name: string }>>([]);
   const [dbFacilities, setDbFacilities] = useState<Array<{ id: number; name: string }>>([]);
 
-  // Sync initial purpose when modal opens
+  // Sync initial states when modal opens
   useEffect(() => {
     if (isOpen) {
       setStep(1);
       setPurpose(initialPurpose);
       setRegion("");
-      setPriceRange([0, 100]);
+      setCategory("all");
+      setRegionError(false);
+      setPriceRange([0, 1]);
       setAreaRange([0, 10000]);
       setSelectedAmenities([]);
       setSelectedHouseType("");
@@ -106,6 +112,12 @@ export default function SearchFilterModal({
       })
       .catch((err) => console.error("Error loading popular regions:", err));
 
+    getPropertyCategories()
+      .then((res) => {
+        if (res?.success) setCategoriesList(res.data || []);
+      })
+      .catch((err) => console.error("Error loading categories:", err));
+
     getFeatures()
       .then((res) => {
         if (res?.success) setDbFeatures(res.data || []);
@@ -121,6 +133,11 @@ export default function SearchFilterModal({
 
   const handleNext = () => {
     if (step === 1) {
+      if (!region) {
+        setRegionError(true);
+        return;
+      }
+      setRegionError(false);
       setStep(2);
     } else {
       handleSubmit();
@@ -142,26 +159,34 @@ export default function SearchFilterModal({
     );
   };
 
+  const handleRegionChange = (val: string) => {
+    setRegion(val);
+    if (val) {
+      setRegionError(false);
+    }
+  };
+
   const handleSubmit = () => {
     onSearch({
       keyword: initialKeyword,
       location: region || undefined,
       property_purpose: purpose,
-      max_price: priceRange[1] === 100 ? undefined : String(priceRange[1] * 10000000), // convert Cr to Rupees
+      max_price: priceRange[1] === 1 ? undefined : String(priceRange[1] * 10000000), // convert Cr to Rupees
       max_area: areaRange[1] === 10000 ? undefined : String(areaRange[1]),
       amenities: selectedAmenities.length > 0 ? selectedAmenities : undefined,
       house_type: selectedHouseType || undefined,
+      category: category !== "all" ? category : undefined,
     });
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className={`w-full p-6 md:p-8 rounded-2xl bg-white border border-gray-100 shadow-2xl overflow-hidden font-inter select-none transition-all duration-300 ${
+      <DialogContent className={`w-full p-6 rounded-2xl bg-white border border-gray-100 shadow-2xl overflow-hidden font-inter select-none transition-all duration-300 ${
         step === 1 ? "max-w-[460px]" : "max-w-[880px]"
       }`}>
         <DialogHeader className="text-left pb-3 border-b border-gray-100 mb-5">
-          <DialogTitle className="text-lg font-bold text-gray-900 tracking-tight">
+          <DialogTitle className="text-lg font-medium text-gray-900 tracking-tight">
             Search Filters
           </DialogTitle>
         </DialogHeader>
@@ -170,12 +195,14 @@ export default function SearchFilterModal({
           /* ─── STEP 1 ─── */
           <div className="flex flex-col gap-5 text-left">
             <div>
-              <label className="text-sm font-bold text-gray-700 mb-2 block">
-                Property Region
+              <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+                Property Region <span className="text-red-500">*</span>
               </label>
               <div className="relative flex items-center w-full">
-                <Select value={region} onValueChange={(val) => setRegion(val)}>
-                  <SelectTrigger className="w-full text-sm font-bold text-gray-700 bg-gray-50 border-gray-200 rounded-xl h-11 px-4 my-0 focus:ring-2 focus:ring-primary/20 transition-all duration-200 flex items-center gap-2">
+                <Select value={region} onValueChange={handleRegionChange}>
+                  <SelectTrigger className={`w-full text-sm font-medium text-gray-700 bg-gray-50 border rounded-xl h-11 px-4 my-0 focus:ring-2 focus:ring-primary/20 transition-all duration-200 flex items-center gap-2 ${
+                    regionError ? "border-red-500 focus:ring-red-200" : "border-gray-200"
+                  }`}>
                     <div className="flex items-center gap-2">
                       <Building className="w-4 h-4 text-blue-500 flex-shrink-0" />
                       <SelectValue placeholder="Select Region..." />
@@ -183,17 +210,22 @@ export default function SearchFilterModal({
                   </SelectTrigger>
                   <SelectContent className="bg-white max-h-[220px] z-[60]">
                     {popularRegions.map((o) => (
-                      <SelectItem key={o.id} value={o.name} className="text-sm font-semibold">
+                      <SelectItem key={o.id} value={o.name} className="text-sm font-medium">
                         {o.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+              {regionError && (
+                <span className="text-[11px] font-medium text-red-500 mt-1 block">
+                  Please select a region to proceed.
+                </span>
+              )}
             </div>
 
             <div>
-              <label className="text-sm font-bold text-gray-700 mb-2 block">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Property Purpose
               </label>
               <div className="w-[200px]">
@@ -209,18 +241,48 @@ export default function SearchFilterModal({
           /* ─── STEP 2 ─── */
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left max-h-[60vh] overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
             
-            {/* Left Column: Sliders */}
+            {/* Left Column: Category, Sliders & House Type */}
             <div className="flex flex-col gap-5">
+              {/* Category */}
+              <div className="border border-gray-100 rounded-xl p-4 md:p-5 bg-white shadow-xs">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center flex-shrink-0">
+                    <Sliders className="w-5 h-5" />
+                  </div>
+                  <span className="font-medium text-sm text-gray-800">Property Category</span>
+                </div>
+                
+                <div className="relative flex items-center w-full">
+                  <Select value={category} onValueChange={(val) => setCategory(val)}>
+                    <SelectTrigger className="w-full text-sm font-medium text-gray-700 bg-gray-50 border-gray-200 rounded-xl h-11 px-4 my-0 focus:ring-2 focus:ring-primary/20 transition-all duration-200 flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <SelectValue placeholder="Select Category..." />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-white max-h-[220px] z-[60]">
+                      <SelectItem value="all" className="text-sm font-medium">
+                        All Categories
+                      </SelectItem>
+                      {categoriesList.map((c) => (
+                        <SelectItem key={c.id} value={c.name.toLowerCase()} className="text-sm font-medium">
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {/* Price Range Slider */}
               <div className="border border-gray-100 rounded-xl p-4 md:p-5 bg-white shadow-xs">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center flex-shrink-0">
                     <IndianRupee className="w-5 h-5 stroke-[2.5px]" />
                   </div>
-                  <span className="font-bold text-sm text-gray-800">Price Range</span>
+                  <span className="font-medium text-sm text-gray-800">Price Range</span>
                 </div>
                 
-                <div className="flex justify-between text-xs font-semibold text-gray-400 mb-2">
+                <div className="flex justify-between text-xs font-medium text-gray-400 mb-2">
                   <span>From</span>
                   <span>To</span>
                 </div>
@@ -228,15 +290,22 @@ export default function SearchFilterModal({
                 <input
                   type="range"
                   min="0"
-                  max="100"
+                  max="1"
+                  step="0.01"
                   value={priceRange[1]}
                   onChange={(e) => setPriceRange([0, Number(e.target.value)])}
                   className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-primary mt-1"
                 />
                 
-                <div className="flex justify-between text-xs font-bold text-gray-500 mt-2.5">
+                <div className="flex justify-between text-xs font-medium text-gray-500 mt-2.5">
                   <span>₹0</span>
-                  <span>₹{priceRange[1]} Cr{priceRange[1] === 100 && "+"}</span>
+                  <span>
+                    {priceRange[1] >= 1
+                      ? `₹${priceRange[1]} Cr+`
+                      : priceRange[1] === 0
+                      ? "₹0"
+                      : `₹${Math.round(priceRange[1] * 100)} Lakhs`}
+                  </span>
                 </div>
               </div>
 
@@ -246,10 +315,10 @@ export default function SearchFilterModal({
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center flex-shrink-0">
                     <Maximize2 className="w-5 h-5" />
                   </div>
-                  <span className="font-bold text-sm text-gray-800">Area Range (sq.ft.)</span>
+                  <span className="font-medium text-sm text-gray-800">Area Range (sq.ft.)</span>
                 </div>
                 
-                <div className="flex justify-between text-xs font-semibold text-gray-400 mb-2">
+                <div className="flex justify-between text-xs font-medium text-gray-400 mb-2">
                   <span>From</span>
                   <span>To</span>
                 </div>
@@ -264,7 +333,7 @@ export default function SearchFilterModal({
                   className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-primary mt-1"
                 />
                 
-                <div className="flex justify-between text-xs font-bold text-gray-500 mt-2.5">
+                <div className="flex justify-between text-xs font-medium text-gray-500 mt-2.5">
                   <span>0</span>
                   <span>{areaRange[1].toLocaleString()} sq.ft.</span>
                 </div>
@@ -276,7 +345,7 @@ export default function SearchFilterModal({
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center flex-shrink-0">
                     <Home className="w-5 h-5" />
                   </div>
-                  <span className="font-bold text-sm text-gray-800">House Type</span>
+                  <span className="font-medium text-sm text-gray-800">House Type</span>
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -287,7 +356,7 @@ export default function SearchFilterModal({
                         key={type}
                         type="button"
                         onClick={() => setSelectedHouseType(selectedHouseType === type ? "" : type)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all duration-200 cursor-pointer ${
+                        className={`px-4 py-2 rounded-xl text-xs font-medium border transition-all duration-200 cursor-pointer ${
                           isSelected
                             ? "bg-gradient-to-r from-primary to-secondary border-transparent text-white shadow-xs"
                             : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -310,7 +379,7 @@ export default function SearchFilterModal({
                     <div className="w-9 h-9 rounded-lg bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center flex-shrink-0">
                       <Star className="w-5 h-5 fill-white" />
                     </div>
-                    <span className="font-bold text-sm text-gray-800">Features</span>
+                    <span className="font-medium text-sm text-gray-800">Features</span>
                   </div>
                   
                   <div className="flex flex-wrap gap-2 mt-2">
@@ -321,7 +390,7 @@ export default function SearchFilterModal({
                           key={feat.id}
                           type="button"
                           onClick={() => toggleAmenity(feat.name)}
-                          className={`px-3.5 py-2 rounded-xl text-xs font-bold border flex items-center transition-all duration-200 cursor-pointer ${
+                          className={`px-3.5 py-2 rounded-xl text-xs font-medium border flex items-center transition-all duration-200 cursor-pointer ${
                             isChecked
                               ? "bg-gradient-to-r from-primary to-secondary border-transparent text-white shadow-xs"
                               : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -343,7 +412,7 @@ export default function SearchFilterModal({
                     <div className="w-9 h-9 rounded-lg bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center flex-shrink-0">
                       <Sliders className="w-5 h-5" />
                     </div>
-                    <span className="font-bold text-sm text-gray-800">Facilities</span>
+                    <span className="font-medium text-sm text-gray-800">Facilities</span>
                   </div>
                   
                   <div className="flex flex-wrap gap-2 mt-2">
@@ -354,7 +423,7 @@ export default function SearchFilterModal({
                           key={fac.id}
                           type="button"
                           onClick={() => toggleAmenity(fac.name)}
-                          className={`px-3.5 py-2 rounded-xl text-xs font-bold border flex items-center transition-all duration-200 cursor-pointer ${
+                          className={`px-3.5 py-2 rounded-xl text-xs font-medium border flex items-center transition-all duration-200 cursor-pointer ${
                             isChecked
                               ? "bg-gradient-to-r from-primary to-secondary border-transparent text-white shadow-xs"
                               : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -378,7 +447,7 @@ export default function SearchFilterModal({
           <div className="flex items-center justify-between w-full">
             <button
               onClick={handleBack}
-              className="px-6 py-2.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 font-bold text-xs text-gray-600 active:scale-98 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-6 py-2.5 rounded-[50px] border border-gray-300 bg-white hover:bg-gray-50 font-medium text-xs text-gray-600 active:scale-98 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <ChevronLeft size={15} />
               Back
@@ -387,7 +456,7 @@ export default function SearchFilterModal({
             <Button
               onClick={handleNext}
               variant={"gradient"}
-              className="rounded-xl text-white font-bold text-xs h-10 px-6 active:scale-98 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              className="rounded-[50px] text-white font-medium text-xs h-10 px-6 active:scale-98 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
               {step === 1 ? "Next" : "show properties"}
               <ArrowRight size={15} />

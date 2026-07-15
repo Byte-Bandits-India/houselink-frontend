@@ -71,6 +71,7 @@ export type BreadcrumbItemProps = {
 
 export type BreadcrumbProps = {
   items: BreadcrumbItemProps[];
+  variant?: "default" | "simple";
 };
 
 export type SearchSuggestionsProps = {
@@ -207,5 +208,6 @@ export type SearchFilterModalProps = {
     max_area?: string;
     amenities?: string[];
     house_type?: string;
+    category?: string;
   }) => void;
 };

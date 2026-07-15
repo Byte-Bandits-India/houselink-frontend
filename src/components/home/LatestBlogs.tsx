@@ -2,12 +2,32 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import { blogPosts } from "@/data/mockProperties";
+import { getBlogs, getImageUrl } from "@/lib/api";
+import type { BlogPost } from "@/types/blog";
 import { fadeUp, stagger } from "@/lib/animations";
 
 export default function LatestBlogs() {
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    getBlogs({ limit: 4 })
+      .then((res) => {
+        if (res.success && res.data && res.data.posts) {
+          setPosts(res.data.posts);
+        }
+      })
+      .catch((err) => console.error("Error loading blog posts:", err))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  if (!isLoading && posts.length === 0) {
+    return null;
+  }
+
   return (
     <section
       className="py-20 md:py-28 bg-[#f4f6f9] relative overflow-hidden"
@@ -76,16 +96,17 @@ export default function LatestBlogs() {
           variants={stagger}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12"
         >
-          {blogPosts.slice(0, 4).map((post, i) => (
+          {posts.slice(0, 4).map((post, i) => (
             <motion.div key={post.id ?? i} variants={fadeUp}>
               <Link href={`/blog/${post.slug}`} className="group block h-full">
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-500 h-full flex flex-col">
                   {/* Image */}
                   <div className="relative h-52 overflow-hidden flex-shrink-0">
                     <Image
-                      src={post.image}
-                      alt={post.name}
+                      src={getImageUrl(post.coverImage)}
+                      alt={post.title}
                       fill
+                      unoptimized
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   </div>
@@ -93,7 +114,7 @@ export default function LatestBlogs() {
                   {/* Content */}
                   <div className="p-5 flex flex-col gap-3 flex-1">
                     <h3 className="text-[#0d2247] font-bold text-base leading-snug line-clamp-2">
-                      {post.name}
+                      {post.title}
                     </h3>
 
                     {/* Divider */}
@@ -101,7 +122,7 @@ export default function LatestBlogs() {
 
                     <span
                       className="inline-flex items-center gap-1.5 text-[#153e75] text-sm font-semibold underline underline-offset-2 hover:gap-2.5 transition-all duration-300 mt-auto cursor-pointer"
-                      aria-label={`Read more about ${post.name}`}
+                      aria-label={`Read more about ${post.title}`}
                     >
                       Read More <ArrowRight size={14} />
                     </span>

@@ -48,24 +48,20 @@ export default function SearchSuggestions({
     getSearches()
       .then((res) => {
         if (res.success && res.data.length > 0) {
-          setRecentSearches(res.data);
+          const sorted = [...res.data].sort((a, b) => {
+            const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+            const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+            if (timeA !== timeB) return timeB - timeA;
+            return b.id - a.id;
+          });
+          setRecentSearches(sorted);
         } else {
-          setRecentSearches([
-            { id: -1, query: "2 BHK apartment in Adyar" },
-            { id: -2, query: "Flats in porur" },
-            { id: -3, query: "Lands in Kundrathur" },
-            { id: -4, query: "3 BHK Villas in ECR" },
-          ]);
+          setRecentSearches([]);
         }
       })
       .catch((err) => {
         console.error("Error fetching searches:", err);
-        setRecentSearches([
-          { id: -1, query: "2 BHK apartment in Adyar" },
-          { id: -2, query: "Flats in porur" },
-          { id: -3, query: "Lands in Kundrathur" },
-          { id: -4, query: "3 BHK Villas in ECR" },
-        ]);
+        setRecentSearches([]);
       });
   }, []);
 

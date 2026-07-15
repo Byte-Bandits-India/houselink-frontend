@@ -1,16 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getStates, getCities, getFeatures, recordSearch, getSearches, getPopularProperties, getPopularRegions } from "@/lib/api";
 import type { SearchApiItem, PopularPropertyApiItem, PopularRegionApiItem } from "@/lib/api";
 import { useHomeFilter } from "@/contexts/HomeFilterContext";
-import { Button } from "@/components/ui/button";
 import ActionSearchBar from "@/components/kokonutui/action-search-bar";
 import PropertyTypeSwitch from "./PropertyTypeSwitch";
 import SearchFilterModal from "./SearchFilterModal";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const categories = [
   { id: "all", name: "All" },
@@ -271,23 +277,19 @@ export default function PropertySearch() {
       try {
         const searchesRes = await getSearches();
         if (searchesRes.success && searchesRes.data && searchesRes.data.length > 0) {
-          setRecentSearches(searchesRes.data);
+          const sorted = [...searchesRes.data].sort((a, b) => {
+            const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+            const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+            if (timeA !== timeB) return timeB - timeA;
+            return b.id - a.id;
+          });
+          setRecentSearches(sorted);
         } else {
-          setRecentSearches([
-            { id: -1, query: "2 BHK apartment in Adyar" },
-            { id: -2, query: "Flats in porur" },
-            { id: -3, query: "Lands in Kundrathur" },
-            { id: -4, query: "3 BHK Villas in ECR" },
-          ]);
+          setRecentSearches([]);
         }
       } catch (e) {
-        console.error("Failed to load searches from backend, using fallback:", e);
-        setRecentSearches([
-          { id: -1, query: "2 BHK apartment in Adyar" },
-          { id: -2, query: "Flats in porur" },
-          { id: -3, query: "Lands in Kundrathur" },
-          { id: -4, query: "3 BHK Villas in ECR" },
-        ]);
+        console.error("Failed to load searches from backend:", e);
+        setRecentSearches([]);
       }
 
       try {
@@ -394,7 +396,12 @@ export default function PropertySearch() {
     }
 
     if (searchKeyword && searchKeyword.trim()) {
-      recordSearch(searchKeyword.trim()).catch((err) => console.error("Error recording search query:", err));
+      const trimmed = searchKeyword.trim();
+      recordSearch(trimmed).catch((err) => console.error("Error recording search query:", err));
+      setRecentSearches((prev) => {
+        const filtered = prev.filter((s) => s.query.toLowerCase() !== trimmed.toLowerCase());
+        return [{ id: Date.now(), query: trimmed, updatedAt: new Date().toISOString() }, ...filtered].slice(0, 6);
+      });
     }
 
     const params = new URLSearchParams();
@@ -542,24 +549,19 @@ export default function PropertySearch() {
           </div>
 
           {/* City Dropdown */}
-          <div className="relative bg-white rounded-full px-6 py-3 shadow-sm border border-gray-100 flex items-center gap-2 cursor-pointer min-w-[160px]">
-            <select
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="w-full appearance-none bg-transparent border-none outline-none text-sm text-gray-800 font-bold pr-6 cursor-pointer"
-            >
-              <option value="">Chennai</option>
+          <Select value={city || "chennai"} onValueChange={(v) => setCity(v === "chennai" ? "" : v)}>
+            <SelectTrigger className="w-[160px] bg-white rounded-full px-6 py-3 h-12 shadow-sm border border-gray-100 text-sm text-gray-800 font-bold focus:ring-0 focus:ring-offset-0 focus:outline-none my-0 cursor-pointer justify-between border-solid select-none">
+              <SelectValue placeholder="Chennai" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border border-gray-100 rounded-2xl shadow-md duration-300 ease-out z-50">
+              <SelectItem value="chennai" className="font-bold text-gray-800 cursor-pointer">Chennai</SelectItem>
               {citiesList.filter(o => o.value !== "chennai").map((o) => (
-                <option key={o.value} value={o.value}>
+                <SelectItem key={o.value} value={o.value} className="font-bold text-gray-800 cursor-pointer">
                   {o.label}
-                </option>
+                </SelectItem>
               ))}
-            </select>
-            <ChevronDown
-              size={16}
-              className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
-            />
-          </div>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Search bar */}

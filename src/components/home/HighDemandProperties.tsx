@@ -82,7 +82,7 @@ export default function HighDemandProperties() {
   }
 
   return (
-    <section id="high-demand-properties" className="py-12 container mx-auto px-4 md:px-6">
+    <section id="high-demand-properties" className="py-6 container mx-auto px-4 md:px-6">
       {/* Title and Controls block */}
       <div className="flex justify-between items-end mb-8">
         <div className="text-left">

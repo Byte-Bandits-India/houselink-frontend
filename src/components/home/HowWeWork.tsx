@@ -4,8 +4,35 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { fadeUp, stagger } from "@/lib/animations";
-import { Home, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { whatWeDoItems } from "@/components/home/Options";
+
+const CustomHomeIcon = ({ size = 22, className = "" }: { size?: number; className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size}
+    height={size}
+    fill="none"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Roof */}
+    <path
+      d="M2,14.5 C1.7,14.5 1.4,14.3 1.2,14.1 C0.8,13.7 0.8,13 1.2,12.6 L10.8,3.5 C11.5,2.8 12.5,2.8 13.2,3.5 L22.8,12.6 C23.2,13 23.2,13.7 22.8,14.1 C22.4,14.5 21.7,14.5 21.3,14.1 L12,5.3 L2.7,14.1 C2.5,14.3 2.2,14.5 2,14.5 Z"
+      fill="currentColor"
+    />
+    {/* Chimney */}
+    <path
+      d="M17,3.5 C17,3.2 17.2,3 17.5,3 H19.5 C19.8,3 20,3.2 20,3.5 V9.5 L17,6.8 V3.5 Z"
+      fill="currentColor"
+    />
+    {/* Main House Body */}
+    <path
+      d="M12,7.2 L4.5,14.3 V20.5 C4.5,21.3 5.2,22 6,22 H10.5 V16.5 H13.5 V22 H18 C18.8,22 19.5,21.3 19.5,20.5 V14.3 L12,7.2 Z"
+      fill="currentColor"
+    />
+  </svg>
+);
 
 export default function WhatWeDo() {
   return (
@@ -73,8 +100,8 @@ export default function WhatWeDo() {
                 }}
               >
                 {/* Home Icon overlay positioned inside the left peak */}
-                <div className="absolute top-[16px] left-[14%] -translate-x-1/2 z-20">
-                  <Home size={22} className="text-black stroke-[2.5px]" />
+                <div className="absolute top-[14px] left-[14%] -translate-x-1/2 z-20">
+                  <CustomHomeIcon size={28} className="text-primary" />
                 </div>
 
                 {/* Content Overlay */}

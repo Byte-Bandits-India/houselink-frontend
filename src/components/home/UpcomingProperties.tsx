@@ -1,37 +1,87 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { smoothScrollBy } from "@/lib/smoothScroll";
 import { MapPin, ArrowRight, Building, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/animations";
-import { Button } from "@/components/ui/button";
-import { upcomingProperties } from "./Options";
-import type { UpcomingProperty } from "./Options";
+import { getProperties, mapApiPropertyToCardProps, getImageUrl } from "@/lib/api";
 
-function UpcomingPropertyCard({ property }: { property: UpcomingProperty }) {
-  const purposeColorClass = {
-    Sale: "text-primary",
-    Rent: "text-amber-500",
-    Lease: "text-emerald-600",
-  }[property.purpose];
+function getDefaultImage(categoryName?: string): string {
+  if (!categoryName) return "/assets/default.png";
+  const name = categoryName.toLowerCase().trim();
+  if (name.includes("apartment")) {
+    return "/assets/default_images/apartmentAvatar.jpg";
+  }
+  if (name.includes("villa")) {
+    return "/assets/default_images/villaAvatar.jpg";
+  }
+  if (name.includes("plot")) {
+    return "/assets/default_images/plotsAvatar.jpg";
+  }
+  if (name.includes("individual house") || name.includes("individual_house") || name.includes("house")) {
+    return "/assets/default_images/houseAvatar.jpg";
+  }
+  if (name.includes("land")) {
+    return "/assets/default_images/landAvatar.jpg";
+  }
+  if (name.includes("shop")) {
+    return "/assets/default_images/shopAvatar.jpg";
+  }
+  if (name.includes("building")) {
+    return "/assets/default_images/buildingAvatar.jpg";
+  }
+  if (name.includes("godown")) {
+    return "/assets/default_images/godownAvatar.jpg";
+  }
+  if (name.includes("warehouse")) {
+    return "/assets/default_images/warehouseAvatar.jpg";
+  }
+  if (name.includes("office")) {
+    return "/assets/default_images/officeAvatar.jpg";
+  }
+  if (name.includes("commercial")) {
+    return "/assets/default_images/commercialAvatar.jpg";
+  }
+  return "/assets/default.png";
+}
+
+function UpcomingPropertyCard({ property }: { property: any }) {
+  const purposeColorMap: Record<string, string> = {
+    "For Sale": "text-primary",
+    "Rent": "text-amber-500",
+    "Lease": "text-emerald-600",
+  };
+  const purposeColorClass = purposeColorMap[property.property_for] || "text-primary";
+
+  const imageUrl = property.image && property.image !== "/assets/blur.png" 
+    ? getImageUrl(property.image) 
+    : getDefaultImage(property.categoryName);
 
   return (
     <div className="group relative flex h-[396px] w-full max-w-[300px] flex-col rounded-[28px] border border-gray-150 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.08)] transition-all duration-300 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.12)] bg-white select-none">
       {/* Top portion: Image */}
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-[28px] image-anime">
         <Image
-          src={property.image}
-          alt={property.title}
+          src={imageUrl}
+          alt={property.name}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           fill
           unoptimized
         />
 
+        {/* Featured badge */}
+        {property.isFeatured && (
+          <div className="absolute top-4 left-4 z-10 bg-[#D1FAE5] text-emerald-800 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider rounded-full shadow-sm">
+            Featured
+          </div>
+        )}
+
         {/* Category tag */}
         <div className="absolute bottom-4 left-4 z-10 bg-white px-4 py-1.5 text-[11px] font-extrabold text-black rounded-full shadow-sm">
-          {property.category}
+          {property.categoryName}
         </div>
       </div>
 
@@ -41,7 +91,7 @@ function UpcomingPropertyCard({ property }: { property: UpcomingProperty }) {
           <path d="M 8 0 H 76 C 80 0, 84 4, 84 8 C 80 12, 80 22, 84 26 C 84 30, 80 34, 76 34 H 8 C 4 34, 0 30, 0 26 C 4 22, 4 12, 0 8 C 0 4, 4 0, 8 0 Z" fill="currentColor" />
         </svg>
         <span className="absolute inset-0 flex items-center justify-center text-[12px] font-black text-white tracking-wider">
-          {property.purpose}
+          {property.property_for}
         </span>
       </div>
 
@@ -55,7 +105,7 @@ function UpcomingPropertyCard({ property }: { property: UpcomingProperty }) {
               <Building size={18} className="text-primary stroke-[2px]" />
             </div>
             <h3 className="font-extrabold text-[17px] text-black tracking-tight leading-tight truncate mt-0.5">
-              {property.title}
+              {property.name}
             </h3>
           </div>
 
@@ -72,14 +122,19 @@ function UpcomingPropertyCard({ property }: { property: UpcomingProperty }) {
               Price
             </span>
             <span className="text-[20px] font-black text-black leading-none mt-1.5">
-              {property.price}
+              {typeof property.price === "number"
+                ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(property.price)
+                : property.price}
             </span>
           </div>
 
           {/* Action chevron */}
-          <Button variant="gradient" className="w-11 h-11 rounded-full text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0 cursor-pointer">
+          <Link
+            href={property.permalink ? `/properties/${property.permalink}` : `/properties/${property.id}`}
+            className="w-11 h-11 rounded-full bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0 cursor-pointer"
+          >
             <ArrowRight size={18} className="stroke-[2.5px]" />
-          </Button>
+          </Link>
         </div>
       </div>
     </div>
@@ -88,6 +143,31 @@ function UpcomingPropertyCard({ property }: { property: UpcomingProperty }) {
 
 export default function UpcomingProperties() {
   const scrollContainer = useRef<HTMLDivElement>(null);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadFeaturedProperties() {
+      try {
+        const res = await getProperties({
+          is_active: "true",
+          moderation: "approved",
+          page_size: "100"
+        });
+        if (res.success && res.data) {
+          const featured = res.data
+            .filter((p: any) => p.isFeatured)
+            .map(mapApiPropertyToCardProps);
+          setProperties(featured);
+        }
+      } catch (err) {
+        console.error("Error loading upcoming featured properties:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadFeaturedProperties();
+  }, []);
 
   const handleScroll = (direction: "left" | "right") => {
     if (scrollContainer.current) {
@@ -100,8 +180,20 @@ export default function UpcomingProperties() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[300px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (properties.length === 0) {
+    return null; // Don't show the upcoming section if no featured properties are seeded/added yet
+  }
+
   return (
-    <section className="py-10 bg-whiteBG" id="upcoming-properties">
+    <section className="py-8 bg-whiteBG" id="upcoming-properties">
       <div className="container mx-auto px-4 max-w-[1440px]">
         {/* Header Block */}
         <motion.div
@@ -120,10 +212,10 @@ export default function UpcomingProperties() {
             {/* Texts */}
             <div className="text-left">
               <h2 className="text-xl md:text-2xl font-extrabold text-primary leading-tight">
-                Upcoming Properties
+                Featured Properties
               </h2>
-              <p className="text-gray-500 text-sm lg:text-md font-medium leading-tight mt-0.5">
-                Find future-ready homes in prime locations
+              <p className="text-gray-500 text-sm lg:text-md font-medium leading-tight -mt-2">
+                Explore handpicked properties in prime locations
               </p>
             </div>
           </div>
@@ -140,22 +232,23 @@ export default function UpcomingProperties() {
 
       <div className="container mx-auto px-4 max-w-[1440px]">
         {/* Arrow Slider Controls */}
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => handleScroll("left")}
-              className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft size={20} className="stroke-[2px]" />
-            </button>
-            <button
-              onClick={() => handleScroll("right")}
-              className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
-              aria-label="Scroll right"
-            >
-              <ChevronRight size={20} className="stroke-[2px]" />
-            </button>
-          </div>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => handleScroll("left")}
+            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft size={20} className="stroke-[2px]" />
+          </button>
+          <button
+            onClick={() => handleScroll("right")}
+            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={20} className="stroke-[2px]" />
+          </button>
+        </div>
+        
         {/* Properties Carousel */}
         <div
           ref={scrollContainer}
@@ -172,7 +265,7 @@ export default function UpcomingProperties() {
             }
           `}} />
 
-          {upcomingProperties.map((property) => (
+          {properties.map((property) => (
             <div key={property.id} className="flex-none w-[300px]">
               <UpcomingPropertyCard property={property} />
             </div>
