@@ -1,18 +1,18 @@
 // ─── Location types ───────────────────────────────────────────────────────────
 
-export interface State {
+export type State = {
   id: number;
   name: string;
-}
+};
 
-export interface City {
+export type City = {
   id: number;
   name: string;
-}
+};
 
 // ─── Customer / User types ────────────────────────────────────────────────────
 
-export interface Customer {
+export type Customer = {
   id: string;
   firstName: string;
   lastName: string | null;
@@ -31,24 +31,24 @@ export interface Customer {
   creditPointsBuilder?: number;
   creditPointsConsultant?: number;
   createdAt: string;
-}
+};
 
 // ─── Auth request payloads ────────────────────────────────────────────────────
 
-export interface SendOtpPayload {
+export type SendOtpPayload = {
   phone: string;
-}
+};
 
-export interface SendOtpRegisterPayload {
+export type SendOtpRegisterPayload = {
   phone: string;
-}
+};
 
-export interface RetryOtpPayload {
+export type RetryOtpPayload = {
   phone: string;
   retryType?: "text" | "voice";
-}
+};
 
-export interface RegisterPayload {
+export type RegisterPayload = {
   firstName: string;
   lastName?: string;
   phone: string;
@@ -56,47 +56,46 @@ export interface RegisterPayload {
   otp: string;
   stateId: number;
   cityId: number;
-}
+};
 
-export interface VerifyOtpLoginPayload {
+export type VerifyOtpLoginPayload = {
   phone: string;
   otp: string;
-}
+};
 
 // ─── Auth response shapes ─────────────────────────────────────────────────────
 
-export interface SendOtpResponse {
+export type SendOtpResponse = {
   success: boolean;
   message: string;
-}
+};
 
-export interface AuthTokenResponse {
+export type AuthTokenResponse = {
   accessToken: string;
   refreshToken: string;
   customer: Customer;
-}
+};
 
-export interface RegisterResponse extends AuthTokenResponse {
-  // same shape — tokens + customer
-}
+// same shape — tokens + customer
+export type RegisterResponse = AuthTokenResponse;
 
-export interface LogoutResponse {
+export type LogoutResponse = {
   success: boolean;
   message: string;
-}
+};
 
-export interface MeResponse {
+export type MeResponse = {
   customer: Customer;
-}
+};
 
 // ─── Location response shapes ─────────────────────────────────────────────────
 
-export interface StatesResponse {
+export type StatesResponse = {
   success: boolean;
   data: State[];
-}
+};
 
-export interface CitiesResponse {
+export type CitiesResponse = {
   success: boolean;
   data: City[];
-}
+};

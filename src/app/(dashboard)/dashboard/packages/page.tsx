@@ -36,13 +36,7 @@ function EnquiryIcon() {
 }
 
 /* ── Credit card data ──────────────────────────────────── */
-interface CreditEntry {
-  title: string;
-  credits: number;
-  expiry: string | null;
-  buyHref: string;
-  Icon: React.FC;
-}
+import type { CreditEntry } from "@/types/packages";
 
 function CreditCard({ entry }: { entry: CreditEntry }) {
   const isActive = entry.credits > 0;

@@ -12,7 +12,7 @@ import PurposeToggle from "@/components/shared/PurposeToggle";
 type Purpose = "sell" | "rent";
 type OwnerType = "owner" | "builder" | "consultant";
 
-interface ActiveProperty {
+type ActiveProperty = {
   id: number;
   name: string;
   state: string;

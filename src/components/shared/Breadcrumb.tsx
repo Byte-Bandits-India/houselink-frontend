@@ -9,14 +9,9 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-export interface BreadcrumbItemProps {
-  label: string;
-  href?: string;
-}
+import type { BreadcrumbItemProps, BreadcrumbProps } from "@/types/components";
 
-interface BreadcrumbProps {
-  items: BreadcrumbItemProps[];
-}
+export type { BreadcrumbItemProps };
 
 export default function Breadcrumb({ items }: BreadcrumbProps) {
   return (

@@ -14,19 +14,7 @@ import { getLeads } from "@/lib/api/leads";
 type Purpose = "sell" | "rent_lease";
 type OwnerType = "owner" | "builder" | "consultant";
 
-interface Property {
-  id: number;
-  name: string;
-  state: string;
-  views: number;
-  expiredAt: string;
-  createdAt: string;
-  status: string;
-  moderationStatus: string;
-  purpose: Purpose;
-  ownerType: OwnerType;
-  categoriesId?: number;
-}
+import type { DashboardProperty as Property } from "@/types/dashboard";
 
 export default function PropertiesPage() {
   const router = useRouter();

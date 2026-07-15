@@ -10,6 +10,8 @@ import { getAds } from "@/lib/api";
 const SLIDE_DURATION = 5000;
 
 import type { Variants } from "framer-motion";
+import type { BannerSlide } from "@/types/home";
+
 const slideVariants: Variants = {
   enter: (direction: number) => ({
     x: direction > 0 ? "100%" : "-100%",
@@ -32,17 +34,6 @@ const slideVariants: Variants = {
     },
   }),
 };
-
-interface BannerSlide {
-  id: number;
-  name: string;
-  image: string;
-  pcImage: string;
-  tabletImage: string;
-  mobileImage: string;
-  url: string | null;
-  openInNewTab: boolean;
-}
 
 const Banner = () => {
   const [banners, setBanners] = useState<BannerSlide[]>([]);

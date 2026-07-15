@@ -12,7 +12,7 @@ import type { Customer } from "@/types/auth";
 
 // ─── Shape ────────────────────────────────────────────────────────────────────
 
-interface AuthState {
+type AuthState = {
   user: Customer | null;
   isLoggedIn: boolean;
   isLoading: boolean;
@@ -21,7 +21,7 @@ interface AuthState {
   logout: () => Promise<void>;
   /** Update user directly without API call */
   setAuthUser: (user: Customer | null) => void;
-}
+};
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 

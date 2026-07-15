@@ -62,7 +62,7 @@ export default function HomePageClient() {
           </h1>
 
           {/* Badges/Features Row */}
-          <div className="p-4 md:px-6 md:py-4 grid grid-cols-2 gap-4 md:flex md:flex-nowrap md:justify-center md:items-center md:gap-8 mb-6 md:mb-10 max-w-4xl w-full">
+          <div className="p-4 md:px-6 md:py-4 grid grid-cols-2 gap-4 md:flex md:flex-nowrap md:justify-center md:items-center md:gap-8 mb-6 md:mb-10 max-w-6xl w-full">
             {heroBadges.map((item, index, arr) => (
               <Fragment key={item.id}>
                 <div className="flex items-center gap-3">

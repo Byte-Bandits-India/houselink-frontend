@@ -15,16 +15,7 @@ import type { EnquiryStatusResponse } from "@/lib/api";
 import { Button } from "../ui/button";
 import { PhoneInput } from "@/components/reui/phone-input";
 
-interface PropertyEnquirySidebarProps {
-  property: {
-    id: number;
-    name: string;
-    propertyFor?: string;
-    propertyOwnership?: string;
-    permalink?: string;
-    [key: string]: any;
-  };
-}
+import type { PropertyEnquirySidebarProps } from "@/types/components";
 
 /** Format seconds remaining into a human-readable string */
 function formatCooldown(seconds: number, propertyFor: string): string {

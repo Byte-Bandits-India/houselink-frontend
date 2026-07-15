@@ -1,10 +1,6 @@
 "use client";
 
-interface PropertyTypeSwitchProps {
-  activeTab: "sell" | "rent";
-  onChange: (tab: "sell" | "rent") => void;
-  variant?: "header" | "sidebar";
-}
+import type { PropertyTypeSwitchProps } from "@/types/components";
 
 export default function PropertyTypeSwitch({
   activeTab,

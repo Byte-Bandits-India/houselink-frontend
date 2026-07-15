@@ -4,65 +4,9 @@ import { Card } from '@/components/ui/card';
 import { getImageUrl } from '@/lib/api';
 import { useWishlist } from '@/context/WishlistContext';
 
-export interface PropertyCardProps {
-  id: string;
-  name: string;
-  image: string;
-  permalink?: string;
-  isFeatured?: boolean;
-  type?: string;
-  categoryName?: string;
-  price: string | number;
-  location: string;
-  bedrooms?: number;
-  bathrooms?: number;
-  area?: string;
-  direction?: string;
-  features?: Array<{ name: string; icon?: string }>;
-  isInWishlist?: boolean;
+import type { PropertyCardProps } from "@/types/components";
 
-  // Extra fields for details page
-  seo_title?: string;
-  seo_desc?: string;
-  created_at?: string;
-  views?: number;
-  description?: string;
-  images?: Array<{ image_url: string }>;
-  city?: { name: string };
-  state?: { name: string };
-  custom_fields?: Array<{ field_name: string; field_value: string; unit?: string }>;
-  house_type?: string;
-  construction_age?: string;
-  ownership_type?: string;
-  furnishing_type?: string;
-  water_supply?: string;
-  food_preference?: string;
-  pet_policy?: string;
-  balcony?: string;
-  garden?: string;
-  swimming_pool?: string;
-  corner_property?: string;
-  compound_wall?: string;
-  property_suitable_for?: string;
-  utility_area?: string;
-  loading_unloading_facility?: string;
-  pantry_area?: string;
-  key_specifications?: string[];
-  parking_availability?: string;
-  parking_type?: string[];
-  parking_slots_count?: number;
-  tenant_preference?: string[];
-  property_for?: string;
-  security_deposit?: number;
-  security_deposit_type?: string;
-  maintenance_charge_status?: string;
-  maintenance_charge_amount?: number;
-  lease_duration?: string;
-  maintenance_responsibility?: string;
-  notice_period?: string;
-  brokerage_type?: string;
-  brokerage_fee?: number;
-}
+export type { PropertyCardProps };
 
 function getDefaultImage(categoryName?: string): string {
   if (!categoryName) return "/assets/default.png";

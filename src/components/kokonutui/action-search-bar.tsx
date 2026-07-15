@@ -16,6 +16,11 @@ interface ActionSearchBarProps {
     category?: string;
     city?: string;
     amenities?: string[];
+    fromModal?: boolean;
+    property_purpose?: "sell" | "rent";
+    max_price?: string;
+    max_area?: string;
+    house_type?: string;
   }) => void;
   onSelectLocation: (location: string) => void;
   setActiveCategory?: (category: string) => void;

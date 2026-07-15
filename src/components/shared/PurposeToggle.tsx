@@ -3,12 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface PurposeToggleProps {
-  value: "sell" | "rent";
-  onChange: (value: "sell" | "rent") => void;
-  sellLabel?: string;
-  rentLabel?: string;
-}
+import type { PurposeToggleProps } from "@/types/components";
 
 export default function PurposeToggle({
   value,

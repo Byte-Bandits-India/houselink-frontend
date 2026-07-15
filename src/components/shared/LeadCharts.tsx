@@ -20,15 +20,7 @@ import type { ChartConfig } from "@/components/ui/chart";
 
 /* ─── Types ─────────────────────────────────────────────────────────────────── */
 
-interface Lead {
-    id: number;
-    property: string;
-    filter: "sell" | "rent";
-}
-
-interface LeadChartsProps {
-    leads: Lead[];
-}
+import type { LeadChartsProps } from "@/types/components";
 
 /* ─── Chart Configs ───────────────────────────────────────────────────────── */
 

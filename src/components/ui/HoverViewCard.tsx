@@ -2,13 +2,7 @@
 import { useState, useRef } from "react"
 import { motion } from "framer-motion"
 
-interface HoverViewCardProps {
-  /** The label text shown inside the following circle (default: "View") */
-  label?: string
-  /** Extra classes applied to the wrapper div */
-  className?: string
-  children: React.ReactNode
-}
+import type { HoverViewCardProps } from "@/types/components";
 
 /**
  * HoverViewCard

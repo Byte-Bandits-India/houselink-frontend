@@ -4,9 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 
-interface GalleryImage {
-    image_url: string;
-}
+import type { GalleryImage } from "@/types/components";
 
 /* ── Lightbox Modal ───────────────────────────────────────────── */
 function Lightbox({

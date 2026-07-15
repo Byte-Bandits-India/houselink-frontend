@@ -3,10 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { smoothScrollBy } from "@/lib/smoothScroll";
 
-interface TabItem {
-  id: string;
-  label: string;
-}
+import type { TabItem } from "@/types/components";
 
 const TABS: TabItem[] = [
   { id: "overview", label: "Overview" },

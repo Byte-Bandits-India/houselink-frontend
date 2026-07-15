@@ -22,19 +22,7 @@ import {
 type Purpose = "sell" | "rent";
 type OwnerType = "owner" | "builder" | "consultant";
 
-interface Property {
-  id: number;
-  name: string;
-  city: string;
-  state: string;
-  views: number;
-  expiredAt: string;
-  createdAt: string;
-  status: string;
-  moderationStatus: string;
-  purpose: Purpose;
-  ownerType: OwnerType;
-}
+import type { DashboardProperty as Property } from "@/types/dashboard";
 
 const moderationBadge: Record<string, string> = {
   approved: "bg-primary/10 text-primary border border-primary/20",
@@ -213,7 +201,7 @@ export default function ExpiredPropertiesPage() {
                       <Button
                         onClick={() => router.push(`/dashboard/properties/${p.id}/edit`)}
                         variant="gradient"
-                        className="flex items-center gap-1 text-xs font-semibold text-white px-3 py-1 rounded-lg transition-colors w-full justify-center"
+                        className="flex items-center gap-1 text-xs font-semibold text-white px-3 py-1 rounded-[50px] transition-colors w-full justify-center"
                       >
                         <Pencil className="w-3 h-3" /> Edit
                       </Button>
@@ -221,7 +209,7 @@ export default function ExpiredPropertiesPage() {
                         propertyName={p.name}
                         onConfirm={() => handleDelete(p.id)}
                         trigger={
-                          <Button className="flex items-center gap-1 text-xs text-danger hover:text-white hover:bg-danger font-semibold bg-white border border-danger px-3 py-1 rounded-lg transition-colors w-full justify-center">
+                          <Button className="flex items-center gap-1 text-xs text-danger hover:text-white hover:bg-danger font-semibold bg-white border border-danger px-3 py-1 rounded-[50px] transition-colors w-full justify-center">
                             <Trash2 className="w-3 h-3" /> Delete
                           </Button>
                         }

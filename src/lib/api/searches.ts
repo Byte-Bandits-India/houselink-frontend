@@ -1,17 +1,7 @@
 import { apiClient } from "./client";
+import type { SearchApiItem, SearchApiResponse } from "@/types/searches";
 
-export interface SearchApiItem {
-  id: number;
-  query: string;
-  count?: number;
-  updatedAt?: string;
-}
-
-export interface SearchApiResponse {
-  success: boolean;
-  type: "user" | "popular";
-  data: SearchApiItem[];
-}
+export type { SearchApiItem, SearchApiResponse };
 
 /**
  * GET /api/v1/searches

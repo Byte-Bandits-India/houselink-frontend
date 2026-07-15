@@ -11,18 +11,7 @@ import PurposeToggle from "@/components/shared/PurposeToggle";
 type Filter = "sell" | "rent";
 type Status = "live" | "expired";
 
-interface HistoryPkg {
-  id: string;
-  name: string;
-  price: string;
-  userType: string;
-  type: "sell" | "rent";
-  status: "live" | "expired";
-  remainingPoints?: number;
-  totalPoints?: number;
-  rawInvoice: UserInvoice;
-  formattedDate: string;
-}
+import type { HistoryPkg } from "@/types/packages";
 
 export default function HistoryPage() {
   const { user } = useAuth();

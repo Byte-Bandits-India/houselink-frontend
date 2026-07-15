@@ -18,14 +18,7 @@ const STEPS = [
   { label: "Summary" },
 ];
 
-interface Props {
-  initialData?: Partial<PropertyFormData>;
-  isEditMode?: boolean;
-  isViewMode?: boolean;
-  disabled?: boolean;
-  onSubmit?: (data: PropertyFormData) => void;
-  onEdit?: () => void;
-}
+import type { PropertyFormWizardProps as Props } from "@/types/property-form";
 
 export default function PropertyFormWizard({
   initialData,
@@ -41,6 +34,7 @@ export default function PropertyFormWizard({
     ...initialData,
   });
   const [permalinkStatus, setPermalinkStatus] = useState<"idle" | "checking" | "available" | "taken" | "error">("idle");
+  const [showErrors, setShowErrors] = useState(false);
 
   const patch = (update: Partial<PropertyFormData>) => {
     if (isViewMode) return; // block edits in view mode
@@ -297,7 +291,12 @@ export default function PropertyFormWizard({
                 "relative z-10 flex flex-col items-center gap-1.5",
                 clickable ? "cursor-pointer" : "cursor-not-allowed opacity-60"
               )}
-              onClick={() => { if (clickable) setStep(i); }}
+              onClick={() => {
+                if (clickable) {
+                  setShowErrors(false);
+                  setStep(i);
+                }
+              }}
             >
               <div className={cn(
                 "w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all duration-300",
@@ -344,7 +343,7 @@ export default function PropertyFormWizard({
           "rounded-2xl border border-gray-200 bg-white shadow-sm p-6 min-h-[400px]",
           (isViewMode || disabled) && "bg-gray-50/50 opacity-85"
         )}>
-          {step === 0 && <Step1BasicDetails data={formData} onChange={patch} disabled={isViewMode || disabled} />}
+          {step === 0 && <Step1BasicDetails data={formData} onChange={patch} disabled={isViewMode || disabled} showErrors={showErrors} />}
           {step === 1 && (
             <Step2PropertyProfile
               data={formData}
@@ -354,9 +353,9 @@ export default function PropertyFormWizard({
               onPermalinkStatusChange={setPermalinkStatus}
             />
           )}
-          {step === 2 && <Step3Location data={formData} onChange={patch} disabled={isViewMode || disabled} />}
-          {step === 3 && <Step4Amenities data={formData} onChange={patch} disabled={isViewMode || disabled} />}
-          {step === 4 && <Step5Final data={formData} onChange={patch} isEditMode={isEditMode} disabled={isViewMode || disabled} />}
+          {step === 2 && <Step3Location data={formData} onChange={patch} disabled={isViewMode || disabled} showErrors={showErrors} />}
+          {step === 3 && <Step4Amenities data={formData} onChange={patch} disabled={isViewMode || disabled} showErrors={showErrors} />}
+          {step === 4 && <Step5Final data={formData} onChange={patch} isEditMode={isEditMode} disabled={isViewMode || disabled} showErrors={showErrors} />}
         </div>
       </div>
 
@@ -364,7 +363,10 @@ export default function PropertyFormWizard({
       <div className="flex items-center justify-between mt-6">
         <button
           type="button"
-          onClick={() => setStep((s) => Math.max(0, s - 1))}
+          onClick={() => {
+            setShowErrors(false);
+            setStep((s) => Math.max(0, s - 1));
+          }}
           disabled={disabled}
           className={cn(
             "flex items-center gap-2 px-5 py-2.5 rounded-lg border text-sm font-semibold transition-all duration-200",
@@ -380,46 +382,68 @@ export default function PropertyFormWizard({
 
         <span className="text-xs text-gray-400">{step + 1} / {STEPS.length}</span>
 
-        {step < STEPS.length - 1 ? (
-          <button
-            type="button"
-            onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
-            disabled={!canGoNext() || disabled}
-            className={cn(
-              "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200",
-              canGoNext() && !disabled
-                ? "bg-brand text-white hover:bg-brand/90 shadow-sm"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-            )}
-          >
-            Next <ChevronRight className="w-4 h-4" />
-          </button>
-        ) : isViewMode ? (
-          <span className="text-xs text-gray-400 italic">End of listing</span>
-        ) : (
-          <button
-            type="button"
-            onClick={() => onSubmit?.(formData)}
-            disabled={!isStepValid(step, formData) || disabled}
-            className={cn(
-              "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200",
-              isStepValid(step, formData) && !disabled
-                ? "bg-brand text-white hover:bg-brand/90 transition-colors shadow-sm"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-            )}
-          >
-            {disabled ? (
-              <span className="flex items-center gap-2">
-                <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                Submitting...
-              </span>
-            ) : isEditMode ? (
-              <><Save className="w-4 h-4" /> Save Changes</>
-            ) : (
-              <><Send className="w-4 h-4" /> Submit Listing</>
-            )}
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {!isStepValid(step, formData) && showErrors && (
+            <p className="text-red-500 text-xs sm:text-sm font-semibold animate-pulse">
+              Please fill in all required fields
+            </p>
+          )}
+
+          {step < STEPS.length - 1 ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (isStepValid(step, formData)) {
+                  setShowErrors(false);
+                  setStep((s) => Math.min(STEPS.length - 1, s + 1));
+                } else {
+                  setShowErrors(true);
+                }
+              }}
+              disabled={disabled}
+              className={cn(
+                "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200",
+                disabled
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-brand text-white hover:bg-brand/90 shadow-sm"
+              )}
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </button>
+          ) : isViewMode ? (
+            <span className="text-xs text-gray-400 italic">End of listing</span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                if (isStepValid(step, formData)) {
+                  setShowErrors(false);
+                  onSubmit?.(formData);
+                } else {
+                  setShowErrors(true);
+                }
+              }}
+              disabled={disabled}
+              className={cn(
+                "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200",
+                disabled
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-brand text-white hover:bg-brand/90 transition-colors shadow-sm"
+              )}
+            >
+              {disabled ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                  Submitting...
+                </span>
+              ) : isEditMode ? (
+                <><Save className="w-4 h-4" /> Save Changes</>
+              ) : (
+                <><Send className="w-4 h-4" /> Submit Listing</>
+              )}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

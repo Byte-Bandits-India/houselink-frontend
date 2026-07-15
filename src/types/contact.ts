@@ -1,4 +1,4 @@
-export interface ContactMessage {
+export type ContactMessage = {
   id: number;
   name: string;
   email: string;
@@ -7,10 +7,10 @@ export interface ContactMessage {
   status: "unread" | "read" | "resolved";
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface ContactResponse {
+export type ContactResponse = {
   success: boolean;
   message: string;
   data: ContactMessage;
-}
+};

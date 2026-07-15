@@ -1,4 +1,4 @@
-export interface AdBanner {
+export type AdBanner = {
   id: number;
   name: string;
   order: number;
@@ -11,9 +11,9 @@ export interface AdBanner {
   mobileImage?: string | null;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface AdsResponse {
+export type AdsResponse = {
   success: boolean;
   data: AdBanner[];
-}
+};

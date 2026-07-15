@@ -1,29 +1,7 @@
 import { apiClient } from "./client";
+import type { Package, CheckoutResponse, UserInvoice, CustomerProfile } from "@/types/packages";
 
-export interface Package {
-  id: number;
-  type: "buy" | "rent";
-  userType: "Owner" | "Builder" | "Consultant" | null;
-  name: string;
-  description: string | null;
-  price: number;
-  finalPrice: number | null;
-  totalDaysLimit: number | null;
-  noOfCredit: number;
-  isGuest: boolean;
-  status: "published" | "draft" | "pending";
-}
-
-export interface CheckoutResponse {
-  success: boolean;
-  data: {
-    orderId: string;
-    amount: number;
-    currency: string;
-    key: string;
-    invoiceId: number;
-  };
-}
+export type { Package, CheckoutResponse, UserInvoice, CustomerProfile };
 
 /** GET /packages?status=published */
 export async function getPackagesList(): Promise<Package[]> {
@@ -53,27 +31,7 @@ export async function verifyCheckoutPayment(payload: {
   );
 }
 
-export interface UserInvoice {
-  id: number;
-  package_id: string;
-  name: string;
-  package_type: "buy" | "rent";
-  user_type: "Owner" | "Builder" | "Consultant" | null;
-  total_days_limit: number | null;
-  no_of_credit: number;
-  amount: string | number;
-  status: string;
-  created_at: string;
-}
 
-export interface CustomerProfile {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  invoices: UserInvoice[];
-}
 
 /** GET /customers/:id */
 export async function getCustomerInvoices(customerId: number): Promise<UserInvoice[]> {

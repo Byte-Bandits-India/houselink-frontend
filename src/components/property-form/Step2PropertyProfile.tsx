@@ -36,13 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-interface Props {
-  data: PropertyFormData;
-  onChange: (patch: Partial<PropertyFormData>) => void;
-  disabled?: boolean;
-  permalinkStatus?: "idle" | "checking" | "available" | "taken" | "error";
-  onPermalinkStatusChange?: (status: "idle" | "checking" | "available" | "taken" | "error") => void;
-}
+import type { Step2Props as Props } from "@/types/property-form";
 
 const RadioPill = ({
   checked,
@@ -170,12 +164,7 @@ function convertNumberToWords(num: number | string): string {
 }
 
 /* ── Multi-image gallery upload (c-file-upload-4 pattern) ────── */
-interface PropertyImagesUploadProps {
-  images: string[];
-  imageLimit: number;
-  disabled?: boolean;
-  onChange: (images: string[]) => void;
-}
+import type { PropertyImagesUploadProps } from "@/types/property-form";
 
 function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }: PropertyImagesUploadProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);

@@ -1,4 +1,4 @@
-export interface BlogTaxonomy {
+export type BlogTaxonomy = {
   id: number;
   name: string;
   slug: string;
@@ -6,9 +6,9 @@ export interface BlogTaxonomy {
   status: "active" | "inactive";
   createdAt?: string;
   updatedAt?: string;
-}
+};
 
-export interface BlogPost {
+export type BlogPost = {
   id: number;
   title: string;
   slug: string;
@@ -23,9 +23,9 @@ export interface BlogPost {
   updatedAt: string;
   categories: BlogTaxonomy[];
   tags: BlogTaxonomy[];
-}
+};
 
-export interface PaginatedBlogsResponse {
+export type PaginatedBlogsResponse = {
   success: boolean;
   message: string;
   data: {
@@ -37,21 +37,21 @@ export interface PaginatedBlogsResponse {
       totalPages: number;
     };
   };
-}
+};
 
-export interface BlogDetailResponse {
+export type BlogDetailResponse = {
   success: boolean;
   message: string;
   data: {
     post: BlogPost;
   };
-}
+};
 
-export interface BlogTaxonomiesResponse {
+export type BlogTaxonomiesResponse = {
   success: boolean;
   message: string;
   data: {
     categories?: BlogTaxonomy[];
     tags?: BlogTaxonomy[];
   };
-}
+};

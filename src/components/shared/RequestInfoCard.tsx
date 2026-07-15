@@ -3,13 +3,7 @@
 import { Tag } from "lucide-react";
 import { Button } from "../ui/button";
 
-interface RequestInfoCardProps {
-  priceFormatted: string;
-  categoryName: string;
-  ownerType: string;
-  property: any;
-  compact?: boolean;
-}
+import type { RequestInfoCardProps } from "@/types/components";
 
 export default function RequestInfoCard({
   priceFormatted,

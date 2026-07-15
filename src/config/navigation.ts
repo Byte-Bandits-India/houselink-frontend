@@ -1,10 +1,7 @@
 import { ROUTES } from "./routes";
+import type { NavLink } from "@/types/navigation";
 
-export interface NavLink {
-  label: string;
-  href: string;
-  children?: NavLink[];
-}
+export type { NavLink };
 
 /** Main header navigation */
 export const headerNav: NavLink[] = [

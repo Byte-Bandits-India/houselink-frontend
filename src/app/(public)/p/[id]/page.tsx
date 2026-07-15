@@ -3,7 +3,7 @@ import { redirect, notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-interface ShortUrlPageProps {
+type ShortUrlPageProps = {
   params: Promise<{ id: string }>;
 }
 

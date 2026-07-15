@@ -1,4 +1,4 @@
-export interface Career {
+export type Career = {
   id: number;
   title: string;
   slug: string;
@@ -10,14 +10,14 @@ export interface Career {
   content?: string | null;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface CareersResponse {
+export type CareersResponse = {
   success: boolean;
   data: Career[];
-}
+};
 
-export interface CareerDetailResponse {
+export type CareerDetailResponse = {
   success: boolean;
   data: Career;
-}
+};

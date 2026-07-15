@@ -27,16 +27,7 @@ import type { ChartConfig } from "@/components/ui/chart";
 
 /* ─── Types ─────────────────────────────────────────────────────────────────── */
 
-interface Property {
-    id: number;
-    name: string;
-    views: number;
-    moderationStatus: string;
-}
-
-interface PropertyChartsProps {
-    properties: Property[];
-}
+import type { PropertyChartsProps } from "@/types/components";
 
 /* ─── Chart configs ───────────────────────────────────────────────────────── */
 

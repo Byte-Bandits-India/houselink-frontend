@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 
-export interface PageFilterValues {
+export type PageFilterValues = {
   activeTab: "sell" | "rent";
   activeCategory: string;
   city: string;
@@ -12,7 +12,8 @@ export interface PageFilterValues {
   maxPrice: string;
   maxArea: string;
   amenities: string;
-}
+  houseType?: string;
+};
 
 export const defaultFilterValues: PageFilterValues = {
   activeTab: "sell",
@@ -24,12 +25,13 @@ export const defaultFilterValues: PageFilterValues = {
   maxPrice: "",
   maxArea: "",
   amenities: "",
+  houseType: "",
 };
 
-interface PageFilterContextType {
+type PageFilterContextType = {
   filters: PageFilterValues;
   setFilters: (filters: PageFilterValues) => void;
-}
+};
 
 const PageFilterContext = createContext<PageFilterContextType>({
   filters: defaultFilterValues,

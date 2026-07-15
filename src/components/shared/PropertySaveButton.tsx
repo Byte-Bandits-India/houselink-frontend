@@ -4,9 +4,7 @@ import React from "react";
 import { Heart } from "lucide-react";
 import { useWishlist } from "@/context/WishlistContext";
 
-interface PropertySaveButtonProps {
-  propertyId: number;
-}
+import type { PropertySaveButtonProps } from "@/types/components";
 
 export default function PropertySaveButton({ propertyId }: PropertySaveButtonProps) {
   const { isWishlisted, toggleWishlist } = useWishlist();

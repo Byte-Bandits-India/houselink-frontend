@@ -12,18 +12,32 @@ import {
 } from "@/components/ui/select";
 import { PropertyFormData, INDIAN_STATES } from "@/types/property";
 import { getStates, getCities } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
-interface Props {
-  data: PropertyFormData;
-  onChange: (patch: Partial<PropertyFormData>) => void;
-  disabled?: boolean;
-}
+import type { StepProps as Props } from "@/types/property-form";
+
+const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
+  <Label className="flex items-center gap-1">
+    <span className="text-red-500 font-bold mr-1">*</span>
+    <span>{children}</span>
+    <span className="text-red-500 font-bold ml-1">*</span>
+  </Label>
+);
+
+const ValidationError = ({ show, message }: { show: boolean; message: string }) => {
+  if (!show) return null;
+  return (
+    <p className="text-red-500 text-xs font-semibold mt-1">
+      {message}
+    </p>
+  );
+};
 
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <h3 className="text-sm font-semibold text-gray-800 mt-5 mb-2">{children}</h3>
 );
 
-export default function Step3Location({ data, onChange, disabled = false }: Props) {
+export default function Step3Location({ data, onChange, disabled = false, showErrors = false }: Props) {
   const [states, setStates] = useState<{ id: number; name: string }[]>([]);
   const [cities, setCities] = useState<{ id: number; name: string }[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
@@ -78,9 +92,7 @@ export default function Step3Location({ data, onChange, disabled = false }: Prop
       <SectionTitle>Property Location</SectionTitle>
 
       <div className="space-y-1">
-        <Label>
-          State <span className="text-red-500">*</span>
-        </Label>
+        <RequiredLabel>State</RequiredLabel>
         <Select
           value={data.state || ""}
           onValueChange={(v) => {
@@ -89,7 +101,9 @@ export default function Step3Location({ data, onChange, disabled = false }: Prop
           }}
           disabled={disabled}
         >
-          <SelectTrigger>
+          <SelectTrigger className={cn(
+            showErrors && !data.state && "border-red-500 focus:border-red-500"
+          )}>
             <SelectValue placeholder="Select State" />
           </SelectTrigger>
           <SelectContent>
@@ -100,18 +114,22 @@ export default function Step3Location({ data, onChange, disabled = false }: Prop
             ))}
           </SelectContent>
         </Select>
+        <ValidationError
+          show={showErrors && !data.state}
+          message="Please select your state"
+        />
       </div>
 
       <div className="space-y-1">
-        <Label>
-          City <span className="text-red-500">*</span>
-        </Label>
+        <RequiredLabel>City</RequiredLabel>
         <Select
           value={data.city || ""}
           onValueChange={(v) => onChange({ city: v })}
           disabled={!data.state || loadingCities || disabled}
         >
-          <SelectTrigger>
+          <SelectTrigger className={cn(
+            showErrors && !data.city && "border-red-500 focus:border-red-500"
+          )}>
             <SelectValue placeholder={
               !data.state ? "Select State First" : 
               loadingCities ? "Loading Cities..." : "Select City"
@@ -125,18 +143,27 @@ export default function Step3Location({ data, onChange, disabled = false }: Prop
             ))}
           </SelectContent>
         </Select>
+        <ValidationError
+          show={showErrors && !data.city}
+          message="Please select your city"
+        />
       </div>
 
       <div className="space-y-1">
-        <Label>
-          Location<span className="text-red-500">*</span>
-        </Label>
+        <RequiredLabel>Location</RequiredLabel>
         <Input
           value={data.address || ""}
           maxLength={200}
           onChange={(e) => onChange({ address: e.target.value.slice(0, 200) })}
           placeholder="e.g. 12, MG Road"
           disabled={disabled}
+          className={cn(
+            showErrors && !data.address && "border-red-500 focus-visible:ring-red-500 focus:border-red-500"
+          )}
+        />
+        <ValidationError
+          show={showErrors && !data.address}
+          message="Please enter your location"
         />
       </div>
     </div>

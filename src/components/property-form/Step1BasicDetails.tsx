@@ -21,11 +21,32 @@ import {
   getSchemaFields,
 } from "@/types/property";
 
-interface Props {
-  data: PropertyFormData;
-  onChange: (patch: Partial<PropertyFormData>) => void;
-  disabled?: boolean;
-}
+import type { StepProps as Props } from "@/types/property-form";
+
+const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
+  <Label className="flex items-center gap-1">
+    <span className="text-red-500 font-bold mr-1">*</span>
+    <span>{children}</span>
+    <span className="text-red-500 font-bold ml-1">*</span>
+  </Label>
+);
+
+const RequiredSectionTitle = ({ children }: { children: React.ReactNode }) => (
+  <h3 className="text-sm font-semibold text-gray-800 mt-5 mb-2 flex items-center gap-1">
+    <span className="text-red-500 font-bold mr-1">*</span>
+    <span>{children}</span>
+    <span className="text-red-500 font-bold ml-1">*</span>
+  </h3>
+);
+
+const ValidationError = ({ show, message }: { show: boolean; message: string }) => {
+  if (!show) return null;
+  return (
+    <p className="text-red-500 text-xs font-semibold mt-1">
+      {message}
+    </p>
+  );
+};
 
 const RadioPill = ({
   name,
@@ -92,7 +113,7 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   </h3>
 );
 
-export default function Step1BasicDetails({ data, onChange, disabled = false }: Props) {
+export default function Step1BasicDetails({ data, onChange, disabled = false, showErrors = false }: Props) {
   const { user } = useAuth();
   const subtype = data.property_subtype || "";
 
@@ -182,9 +203,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
   return (
     <div className="space-y-1">
       {/* Property For */}
-      <SectionTitle>
-        Property For <span className="text-red-500">*</span>
-      </SectionTitle>
+      <RequiredSectionTitle>Property For</RequiredSectionTitle>
       <div className="flex gap-3 flex-wrap">
         <RadioPill
           name="property_for"
@@ -206,11 +225,13 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           }}
         />
       </div>
+      <ValidationError
+        show={showErrors && !data.property_for}
+        message="Please select property listing purpose"
+      />
 
       {/* Owner Type */}
-      <SectionTitle>
-        Are you? <span className="text-red-500">*</span>
-      </SectionTitle>
+      <RequiredSectionTitle>Are you?</RequiredSectionTitle>
       <div className="flex gap-3 flex-wrap">
         {(data.property_for === "sell"
           ? ["Owner", "Builder", "Consultant"]
@@ -238,11 +259,13 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           );
         })}
       </div>
+      <ValidationError
+        show={showErrors && !data.owner_type}
+        message="Please select your listing role"
+      />
 
       {/* Main Type */}
-      <SectionTitle>
-        And it&apos;s a… <span className="text-red-500">*</span>
-      </SectionTitle>
+      <RequiredSectionTitle>And it&apos;s a…</RequiredSectionTitle>
       <div className="flex gap-3 flex-wrap">
         <RadioPill
           name="main_type"
@@ -267,11 +290,13 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           onChange={() => onChange({ property_main_type: "commercial", property_subtype: "", tenant_preference: [] })}
         />
       </div>
+      <ValidationError
+        show={showErrors && !data.property_main_type}
+        message="Please select your property main type"
+      />
 
       {/* Property Type Buttons */}
-      <SectionTitle>
-        Property Type <span className="text-red-500">*</span>
-      </SectionTitle>
+      <RequiredSectionTitle>Property Type</RequiredSectionTitle>
       <div className="flex gap-2 flex-wrap">
         {[...showResidential, ...showCommercial].map((s) => (
           <SubtypeButton
@@ -283,6 +308,10 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
           />
         ))}
       </div>
+      <ValidationError
+        show={showErrors && !data.property_subtype}
+        message="Please select your property type"
+      />
 
       {/* Dynamic Area Fields */}
       {subtype && (
@@ -294,10 +323,11 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
             {/* Plot/Land Area Input — first in grid */}
             {showLandPlotDetails && (
               <div className="space-y-1">
-                <Label>
-                  {subtype === "plot" ? "Plot Area" : "Land Area"}{" "}
-                  {showPlotAreaRequired && <span className="text-red-500">*</span>}
-                </Label>
+                {showPlotAreaRequired ? (
+                  <RequiredLabel>{subtype === "plot" ? "Plot Area" : "Land Area"}</RequiredLabel>
+                ) : (
+                  <Label>{subtype === "plot" ? "Plot Area" : "Land Area"}</Label>
+                )}
                 <Input
                   type="number"
                   min={1}
@@ -306,6 +336,13 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   value={data.plot_area || ""}
                   onChange={(e) => handleDecimalInput("plot_area", e.target.value)}
                   placeholder="Enter area"
+                  className={cn(
+                    showErrors && showPlotAreaRequired && !data.plot_area && "border-red-500 focus-visible:ring-red-500 focus:border-red-500"
+                  )}
+                />
+                <ValidationError
+                  show={showErrors && showPlotAreaRequired && !data.plot_area}
+                  message={`Please enter your ${subtype === "plot" ? "plot area" : "land area"}`}
                 />
               </div>
             )}
@@ -313,9 +350,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
             {/* Built-Up Area Input — first when no plot/land */}
             {showAreaDetails && (
               <div className="space-y-1">
-                <Label>
-                  Built-Up Area <span className="text-red-500">*</span>
-                </Label>
+                <RequiredLabel>Built-Up Area</RequiredLabel>
                 <Input
                   type="number"
                   min={1}
@@ -324,21 +359,28 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   value={data.super_builtup_area || ""}
                   onChange={(e) => handleDecimalInput("super_builtup_area", e.target.value)}
                   placeholder="Enter area"
+                  className={cn(
+                    showErrors && !data.super_builtup_area && "border-red-500 focus-visible:ring-red-500 focus:border-red-500"
+                  )}
+                />
+                <ValidationError
+                  show={showErrors && !data.super_builtup_area}
+                  message="Please enter your built-up area"
                 />
               </div>
             )}
 
             {/* Unit * — always second in the grid */}
             <div className="space-y-1">
-              <Label>
-                Unit <span className="text-red-500">*</span>
-              </Label>
+              <RequiredLabel>Unit</RequiredLabel>
               <Select
                 disabled={disabled}
                 value={data.area_unit || ""}
                 onValueChange={(v) => onChange({ area_unit: v })}
               >
-                <SelectTrigger>
+                <SelectTrigger className={cn(
+                  showErrors && !data.area_unit && "border-red-500 focus:border-red-500"
+                )}>
                   <SelectValue placeholder="Select Unit" />
                 </SelectTrigger>
                 <SelectContent>
@@ -349,6 +391,10 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   ))}
                 </SelectContent>
               </Select>
+              <ValidationError
+                show={showErrors && !data.area_unit}
+                message="Please select your unit"
+              />
             </div>
 
             {/* Carpet Area (Optional) */}
@@ -370,9 +416,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
             {/* Storage Area (Required for Godown/Warehouse) */}
             {showAreaDetails && showStorageArea && (
               <div className="space-y-1">
-                <Label>
-                  Storage Area (Sq. Ft) <span className="text-red-500">*</span>
-                </Label>
+                <RequiredLabel>Storage Area (Sq. Ft)</RequiredLabel>
                 <Input
                   type="number"
                   min={1}
@@ -381,6 +425,13 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                   value={data.storage_area || ""}
                   onChange={(e) => handleDecimalInput("storage_area", e.target.value)}
                   placeholder="Enter storage area"
+                  className={cn(
+                    showErrors && !data.storage_area && "border-red-500 focus-visible:ring-red-500 focus:border-red-500"
+                  )}
+                />
+                <ValidationError
+                  show={showErrors && !data.storage_area}
+                  message="Please enter your storage area"
                 />
               </div>
             )}
@@ -394,9 +445,11 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
               </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label>
-                    Total Floors {isFloorRequired && <span className="text-red-500">*</span>}
-                  </Label>
+                  {isFloorRequired ? (
+                    <RequiredLabel>Total Floors</RequiredLabel>
+                  ) : (
+                    <Label>Total Floors</Label>
+                  )}
                   <Input
                     type="number"
                     min={1}
@@ -406,13 +459,22 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                     onChange={(e) => handleTotalFloorsChange(e.target.value)}
                     onBlur={handleFloorBlur}
                     placeholder="e.g. 10"
-                    className={cn(isFloorInvalid && "border-red-500 focus-visible:ring-red-500 text-red-500")}
+                    className={cn(
+                      isFloorInvalid && "border-red-500 focus-visible:ring-red-500 text-red-500",
+                      showErrors && isFloorRequired && !data.total_floors && "border-red-500 focus-visible:ring-red-500 focus:border-red-500"
+                    )}
+                  />
+                  <ValidationError
+                    show={showErrors && isFloorRequired && !data.total_floors}
+                    message="Please enter your total floors"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>
-                    Property on Floor {isFloorRequired && <span className="text-red-500">*</span>}
-                  </Label>
+                  {isFloorRequired ? (
+                    <RequiredLabel>Property on Floor</RequiredLabel>
+                  ) : (
+                    <Label>Property on Floor</Label>
+                  )}
                   <Input
                     type="number"
                     min={0}
@@ -422,7 +484,14 @@ export default function Step1BasicDetails({ data, onChange, disabled = false }: 
                     onChange={(e) => handlePropertyOnFloorChange(e.target.value)}
                     onBlur={handleFloorBlur}
                     placeholder="e.g. 3"
-                    className={cn(isFloorInvalid && "border-red-500 focus-visible:ring-red-500 text-red-500")}
+                    className={cn(
+                      isFloorInvalid && "border-red-500 focus-visible:ring-red-500 text-red-500",
+                      showErrors && isFloorRequired && !data.property_on_floor && "border-red-500 focus-visible:ring-red-500 focus:border-red-500"
+                    )}
+                  />
+                  <ValidationError
+                    show={showErrors && isFloorRequired && !data.property_on_floor}
+                    message="Please enter your property on floor"
                   />
                 </div>
 

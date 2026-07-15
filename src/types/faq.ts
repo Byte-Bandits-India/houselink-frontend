@@ -1,4 +1,4 @@
-export interface FaqCategory {
+export type FaqCategory = {
   id: number;
   parentId: null;
   title: string;
@@ -7,9 +7,9 @@ export interface FaqCategory {
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface FaqItem {
+export type FaqItem = {
   id: number;
   parentId: number;
   title: string;
@@ -21,16 +21,16 @@ export interface FaqItem {
   parent?: {
     title: string;
   };
-}
+};
 
-export interface FaqsResponse {
+export type FaqsResponse = {
   success: boolean;
   message?: string;
   data: FaqItem[];
-}
+};
 
-export interface FaqCategoriesResponse {
+export type FaqCategoriesResponse = {
   success: boolean;
   message?: string;
   data: FaqCategory[];
-}
+};

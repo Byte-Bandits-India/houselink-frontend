@@ -4,10 +4,7 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 
-interface PropertyImageGalleryProps {
-  images: { image_url: string }[];
-  propertyName: string;
-}
+import type { PropertyImageGalleryProps } from "@/types/components";
 
 export default function PropertyImageGallery({
   images,

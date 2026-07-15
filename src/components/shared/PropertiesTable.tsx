@@ -51,37 +51,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-interface Property {
-  id: number;
-  name: string;
-  state: string;
-  views: number;
-  expiredAt: string;
-  createdAt: string;
-  status: string;
-  moderationStatus: string;
-  purpose: "sell" | "rent_lease";
-  ownerType: "owner" | "builder" | "consultant";
-  categoriesId?: number;
-}
-
-interface Lead {
-  id: number;
-  date: string;
-  property: string;
-  name: string;
-  phone: string;
-  email: string;
-  message: string;
-  filter: "sell" | "rent";
-  avatarImage?: string | null;
-}
-
-interface PropertiesTableProps {
-  properties: Property[];
-  leads: Lead[];
-  onDelete: (id: number, name: string) => void;
-}
+import type { PropertiesTableProps } from "@/types/components";
+import type { Lead } from "@/types/leads";
+import type { DashboardProperty as Property } from "@/types/dashboard";
 
 const CATEGORY_LABELS: Record<number, string> = {
   1: "Apartment",

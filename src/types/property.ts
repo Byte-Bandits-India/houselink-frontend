@@ -57,7 +57,7 @@ export const INDIAN_STATES = [
 ];
 
 // Step 1: Basic Details Form Data
-export interface Step1FormData {
+export type Step1FormData = {
   property_for: PropertyFor;
   owner_type: OwnerType | "";
   property_main_type: MainType;
@@ -71,10 +71,10 @@ export interface Step1FormData {
   carpet_area?: string;
   total_floors?: string;
   property_on_floor?: string;
-}
+};
 
 // Step 2: Property Profile Form Data
-export interface Step2FormData {
+export type Step2FormData = {
   name: string;
   permalink: string;
   description: string;
@@ -119,10 +119,10 @@ export interface Step2FormData {
   brokerage_percentage?: string;
   // Optional extra decimals for residential/commercial sells
   uds_area?: string;
-}
+};
 
 // Step 3: Location Form Data
-export interface Step3FormData {
+export type Step3FormData = {
   address?: string;
   landmark?: string;
   state?: string;
@@ -131,19 +131,19 @@ export interface Step3FormData {
   pincode?: string;
   latitude?: string;
   longitude?: string;
-}
+};
 
 // Step 4: Amenities Form Data
-export interface Step4FormData {
+export type Step4FormData = {
   amenities?: string[];
   features?: Array<{ featureId: number }>;
   facilities?: Array<{ facilityId: number; facilityValue: string }>;
   direction_facing?: string;
   tags?: string[];
-}
+};
 
 // Step 5: SEO / Final Form Data
-export interface Step5FormData {
+export type Step5FormData = {
   seo_title?: string;
   seo_desc?: string;
   seo_img?: string;
@@ -154,17 +154,16 @@ export interface Step5FormData {
   renew_24_hours?: boolean;
   renew_30_days?: boolean;
   is_featured?: boolean;
-}
+};
 
-// Combined Property Form Data interface extending all steps
-export interface PropertyFormData
-  extends Step1FormData,
-  Step2FormData,
-  Step3FormData,
-  Step4FormData,
-  Step5FormData {
-  id?: number | string;
-}
+// Combined Property Form Data type extending all steps
+export type PropertyFormData = Step1FormData &
+  Step2FormData &
+  Step3FormData &
+  Step4FormData &
+  Step5FormData & {
+    id?: number | string;
+  };
 
 export const defaultFormData: PropertyFormData = {
   property_for: "sell",

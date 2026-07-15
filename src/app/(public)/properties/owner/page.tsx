@@ -1,17 +1,48 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import PropertiesListingLayout from "@/components/shared/PropertiesListingLayout";
 import { getProperties, mapApiPropertyToCardProps, getCityIdByName } from "@/lib/api";
 import { PageFilterProvider, usePageFilter } from "@/contexts/HomeFilterContext";
 
 function OwnerPropertiesListContent() {
-  const { filters } = usePageFilter();
+  const { filters, setFilters } = usePageFilter();
+  const searchParams = useSearchParams();
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { activeTab: propertyPurpose, city, keyword, location, categoryType, activeCategory: category, maxPrice, maxArea, amenities } = filters;
+  useEffect(() => {
+    if (searchParams) {
+      const activeTab = searchParams.get("property_purpose") as "sell" | "rent" || "sell";
+      const activeCategory = searchParams.get("category") || "all";
+      const city = searchParams.get("city") || "";
+      const keyword = searchParams.get("keyword") || "";
+      const location = searchParams.get("location") || "";
+      const categoryType = searchParams.get("category_type") || "";
+      const maxPrice = searchParams.get("max_price") || "";
+      const maxArea = searchParams.get("max_area") || "";
+      const amenities = searchParams.get("amenities") || "";
+
+      const houseType = searchParams.get("house_type") || "";
+
+      setFilters({
+        activeTab,
+        activeCategory,
+        city,
+        keyword,
+        location,
+        categoryType,
+        maxPrice,
+        maxArea,
+        amenities,
+        houseType,
+      });
+    }
+  }, [searchParams]);
+
+  const { activeTab: propertyPurpose, city, keyword, location, categoryType, activeCategory: category, maxPrice, maxArea, amenities, houseType } = filters;
 
   useEffect(() => {
     async function fetchFilteredProperties() {
@@ -103,6 +134,23 @@ function OwnerPropertiesListContent() {
         if (maxArea) {
           const areaLimit = Number(maxArea);
           if (!isNaN(areaLimit)) data = data.filter((p) => Number(p.builtUpArea || p.plotLandArea || 0) <= areaLimit);
+        }
+
+        // 9. House Type Filter
+        if (houseType) {
+          const rawType = houseType.replace(/\s+/g, "").toUpperCase();
+          if (rawType.startsWith("5")) {
+            data = data.filter((p) => p.houseType === "five_bhk");
+          } else {
+            const mapped = rawType === "1RK" ? "one_bk" :
+                           rawType === "1BHK" ? "one_bhk" :
+                           rawType === "2BHK" ? "two_bhk" :
+                           rawType === "3BHK" ? "three_bhk" :
+                           rawType === "4BHK" ? "four_bhk" : "";
+            if (mapped) {
+              data = data.filter((p) => p.houseType === mapped);
+            }
+          }
         }
 
         // 8. Amenities Filter

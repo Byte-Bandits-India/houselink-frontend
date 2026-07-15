@@ -15,11 +15,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface Props {
-  data: PropertyFormData;
-  onChange: (patch: Partial<PropertyFormData>) => void;
-  disabled?: boolean;
-}
+import type { StepProps as Props } from "@/types/property-form";
+
+const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
+  <Label className="flex items-center gap-1">
+    <span className="text-red-500 font-bold mr-1">*</span>
+    <span>{children}</span>
+    <span className="text-red-500 font-bold ml-1">*</span>
+  </Label>
+);
+
+const ValidationError = ({ show, message }: { show: boolean; message: string }) => {
+  if (!show) return null;
+  return (
+    <p className="text-red-500 text-xs font-semibold mt-1">
+      {message}
+    </p>
+  );
+};
 
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <h3 className="text-sm font-semibold text-gray-800 mt-6 mb-3">{children}</h3>
@@ -59,7 +72,7 @@ const DIRECTIONS = [
   { value: "south_west", label: "South West" },
 ];
 
-export default function Step4Amenities({ data, onChange, disabled = false }: Props) {
+export default function Step4Amenities({ data, onChange, disabled = false, showErrors = false }: Props) {
   const subtype = data.property_subtype || "";
   const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
 
@@ -252,15 +265,22 @@ export default function Step4Amenities({ data, onChange, disabled = false }: Pro
       {/* Direction Facing */}
       {allowedFields.direction_facing && (
         <div className="space-y-1">
-          <SectionTitle>
-            Direction Facing {isDirectionRequired && <span className="text-red-500">*</span>}
-          </SectionTitle>
+          <div className="mt-5 mb-2">
+            {isDirectionRequired ? (
+              <RequiredLabel>Direction Facing</RequiredLabel>
+            ) : (
+              <Label>Direction Facing</Label>
+            )}
+          </div>
           <Select
             value={data.direction_facing || ""}
             onValueChange={(v) => onChange({ direction_facing: v })}
             disabled={disabled}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className={cn(
+              "w-full",
+              showErrors && isDirectionRequired && !data.direction_facing && "border-red-500 focus:border-red-500"
+            )}>
               <SelectValue placeholder="Select Direction" />
             </SelectTrigger>
             <SelectContent>
@@ -271,6 +291,10 @@ export default function Step4Amenities({ data, onChange, disabled = false }: Pro
               ))}
             </SelectContent>
           </Select>
+          <ValidationError
+            show={showErrors && isDirectionRequired && !data.direction_facing}
+            message="Please select your direction facing"
+          />
         </div>
       )}
     </div>

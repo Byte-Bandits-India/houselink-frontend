@@ -64,11 +64,11 @@ export class ApiError extends Error {
 
 // ─── Core fetch wrapper ───────────────────────────────────────────────────────
 
-interface RequestOptions extends Omit<RequestInit, "body"> {
+type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
   /** Skip automatic Authorization header injection */
   skipAuth?: boolean;
-}
+};
 
 async function request<T = unknown>(
   path: string,

@@ -8,27 +8,9 @@
  */
 
 import { apiClient } from "./client";
+import type { PopularPropertyApiItem, PopularRegionApiItem } from "@/types/popular";
 
-export interface PopularPropertyApiItem {
-  id: number;
-  type: string;
-  title: string;
-  price: string;
-  location: string;
-  image: string | null;
-  order: number;
-  status: "active" | "inactive";
-}
-
-export interface PopularRegionApiItem {
-  id: number;
-  name: string;
-  propertiesCount: number;
-  growthRate: string;
-  image: string | null;
-  order: number;
-  status: "active" | "inactive";
-}
+export type { PopularPropertyApiItem, PopularRegionApiItem };
 
 export async function getPopularProperties(): Promise<PopularPropertyApiItem[]> {
   const res = await apiClient.get<{ success: boolean; data: PopularPropertyApiItem[] }>(

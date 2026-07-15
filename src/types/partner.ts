@@ -1,4 +1,4 @@
-export interface Partner {
+export type Partner = {
   id: number;
   name: string;
   title: string | null;
@@ -10,9 +10,9 @@ export interface Partner {
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface PartnerInquiry {
+export type PartnerInquiry = {
   id: number;
   name: string;
   companyName: string;
@@ -25,15 +25,15 @@ export interface PartnerInquiry {
   status: number; // 0 for Unread, 1 for Read
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface PartnersResponse {
+export type PartnersResponse = {
   success: boolean;
   data: Partner[];
-}
+};
 
-export interface PartnerInquiryResponse {
+export type PartnerInquiryResponse = {
   success: boolean;
   message: string;
   data: PartnerInquiry;
-}
+};

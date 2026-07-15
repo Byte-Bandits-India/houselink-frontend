@@ -5,13 +5,7 @@ import Image from "next/image";
 import { MapPin, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { getPopularRegions, getImageUrl, type PopularRegionApiItem } from "@/lib/api";
 import { smoothScrollBy } from "@/lib/smoothScroll";
-
-interface CityCardProps {
-  image: string;
-  name: string;
-  propertiesCount: number;
-  growthRate: string;
-}
+import type { CityCardProps } from "@/types/home";
 
 function CityCard({ image, name, propertiesCount, growthRate }: CityCardProps) {
   return (

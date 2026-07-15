@@ -15,13 +15,13 @@ import {
 } from "@/lib/api/wishlist";
 import { message } from "antd";
 
-interface WishlistContextType {
+type WishlistContextType = {
   wishlistIds: number[];
   isWishlisted: (propertyId: number) => boolean;
   toggleWishlist: (propertyId: number) => Promise<boolean>;
   loading: boolean;
   refreshWishlistIds: () => Promise<void>;
-}
+};
 
 const WishlistContext = createContext<WishlistContextType>({
   wishlistIds: [],

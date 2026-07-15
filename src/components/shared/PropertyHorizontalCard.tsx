@@ -3,11 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getImageUrl } from "@/lib/api";
-import { PropertyCardProps } from "./PropertyCard";
-
-interface PropertyHorizontalCardProps extends PropertyCardProps {
-  onEnquireClick: (property: any) => void;
-}
+import type { PropertyHorizontalCardProps } from "@/types/components";
 
 function getDefaultImage(categoryName?: string): string {
   if (!categoryName) return "/assets/default.png";

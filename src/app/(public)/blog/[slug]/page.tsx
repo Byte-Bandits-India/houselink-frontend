@@ -24,7 +24,7 @@ export async function generateStaticParams() {
   return []
 }
 
-interface PageProps {
+type PageProps = {
   params: Promise<{ slug: string }>
 }
 

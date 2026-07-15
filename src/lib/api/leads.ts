@@ -9,39 +9,9 @@
  */
 
 import { apiClient } from "./client";
+import type { LeadInput, LeadResponse, EnquiryStatusResponse } from "@/types/leads";
 
-export interface LeadInput {
-  property_id: number;
-  name: string;
-  phone: string;
-  email: string;
-  message?: string;
-}
-
-export interface LeadResponse {
-  success: boolean;
-  message: string;
-  data: any;
-}
-
-/** Cooldown/points status returned by the check-status endpoint */
-export interface EnquiryStatusResponse {
-  success: boolean;
-  data: {
-    can_enquire: boolean;
-    property_for: "sell" | "rent" | "lease";
-    /** Only present when can_enquire = false */
-    remaining_minutes?: number;
-    remaining_seconds?: number;
-    owner_details_expires_at?: string;
-    last_enquiry_time?: string;
-    current_time?: string;
-    /** rent/lease specific */
-    already_unlocked?: boolean;
-    /** null = sell (no points needed) */
-    has_points?: boolean | null;
-  };
-}
+export type { LeadInput, LeadResponse, EnquiryStatusResponse };
 
 /**
  * Submit a new property enquiry lead to the backend.

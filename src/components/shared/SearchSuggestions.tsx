@@ -7,23 +7,8 @@ import { useRouter } from "next/navigation";
 import { getPopularProperties, getPopularRegions, getSearches, deleteSearchHistory } from "@/lib/api";
 import type { PopularPropertyApiItem, PopularRegionApiItem, SearchApiItem } from "@/lib/api";
 
-interface SearchSuggestionsProps {
-  query?: string;
-  onSelectKeyword: (keyword: string) => void;
-  onSelectLocation: (location: string) => void;
-  onSelectCategory?: (category: string) => void;
-  onSelectCity?: (city: string) => void;
-  onSelectAmenity?: (amenity: string) => void;
-  selectedAmenities?: string[];
-  onSearch: (overrides?: {
-    keyword?: string;
-    location?: string;
-    category?: string;
-    city?: string;
-    amenities?: string[];
-  }) => void;
-  onClose: () => void;
-}
+import type { SearchSuggestionsProps } from "@/types/components";
+
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 12 },
@@ -242,7 +227,11 @@ export default function SearchSuggestions({
               <motion.div
                 variants={itemVariants}
                 key={index}
-                onClick={() => handleScrollOrNavigate("high-demand-properties")}
+                onClick={() => {
+                  onSelectKeyword(prop.title);
+                  onSearch({ keyword: prop.title });
+                  onClose();
+                }}
                 className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
               >
                 <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
@@ -282,7 +271,7 @@ export default function SearchSuggestions({
               <motion.div
                 variants={itemVariants}
                 key={index}
-                onClick={() => handleScrollOrNavigate("trending-cities")}
+                onClick={() => handleRegionClick(region.name)}
                 className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
               >
                 <div className="w-7 h-7 rounded-lg bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
@@ -300,7 +289,7 @@ export default function SearchSuggestions({
                 <motion.div
                   variants={itemVariants}
                   key={`city-${index}`}
-                  onClick={() => handleScrollOrNavigate("trending-cities")}
+                  onClick={() => handleCityClick(city)}
                   className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
                 >
                   <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">

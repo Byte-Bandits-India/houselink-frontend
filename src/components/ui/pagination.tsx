@@ -1,12 +1,6 @@
 import { Pagination as AntdPagination } from "antd";
 
-interface PaginationProps {
-  current: number;
-  pageSize: number;
-  total: number;
-  onChange: (page: number) => void;
-  showTotal?: boolean;
-}
+import type { PaginationProps } from "@/types/components";
 
 export default function Pagination({
   current,

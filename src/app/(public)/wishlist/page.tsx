@@ -19,7 +19,7 @@ import { useWishlist } from "@/context/WishlistContext"
 import { getWishlist, getImageUrl } from "@/lib/api"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface Property {
+type Property = {
   id: number
   name: string
   permalink: string

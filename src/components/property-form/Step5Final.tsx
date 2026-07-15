@@ -16,12 +16,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-interface Props {
-  data: PropertyFormData;
-  onChange: (patch: Partial<PropertyFormData>) => void;
-  isEditMode?: boolean;
-  disabled?: boolean;
-}
+import type { Step5Props as Props } from "@/types/property-form";
+
+const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
+  <Label className="flex items-center gap-1">
+    <span className="text-red-500 font-bold mr-1">*</span>
+    <span>{children}</span>
+    <span className="text-red-500 font-bold ml-1">*</span>
+  </Label>
+);
+
+const ValidationError = ({ show, message }: { show: boolean; message: string }) => {
+  if (!show) return null;
+  return (
+    <p className="text-red-500 text-xs font-semibold mt-1">
+      {message}
+    </p>
+  );
+};
 
 const RadioPill = ({
   checked,
@@ -51,16 +63,7 @@ const RadioPill = ({
 );
 
 /* ── Single-image upload zone ───────────────────────────────── */
-interface SingleImageUploadProps {
-  /** The current image URL (controlled from parent) */
-  value: string;
-  /** Called with the new object URL when a file is selected, or "" to clear */
-  onValue: (url: string) => void;
-  label: string;
-  emptyLabel: string;
-  disabled?: boolean;
-  accept?: string;
-}
+import type { SingleImageUploadProps } from "@/types/property-form";
 
 function SingleImageUpload({
   value,
@@ -94,9 +97,7 @@ function SingleImageUpload({
     }
   }, [files]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // When a value comes in from outside (e.g. edit-mode server URL) but our
-  // internal files list is empty, show the value directly.
-  const previewUrl = files[0]?.preview ?? value ?? null;
+  const previewUrl = value;
 
   if (previewUrl) {
     return (
@@ -208,7 +209,7 @@ function SingleImageUpload({
 }
 
 /* ── Main component ─────────────────────────────────────────── */
-export default function Step5Final({ data, onChange, isEditMode, disabled = false }: Props) {
+export default function Step5Final({ data, onChange, isEditMode = false, disabled = false, showErrors = false }: Props) {
   const subtype = data.property_subtype || "";
   const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
   const isConsultant = data.owner_type === "Consultant";
@@ -234,9 +235,7 @@ export default function Step5Final({ data, onChange, isEditMode, disabled = fals
         allowedFields.brokerage_type && (
           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-5">
             <div className="space-y-3">
-              <Label className="text-gray-700 font-medium block">
-                Brokerage Type <span className="text-red-500">*</span>
-              </Label>
+              <RequiredLabel>Brokerage Type</RequiredLabel>
               <div className="flex flex-wrap gap-3">
                 {[
                   { value: "no_brokerage", label: "No Brokerage" },
@@ -258,34 +257,48 @@ export default function Step5Final({ data, onChange, isEditMode, disabled = fals
                   />
                 ))}
               </div>
+              <ValidationError
+                show={showErrors && !data.brokerage_type}
+                message="Please select your brokerage type"
+              />
             </div>
 
             {data.brokerage_type === "fixed" && allowedFields.brokerage_fee && (
               <div className="space-y-2 pt-2 border-t border-gray-50">
-                <Label className="text-gray-700 font-medium block">
-                  Broker Fee <span className="text-red-500">*</span>
-                </Label>
+                <RequiredLabel>Broker Fee</RequiredLabel>
                 <Input
                   disabled={disabled}
                   value={data.brokerage_fee || ""}
                   onChange={(e) => handleDecimalInput("brokerage_fee", e.target.value)}
                   placeholder="Enter amount"
-                  className="rounded-xl border-gray-200 focus-visible:ring-brand max-w-xl h-11"
+                  className={cn(
+                    "rounded-xl border-gray-200 focus-visible:ring-brand max-w-xl h-11",
+                    showErrors && !data.brokerage_fee && "border-red-500 focus-visible:ring-red-500 focus:border-red-500"
+                  )}
+                />
+                <ValidationError
+                  show={showErrors && !data.brokerage_fee}
+                  message="Please enter your broker fee"
                 />
               </div>
             )}
 
             {data.brokerage_type === "percentage" && allowedFields.brokerage_percentage && (
               <div className="space-y-2 pt-2 border-t border-gray-50">
-                <Label className="text-gray-700 font-medium block">
-                  Brokerage Percentage <span className="text-red-500">*</span>
-                </Label>
+                <RequiredLabel>Brokerage Percentage</RequiredLabel>
                 <Input
                   disabled={disabled}
                   value={data.brokerage_percentage || ""}
                   onChange={(e) => handleDecimalInput("brokerage_percentage", e.target.value)}
                   placeholder="Enter amount"
-                  className="rounded-xl border-gray-200 focus-visible:ring-brand max-w-xl h-11"
+                  className={cn(
+                    "rounded-xl border-gray-200 focus-visible:ring-brand max-w-xl h-11",
+                    showErrors && !data.brokerage_percentage && "border-red-500 focus-visible:ring-red-500 focus:border-red-500"
+                  )}
+                />
+                <ValidationError
+                  show={showErrors && !data.brokerage_percentage}
+                  message="Please enter your brokerage percentage"
                 />
               </div>
             )}

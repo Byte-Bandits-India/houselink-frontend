@@ -3,16 +3,9 @@ import Image from "next/image";
 import { MapPin, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { getPopularProperties, getImageUrl, type PopularPropertyApiItem } from "@/lib/api";
 import { smoothScrollBy } from "@/lib/smoothScroll";
+import type { HighDemandPropertyCardProps } from "@/types/home";
 
-interface PropertyCardProps {
-  image: string;
-  type: string;
-  title: string;
-  price: string;
-  location: string;
-}
-
-function PropertyCard({ image, type, title, price, location }: PropertyCardProps) {
+function PropertyCard({ image, type, title, price, location }: HighDemandPropertyCardProps) {
   return (
     <div className="relative rounded-[20px] overflow-hidden shadow-[0_1px_10px_rgba(0,0,0,0.25)] w-[360px] sm:w-[460px] md:w-[540px] lg:w-[888px] h-[240px] sm:h-[300px] md:h-[340px] lg:h-[396px] flex-shrink-0 cursor-pointer group image-anime">
       {/* Category Tag */}

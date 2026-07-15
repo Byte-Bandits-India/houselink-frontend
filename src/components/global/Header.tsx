@@ -292,9 +292,9 @@ export default function Header() {
               content={supportContent}
               align="end"
               trigger={
-                <Button variant="gradient" className="w-12 h-12">
+                <div className="w-12 h-12 cursor-pointer bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
                   <img src="/assets/header/Headphone.svg" alt="headset" />
-                </Button>
+                </div>
               }
             />
           </div>

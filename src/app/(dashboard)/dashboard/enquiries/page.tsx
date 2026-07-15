@@ -19,16 +19,7 @@ import {
 
 type Filter = "sell" | "rent" | "lease";
 
-interface Enquiry {
-  id: number;
-  date: string;
-  property: string;
-  ownerName: string;
-  ownerPhone: string;
-  ownerEmail: string;
-  myMessage: string;
-  filter: Filter;
-}
+import type { Enquiry } from "@/types/dashboard";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -118,7 +109,7 @@ export default function EnquiriesPage() {
           <Button 
             onClick={handleDownloadCSV}
             variant="gradient"
-            className="flex items-center gap-2 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors duration-200"
+            className="flex items-center gap-2 text-white font-semibold text-sm px-4 py-2 rounded-[50px] transition-colors duration-200"
           >
             <Download className="w-4 h-4" /> Download
           </Button>

@@ -1,10 +1,7 @@
 import { apiClient } from "./client";
+import type { WishlistResponse } from "@/types/wishlist";
 
-export interface WishlistResponse<T = any> {
-  success: boolean;
-  message: string;
-  data: T;
-}
+export type { WishlistResponse };
 
 /**
  * Fetch all properties in the logged-in customer's wishlist.

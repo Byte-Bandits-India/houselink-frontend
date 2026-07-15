@@ -16,13 +16,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-interface PropertiesListingLayoutProps {
-  properties: any[];
-  isLoading: boolean;
-  error: string | null;
-  title: string;
-  breadcrumbLabel: string;
-}
+import type { PropertiesListingLayoutProps } from "@/types/components";
 
 export default function PropertiesListingLayout({
   properties,

@@ -4,11 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getStates, getCities, getFeatures, recordSearch } from "@/lib/api";
+import { getStates, getCities, getFeatures, recordSearch, getSearches, getPopularProperties, getPopularRegions } from "@/lib/api";
+import type { SearchApiItem, PopularPropertyApiItem, PopularRegionApiItem } from "@/lib/api";
 import { useHomeFilter } from "@/contexts/HomeFilterContext";
 import { Button } from "@/components/ui/button";
 import ActionSearchBar from "@/components/kokonutui/action-search-bar";
 import PropertyTypeSwitch from "./PropertyTypeSwitch";
+import SearchFilterModal from "./SearchFilterModal";
 
 const categories = [
   { id: "all", name: "All" },
@@ -146,6 +148,10 @@ export default function PropertySearch() {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [citiesList, setCitiesList] = useState<{ value: string; label: string }[]>(cities);
   const [amenityList, setAmenityList] = useState<string[]>(defaultAmenities);
+  const [recentSearches, setRecentSearches] = useState<SearchApiItem[]>([]);
+  const [popularProperties, setPopularProperties] = useState<PopularPropertyApiItem[]>([]);
+  const [popularRegions, setPopularRegions] = useState<PopularRegionApiItem[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Typewriter placeholder animation
   const [placeholderText, setPlaceholderText] = useState("Search for properties in Chennai...");
@@ -261,6 +267,46 @@ export default function PropertySearch() {
       } catch (e) {
         console.error("Failed to load features from backend, using fallback:", e);
       }
+
+      try {
+        const searchesRes = await getSearches();
+        if (searchesRes.success && searchesRes.data && searchesRes.data.length > 0) {
+          setRecentSearches(searchesRes.data);
+        } else {
+          setRecentSearches([
+            { id: -1, query: "2 BHK apartment in Adyar" },
+            { id: -2, query: "Flats in porur" },
+            { id: -3, query: "Lands in Kundrathur" },
+            { id: -4, query: "3 BHK Villas in ECR" },
+          ]);
+        }
+      } catch (e) {
+        console.error("Failed to load searches from backend, using fallback:", e);
+        setRecentSearches([
+          { id: -1, query: "2 BHK apartment in Adyar" },
+          { id: -2, query: "Flats in porur" },
+          { id: -3, query: "Lands in Kundrathur" },
+          { id: -4, query: "3 BHK Villas in ECR" },
+        ]);
+      }
+
+      try {
+        const propsRes = await getPopularProperties();
+        if (Array.isArray(propsRes)) {
+          setPopularProperties(propsRes);
+        }
+      } catch (e) {
+        console.error("Failed to load popular properties:", e);
+      }
+
+      try {
+        const regionsRes = await getPopularRegions();
+        if (Array.isArray(regionsRes)) {
+          setPopularRegions(regionsRes);
+        }
+      } catch (e) {
+        console.error("Failed to load popular regions:", e);
+      }
     }
     loadBackendData();
   }, []);
@@ -298,49 +344,100 @@ export default function PropertySearch() {
     category?: string;
     city?: string;
     amenities?: string[];
+    fromModal?: boolean;
+    property_purpose?: "sell" | "rent";
+    max_price?: string;
+    max_area?: string;
+    house_type?: string;
   }) => {
     const searchKeyword = overrides && overrides.keyword !== undefined ? overrides.keyword : keyword;
     const searchLocation = overrides && overrides.location !== undefined ? overrides.location : location;
     const searchCategory = overrides && overrides.category !== undefined ? overrides.category : activeCategory;
     const searchCity = overrides && overrides.city !== undefined ? overrides.city : city;
     const searchAmenities = overrides && overrides.amenities !== undefined ? overrides.amenities : selectedAmenities;
+    const searchPurpose = overrides && overrides.property_purpose !== undefined ? overrides.property_purpose : activeTab;
+    const searchMaxPrice = overrides && overrides.max_price !== undefined ? overrides.max_price : (showAdvanced ? String(priceRange * 10000000) : "");
+    const searchMaxArea = overrides && overrides.max_area !== undefined ? overrides.max_area : (showAdvanced ? String(areaRange) : "");
+    const searchHouseType = overrides && overrides.house_type !== undefined ? overrides.house_type : "";
+
+    const q = searchKeyword.trim().toLowerCase();
+    const isSearching = q.length > 0;
+    const fromModal = overrides && overrides.fromModal;
+
+    const hasLocationFilter = overrides && overrides.location !== undefined;
+    const hasCategoryFilter = overrides && overrides.category !== undefined;
+    const hasCityFilter = overrides && overrides.city !== undefined;
+    const hasAmenityFilter = overrides && overrides.amenities !== undefined;
+    const isTargetedSearch = hasLocationFilter || hasCategoryFilter || hasCityFilter || hasAmenityFilter;
+
+    if (isHomePage && !fromModal && !isTargetedSearch) {
+      if (!isSearching) {
+        setIsModalOpen(true);
+        return;
+      }
+
+      const propertyCategories = ["plots", "apartments", "villas", "house", "commercial"];
+      const defaultAmenitiesList = ["wifi", "swimming pool", "security", "garden", "balcony", "air conditioning", "fitness center", "car parking", "bike parking"];
+      
+      const hasSuggestions =
+        popularProperties.some((p) => p.title.toLowerCase().includes(q)) ||
+        popularRegions.some((r) => r.name.toLowerCase().includes(q)) ||
+        ["chennai", "bangalore", "mumbai", "hyderabad"].some((c) => c.includes(q)) ||
+        recentSearches.some((s) => s.query.toLowerCase().includes(q)) ||
+        propertyCategories.some((c) => c.includes(q)) ||
+        defaultAmenitiesList.some((a) => a.includes(q));
+
+      if (!hasSuggestions) {
+        setIsModalOpen(true);
+        return;
+      }
+    }
 
     if (searchKeyword && searchKeyword.trim()) {
       recordSearch(searchKeyword.trim()).catch((err) => console.error("Error recording search query:", err));
     }
 
     const params = new URLSearchParams();
-    params.set("property_purpose", activeTab);
+    params.set("property_purpose", searchPurpose);
     if (searchCity) params.set("city", searchCity);
     if (searchKeyword) params.set("keyword", searchKeyword);
     if (searchLocation) params.set("location", searchLocation);
     if (categoryType) params.set("category_type", categoryType);
     if (searchCategory !== "all") params.set("category", searchCategory);
 
-    const hasAdvanced = showAdvanced || (overrides && overrides.amenities !== undefined);
+    const hasAdvanced = showAdvanced || (overrides && overrides.amenities !== undefined) || (overrides && overrides.max_price !== undefined);
 
     if (hasAdvanced) {
-      params.set("max_price", String(priceRange * 10000000));
-      params.set("max_area", String(areaRange));
+      if (searchMaxPrice) params.set("max_price", searchMaxPrice);
+      if (searchMaxArea) params.set("max_area", searchMaxArea);
       if (searchAmenities.length > 0) {
         params.set("amenities", searchAmenities.join(","));
       }
     }
 
+    if (searchHouseType) {
+      params.set("house_type", searchHouseType);
+    }
+
     if (isListingPage) {
-      // On all listing pages: update context, keep URL clean
-      setFilters({
-        activeTab: activeTab as "sell" | "rent",
-        activeCategory: searchCategory,
-        city: searchCity,
-        keyword: searchKeyword,
-        location: searchLocation,
-        categoryType,
-        maxPrice: hasAdvanced ? String(priceRange * 10000000) : "",
-        maxArea: hasAdvanced ? String(areaRange) : "",
-        amenities: hasAdvanced && searchAmenities.length > 0 ? searchAmenities.join(",") : "",
-      });
-      scrollToResults();
+      if (isHomePage) {
+        router.push(`/properties?${params.toString()}`, { scroll: false });
+      } else {
+        // On all listing pages: update context, keep URL clean
+        setFilters({
+          activeTab: searchPurpose as "sell" | "rent",
+          activeCategory: searchCategory,
+          city: searchCity,
+          keyword: searchKeyword,
+          location: searchLocation,
+          categoryType,
+          maxPrice: searchMaxPrice,
+          maxArea: searchMaxArea,
+          amenities: searchAmenities.length > 0 ? searchAmenities.join(",") : "",
+          houseType: searchHouseType,
+        });
+        scrollToResults();
+      }
     } else {
       router.push(`${basePath}?${params.toString()}`, { scroll: false });
     }
@@ -367,6 +464,7 @@ export default function PropertySearch() {
         maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
         maxArea: showAdvanced ? String(areaRange) : "",
         amenities: showAdvanced && selectedAmenities.length > 0 ? selectedAmenities.join(",") : "",
+        houseType: "",
       });
       return;
     }
@@ -405,6 +503,7 @@ export default function PropertySearch() {
         maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
         maxArea: showAdvanced ? String(areaRange) : "",
         amenities: showAdvanced && selectedAmenities.length > 0 ? selectedAmenities.join(",") : "",
+        houseType: "",
       });
       return;
     }
@@ -478,32 +577,41 @@ export default function PropertySearch() {
         />
 
         {/* Recent searches */}
-        <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-gray-500 mt-5">
-          <span className="font-bold text-gray-600 w-full text-center mb-1 md:w-auto md:mb-0">Recent searches:</span>
-          {[
-            "Plots in porur",
-            "Plots in porur",
-            "Plots in porur",
-            "Plots in porur",
-            "Plots in porur",
-            "Plots in porur",
-          ].map((item, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => {
-                setKeyword(item);
-                setCity("chennai");
-              }}
-              className="flex items-center gap-1.5 bg-white/70 hover:bg-white text-gray-600 px-3.5 py-1.5 rounded-full border border-gray-200/85 transition-colors shadow-sm cursor-pointer"
-            >
-              <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {item}
-            </button>
-          ))}
-        </div>
+        {recentSearches.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-gray-500 mt-5">
+            <span className="font-bold text-gray-600 w-full text-center mb-1 md:w-auto md:mb-0">Recent searches:</span>
+            {recentSearches.slice(0, 6).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  setKeyword(item.query);
+                  setCity("chennai");
+                  handleSearch({ keyword: item.query, city: "chennai" });
+                }}
+                className="flex items-center gap-1.5 bg-white/70 hover:bg-white text-gray-600 px-3.5 py-1.5 rounded-full border border-gray-200/85 transition-colors shadow-sm cursor-pointer"
+              >
+                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {item.query}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        <SearchFilterModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          initialKeyword={keyword}
+          initialPurpose={activeTab as "sell" | "rent"}
+          onSearch={(modalFilters) => {
+            handleSearch({
+              ...modalFilters,
+              fromModal: true,
+            });
+          }}
+        />
       </div>
     );
   }
@@ -696,6 +804,19 @@ export default function PropertySearch() {
           </button>
         ))}
       </div>
+
+      <SearchFilterModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        initialKeyword={keyword}
+        initialPurpose={activeTab as "sell" | "rent"}
+        onSearch={(modalFilters) => {
+          handleSearch({
+            ...modalFilters,
+            fromModal: true,
+          });
+        }}
+      />
 
     </div>
   );

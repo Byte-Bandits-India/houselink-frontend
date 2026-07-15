@@ -13,16 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { AlertTriangleIcon } from "lucide-react";
 import { useState } from "react";
-
-interface DeletePropertyDialogProps {
-  propertyName: string;
-  onConfirm: () => void | Promise<void>;
-  /** Uncontrolled: provide a trigger node and the dialog manages its own open state */
-  trigger?: React.ReactNode;
-  /** Controlled: provide open + onOpenChange when you manage state externally */
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-}
+import type { DeletePropertyDialogProps } from "@/types/components";
 
 export function DeletePropertyDialog({
   propertyName,
