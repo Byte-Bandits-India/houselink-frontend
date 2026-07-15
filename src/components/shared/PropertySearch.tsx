@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getStates, getCities, getFeatures, recordSearch, getSearches, getPopularProperties, getPopularRegions } from "@/lib/api";
+import { getStates, getCities, getFeatures, recordSearch, getSearches, getPopularProperties, getPopularRegions, tokenStore } from "@/lib/api";
 import type { SearchApiItem, PopularPropertyApiItem, PopularRegionApiItem } from "@/lib/api";
 import { useHomeFilter } from "@/contexts/HomeFilterContext";
 import ActionSearchBar from "@/components/kokonutui/action-search-bar";
@@ -17,6 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const DEFAULT_TOP_SEARCHES = [
+  { id: -1, query: "2 BHK apartment in Adyar", count: 1 },
+  { id: -2, query: "Flats in porur", count: 1 },
+  { id: -3, query: "Lands in Kundrathur", count: 1 },
+  { id: -4, query: "3 BHK Villas in ECR", count: 1 },
+];
 
 const categories = [
   { id: "all", name: "All" },
@@ -276,20 +283,26 @@ export default function PropertySearch() {
       try {
         const searchesRes = await getSearches();
         console.log("PropertySearch: getSearches response:", searchesRes);
-        if (searchesRes.success && searchesRes.data && searchesRes.data.length > 0) {
-          const sorted = [...searchesRes.data].sort((a, b) => {
-            const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-            const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-            if (timeA !== timeB) return timeB - timeA;
-            return b.id - a.id;
-          });
-          setRecentSearches(sorted);
+        const isLoggedIn = tokenStore.isLoggedIn();
+        if (searchesRes.success && searchesRes.data) {
+          if (searchesRes.data.length > 0) {
+            const sorted = [...searchesRes.data].sort((a, b) => {
+              const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+              const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+              if (timeA !== timeB) return timeB - timeA;
+              return b.id - a.id;
+            });
+            setRecentSearches(sorted);
+          } else {
+            setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
+          }
         } else {
-          setRecentSearches([]);
+          setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
         }
       } catch (e) {
         console.error("Failed to load searches from backend:", e);
-        setRecentSearches([]);
+        const isLoggedIn = tokenStore.isLoggedIn();
+        setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
       }
 
       try {

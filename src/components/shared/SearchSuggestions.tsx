@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Clock, MapPin, Building, X, Home, Flame, Tag, CheckSquare } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { getPopularProperties, getPopularRegions, getSearches, deleteSearchHistory } from "@/lib/api";
+import { getPopularProperties, getPopularRegions, getSearches, deleteSearchHistory, tokenStore } from "@/lib/api";
 import type { PopularPropertyApiItem, PopularRegionApiItem, SearchApiItem } from "@/lib/api";
 
 import type { SearchSuggestionsProps } from "@/types/components";
@@ -23,6 +23,13 @@ const itemVariants: Variants = {
     transition: { duration: 0.15, ease: "easeIn" },
   },
 };
+
+const DEFAULT_TOP_SEARCHES = [
+  { id: -1, query: "2 BHK apartment in Adyar", count: 1 },
+  { id: -2, query: "Flats in porur", count: 1 },
+  { id: -3, query: "Lands in Kundrathur", count: 1 },
+  { id: -4, query: "3 BHK Villas in ECR", count: 1 },
+];
 
 export default function SearchSuggestions({
   query = "",
@@ -48,21 +55,27 @@ export default function SearchSuggestions({
     getSearches()
       .then((res) => {
         console.log("SearchSuggestions: getSearches response:", res);
-        if (res.success && res.data.length > 0) {
-          const sorted = [...res.data].sort((a, b) => {
-            const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-            const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-            if (timeA !== timeB) return timeB - timeA;
-            return b.id - a.id;
-          });
-          setRecentSearches(sorted);
+        const isLoggedIn = tokenStore.isLoggedIn();
+        if (res.success && res.data) {
+          if (res.data.length > 0) {
+            const sorted = [...res.data].sort((a, b) => {
+              const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+              const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+              if (timeA !== timeB) return timeB - timeA;
+              return b.id - a.id;
+            });
+            setRecentSearches(sorted);
+          } else {
+            setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
+          }
         } else {
-          setRecentSearches([]);
+          setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
         }
       })
       .catch((err) => {
         console.error("Error fetching searches:", err);
-        setRecentSearches([]);
+        const isLoggedIn = tokenStore.isLoggedIn();
+        setRecentSearches(isLoggedIn ? [] : DEFAULT_TOP_SEARCHES);
       });
   }, []);
 
