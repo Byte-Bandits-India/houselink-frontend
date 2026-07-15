@@ -203,7 +203,6 @@ export default function PropertySearch() {
       }
     };
 
-    // Wait the full pause duration (1500ms) before starting the first deletion of the pre-filled text
     timeoutId = setTimeout(runTypewriter, 1500);
 
     return () => clearTimeout(timeoutId);
@@ -276,6 +275,7 @@ export default function PropertySearch() {
 
       try {
         const searchesRes = await getSearches();
+        console.log("PropertySearch: getSearches response:", searchesRes);
         if (searchesRes.success && searchesRes.data && searchesRes.data.length > 0) {
           const sorted = [...searchesRes.data].sort((a, b) => {
             const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
@@ -581,7 +581,9 @@ export default function PropertySearch() {
         {/* Recent searches */}
         {recentSearches.length > 0 && (
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-gray-500 mt-5">
-            <span className="font-bold text-gray-600 w-full text-center mb-1 md:w-auto md:mb-0">Recent searches:</span>
+            <span className="font-bold text-gray-600 w-full text-center mb-1 md:w-auto md:mb-0">
+              {recentSearches.some((s) => s.count !== undefined) ? "Top searches:" : "Recent searches:"}
+            </span>
             {recentSearches.slice(0, 6).map((item) => (
               <button
                 key={item.id}

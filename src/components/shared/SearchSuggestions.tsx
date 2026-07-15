@@ -47,6 +47,7 @@ export default function SearchSuggestions({
 
     getSearches()
       .then((res) => {
+        console.log("SearchSuggestions: getSearches response:", res);
         if (res.success && res.data.length > 0) {
           const sorted = [...res.data].sort((a, b) => {
             const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
@@ -314,7 +315,11 @@ export default function SearchSuggestions({
             <motion.div variants={itemVariants} className="flex items-center justify-between mb-3">
               <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500 flex items-center gap-2">
                 <Clock size={14} className="text-gray-400 stroke-[2.5px]" />
-                {isSearching ? "Matching History" : "Recent Searches"}
+                {isSearching
+                  ? "Matching History"
+                  : recentSearches.some((s) => s.count !== undefined)
+                  ? "Top Searches"
+                  : "Recent Searches"}
               </h4>
             </motion.div>
 
