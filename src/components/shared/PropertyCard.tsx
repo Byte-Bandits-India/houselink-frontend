@@ -104,11 +104,27 @@ export default function PropertyCard(props: PropertyCardProps) {
           <Heart className={`h-4.5 w-4.5 stroke-[2px] ${wishlisted ? "fill-red-500 text-red-500" : "text-neutral-700"}`} />
         </button>
 
-        {/* Badges on top-left - show only Featured, category is now in the ribbon */}
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+        {/* Badges on top-left - Featured, Owner/Builder, and Sell/Rent */}
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
           {props.isFeatured && (
-            <span className="rounded-full bg-[#D1FAE5] text-emerald-800 px-2.5 py-1 font-bold text-[10px] uppercase tracking-wider shadow-sm">
+            <span className="rounded-md bg-emerald-100 text-emerald-800 px-2.5 py-1 font-semibold text-[11px] md:text-xs shadow-sm">
               Featured
+            </span>
+          )}
+          {props.type && (
+            <span className="rounded-md bg-blue-100 text-blue-800 px-2.5 py-1 font-semibold text-[11px] md:text-xs shadow-sm">
+              {props.type}
+            </span>
+          )}
+          {props.property_for && (
+            <span className="rounded-md bg-[#153e75] text-white px-2.5 py-1 font-semibold text-[11px] md:text-xs shadow-sm">
+              {props.property_for === "For Sale" || props.property_for.toLowerCase() === "sell"
+                ? "Sell"
+                : props.property_for === "Rent"
+                ? "Rent"
+                : props.property_for === "Lease"
+                ? "Lease"
+                : props.property_for}
             </span>
           )}
         </div>
