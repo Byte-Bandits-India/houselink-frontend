@@ -15,6 +15,9 @@ import { heroBadges } from "@/components/home/Options";
 import type { HeroBadge } from "@/components/home/Options";
 import React from "react";
 import Image from "next/image";
+import RotatingText, { RotatingTextRef } from "@/components/ui/RotatingText";
+import ShinyText from "@/components/ui/ShinyText";
+import { getHeroConfig, getImageUrl } from "@/lib/api";
 
 const badgeIconMap: Record<HeroBadge["iconName"], React.ReactNode> = {
   ShieldCheck: <Image src="/assets/home/icons/verified.png" alt="Verified Properties" width={36} height={36} unoptimized />,
@@ -24,12 +27,57 @@ const badgeIconMap: Record<HeroBadge["iconName"], React.ReactNode> = {
 };
 
 export default function HomePageClient() {
+  const [textIndex, setTextIndex] = React.useState(0);
+  const ref1 = React.useRef<RotatingTextRef>(null);
+  const ref2 = React.useRef<RotatingTextRef>(null);
+
+  const [heroConfig, setHeroConfig] = React.useState({
+    bgImage: "/assets/heroBG.png",
+    shinyText: "Find your dream property in just a few clicks",
+    rotatingTexts1: ["Better Homes.", "Better Life."],
+    rotatingTexts2: ["Better Life.", "Better Homes."],
+  });
+
+  React.useEffect(() => {
+    async function loadHeroConfig() {
+      try {
+        const res = await getHeroConfig();
+        if (res.success && res.data) {
+          setHeroConfig(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to load hero configuration from backend:", err);
+      }
+    }
+    loadHeroConfig();
+  }, []);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setTextIndex((prev) => {
+        const maxLen = Math.max(heroConfig.rotatingTexts1.length, heroConfig.rotatingTexts2.length);
+        if (maxLen <= 1) return 0;
+        return (prev + 1) % maxLen;
+      });
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [heroConfig.rotatingTexts1.length, heroConfig.rotatingTexts2.length]);
+
+  React.useEffect(() => {
+    if (ref1.current && heroConfig.rotatingTexts1.length > textIndex) {
+      ref1.current.jumpTo(textIndex);
+    }
+    if (ref2.current && heroConfig.rotatingTexts2.length > textIndex) {
+      ref2.current.jumpTo(textIndex);
+    }
+  }, [textIndex, heroConfig.rotatingTexts1.length, heroConfig.rotatingTexts2.length]);
+
   return (
     <HomeFilterProvider>
       {/* ── Hero Section ── */}
       <section 
         className="relative h-[100dvh] lg:h-[90dvh] pt-10 md:pt-16 lg:pt-24 w-full flex items-start justify-center overflow-visible bg-cover bg-center bg-no-repeat z-30"
-        style={{ backgroundImage: "url('/assets/heroBG.png')" }}
+        style={{ backgroundImage: `url('${getImageUrl(heroConfig.bgImage)}')` }}
       >
         <div className="container mx-auto px-4 flex flex-col items-center text-center relative z-10">
           {/* Subtitle */}
@@ -42,9 +90,19 @@ export default function HomePageClient() {
               className="object-contain w-6 h-6 md:w-[124px] md:h-[15px] shrink-0"
               unoptimized
             />
-            <span className="text-secondary text-sm md:text-base lg:text-lg font-bold tracking-wider">
-              Find your dream property in just a few clicks
-            </span>
+            <ShinyText
+              text={heroConfig.shinyText}
+              speed={2}
+              delay={0}
+              color="#4F8BD3"
+              shineColor="#FFFFFF"
+              spread={120}
+              direction="left"
+              yoyo={false}
+              pauseOnHover={false}
+              disabled={false}
+              className="text-sm md:text-base lg:text-lg font-bold tracking-wider"
+            />
             <Image
               src="/assets/home/icons/right.png"
               alt="Right decorative icon"
@@ -56,9 +114,31 @@ export default function HomePageClient() {
           </div>
           
           {/* Heading */}
-          <h1 className="text-5xl lg:text-[68px] font-extrabold tracking-tight mb-4 md:mb-6 lg:mb-10">
-            <span className="text-primary">Better Homes. </span><br className="md:hidden"/>
-            <span className="text-secondary">Better Life.</span>
+          <h1 className="text-5xl lg:text-[68px] font-extrabold tracking-tight mb-4 md:mb-6 lg:mb-10 min-h-[1.2em] select-none">
+            <span className={`inline-flex transition-colors duration-500 ${textIndex % 2 === 0 ? "text-primary" : "text-secondary"}`}>
+              <RotatingText
+                ref={ref1}
+                auto={false}
+                texts={heroConfig.rotatingTexts1}
+                mainClassName="overflow-hidden py-1 lg:py-2"
+                staggerDuration={0.025}
+                splitLevelClassName="overflow-hidden"
+                transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              />
+            </span>
+            <span className="hidden md:inline">&nbsp;</span>
+            <br className="md:hidden"/>
+            <span className={`inline-flex transition-colors duration-500 ${textIndex % 2 === 0 ? "text-secondary" : "text-primary"}`}>
+              <RotatingText
+                ref={ref2}
+                auto={false}
+                texts={heroConfig.rotatingTexts2}
+                mainClassName="overflow-hidden py-1 lg:py-2"
+                staggerDuration={0.025}
+                splitLevelClassName="overflow-hidden"
+                transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              />
+            </span>
           </h1>
 
           {/* Badges/Features Row */}

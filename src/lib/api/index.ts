@@ -124,6 +124,14 @@ export {
 } from "./searches";
 export type { SearchApiItem, SearchApiResponse } from "./searches";
 
+// Hero Config API
+export { getHeroConfig } from "./hero";
+export type { HeroConfig, HeroConfigResponse } from "./hero";
+
+// Upcoming Config API
+export { getUpcomingConfig } from "./upcoming";
+export type { UpcomingConfig, UpcomingConfigResponse } from "./upcoming";
+
 
 
 

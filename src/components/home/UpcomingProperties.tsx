@@ -7,7 +7,7 @@ import { smoothScrollBy } from "@/lib/smoothScroll";
 import { MapPin, ArrowRight, Building, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/animations";
-import { getProperties, mapApiPropertyToCardProps, getImageUrl } from "@/lib/api";
+import { getProperties, mapApiPropertyToCardProps, getImageUrl, getUpcomingConfig } from "@/lib/api";
 
 function getDefaultImage(categoryName?: string): string {
   if (!categoryName) return "/assets/default.png";
@@ -145,6 +145,8 @@ export default function UpcomingProperties() {
   const scrollContainer = useRef<HTMLDivElement>(null);
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [bannerImages, setBannerImages] = useState<string[]>([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     async function loadFeaturedProperties() {
@@ -166,8 +168,32 @@ export default function UpcomingProperties() {
         setIsLoading(false);
       }
     }
+    
+    async function loadBanner() {
+      try {
+        const res = await getUpcomingConfig();
+        if (res.success && res.data && res.data.images && res.data.images.length > 0) {
+          setBannerImages(res.data.images);
+        } else {
+          setBannerImages(['/assets/home/upComming.png']);
+        }
+      } catch (err) {
+        console.error("Failed to load upcoming banner images:", err);
+        setBannerImages(['/assets/home/upComming.png']);
+      }
+    }
+
     loadFeaturedProperties();
+    loadBanner();
   }, []);
+
+  useEffect(() => {
+    if (bannerImages.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % bannerImages.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [bannerImages]);
 
   const handleScroll = (direction: "left" | "right") => {
     if (scrollContainer.current) {
@@ -222,12 +248,44 @@ export default function UpcomingProperties() {
         </motion.div>
       </div>
 
-      <div className="mb-10 w-full image-anime">
-        <img
-          src="/assets/home/upComming.png"
-          alt="upcoming-properties"
-          className="w-full h-auto shadow-sm object-cover"
-        />
+      <div className="mb-10">
+        <div className="relative w-full overflow-hidden select-none">
+          {bannerImages.map((src, idx) => (
+            <div
+              key={idx}
+              className={`transition-opacity duration-1000 ease-in-out ${
+                idx === currentSlide
+                  ? "opacity-100 relative z-10"
+                  : "opacity-0 absolute inset-0 z-0 pointer-events-none"
+              }`}
+            >
+              <Image
+                src={getImageUrl(src)}
+                alt={`Upcoming Banner ${idx + 1}`}
+                width={0}
+                height={0}
+                sizes="100vw"
+                className="w-full h-auto object-cover"
+                unoptimized
+              />
+            </div>
+          ))}
+          {/* Slide dots indicators */}
+          {bannerImages.length > 1 && (
+            <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center gap-2">
+              {bannerImages.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    idx === currentSlide ? "bg-white scale-125 shadow-md" : "bg-white/50 hover:bg-white/70"
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="container mx-auto px-4 max-w-[1440px]">

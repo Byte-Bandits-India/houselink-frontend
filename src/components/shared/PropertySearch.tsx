@@ -280,11 +280,11 @@ export default function PropertySearch() {
         console.error("Failed to load features from backend, using fallback:", e);
       }
 
-      try {
-        const searchesRes = await getSearches();
-        console.log("PropertySearch: getSearches response:", searchesRes);
-        if (searchesRes.success && searchesRes.data) {
-          if (searchesRes.data.length > 0) {
+      if (tokenStore.isLoggedIn()) {
+        try {
+          const searchesRes = await getSearches();
+          console.log("PropertySearch: getSearches response:", searchesRes);
+          if (searchesRes.success && searchesRes.data) {
             const sorted = [...searchesRes.data].sort((a, b) => {
               const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
               const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
@@ -293,14 +293,29 @@ export default function PropertySearch() {
             });
             setRecentSearches(sorted);
           } else {
-            setRecentSearches(DEFAULT_TOP_SEARCHES);
+            setRecentSearches([]);
           }
-        } else {
-          setRecentSearches(DEFAULT_TOP_SEARCHES);
+        } catch (e) {
+          console.error("Failed to load searches from backend:", e);
+          setRecentSearches([]);
         }
-      } catch (e) {
-        console.error("Failed to load searches from backend:", e);
-        setRecentSearches(DEFAULT_TOP_SEARCHES);
+      } else {
+        try {
+          const localData = localStorage.getItem("houselink_recent_searches");
+          if (localData) {
+            const parsed = JSON.parse(localData);
+            if (Array.isArray(parsed)) {
+              setRecentSearches(parsed);
+            } else {
+              setRecentSearches([]);
+            }
+          } else {
+            setRecentSearches([]);
+          }
+        } catch (e) {
+          console.error("Failed to parse recent searches from localStorage:", e);
+          setRecentSearches([]);
+        }
       }
 
       try {
@@ -419,7 +434,15 @@ export default function PropertySearch() {
       recordSearch(queryToRecord).catch((err) => console.error("Error recording search query:", err));
       setRecentSearches((prev) => {
         const filtered = prev.filter((s) => s.query.toLowerCase() !== queryToRecord.toLowerCase());
-        return [{ id: Date.now(), query: queryToRecord, updatedAt: new Date().toISOString() }, ...filtered].slice(0, 6);
+        const updated = [{ id: Date.now(), query: queryToRecord, updatedAt: new Date().toISOString() }, ...filtered].slice(0, 6);
+        if (typeof window !== "undefined" && !tokenStore.isLoggedIn()) {
+          try {
+            localStorage.setItem("houselink_recent_searches", JSON.stringify(updated));
+          } catch (e) {
+            console.error("Failed to save recent searches to localStorage:", e);
+          }
+        }
+        return updated;
       });
     }
 
@@ -601,7 +624,7 @@ export default function PropertySearch() {
         {recentSearches.length > 0 && (
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-gray-500 mt-5">
             <span className="font-bold text-gray-600 w-full text-center mb-1 md:w-auto md:mb-0">
-              {recentSearches.some((s) => s.count !== undefined) ? "Top searches:" : "Recent searches:"}
+              Recent searches:
             </span>
             {recentSearches.slice(0, 6).map((item) => (
               <button
