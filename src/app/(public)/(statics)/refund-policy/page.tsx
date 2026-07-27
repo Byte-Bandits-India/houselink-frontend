@@ -1,7 +1,7 @@
+"use client"
+
+import CmsPageRenderer from "@/components/cms/CmsPageRenderer"
+
 export default function RefundPolicyPage() {
-  return (
-    <div>
-      <h1>RefundPolicy</h1>
-    </div>
-  );
+  return <CmsPageRenderer slug="refund-policy" fallbackTitle="Refund Policy" />
 }

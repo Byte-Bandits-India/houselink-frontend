@@ -132,6 +132,10 @@ export type { HeroConfig, HeroConfigResponse } from "./hero";
 export { getUpcomingConfig } from "./upcoming";
 export type { UpcomingConfig, UpcomingConfigResponse } from "./upcoming";
 
+// CMS API
+export { getCmsPages, getCmsPageBySlug } from "./cms";
+
+
 
 
 

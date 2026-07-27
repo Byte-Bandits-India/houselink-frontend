@@ -1,7 +1,7 @@
+"use client"
+
+import CmsPageRenderer from "@/components/cms/CmsPageRenderer"
+
 export default function ListingGuidelinesPage() {
-  return (
-    <div>
-      <h1>ListingGuidelines</h1>
-    </div>
-  );
+  return <CmsPageRenderer slug="listing-guidelines" fallbackTitle="Listing Guidelines" />
 }

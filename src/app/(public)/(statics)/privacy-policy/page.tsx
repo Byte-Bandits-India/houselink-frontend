@@ -1,7 +1,7 @@
+"use client"
+
+import CmsPageRenderer from "@/components/cms/CmsPageRenderer"
+
 export default function PrivacyPolicyPage() {
-  return (
-    <div>
-      <h1>PrivacyPolicy</h1>
-    </div>
-  );
+  return <CmsPageRenderer slug="privacy-policy" fallbackTitle="Privacy Policy" />
 }

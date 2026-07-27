@@ -1,7 +1,7 @@
+"use client"
+
+import CmsPageRenderer from "@/components/cms/CmsPageRenderer"
+
 export default function TermsPage() {
-  return (
-    <div>
-      <h1>Terms</h1>
-    </div>
-  );
+  return <CmsPageRenderer slug="terms-and-conditions" fallbackTitle="Terms & Conditions" />
 }
