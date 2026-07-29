@@ -395,6 +395,14 @@ export default function Step2PropertyProfile({
       const sanitizedParts = sanitized.split(".");
       if (sanitizedParts[0].length > 10) return;
     }
+    if (field === "price") {
+      const num = parseFloat(sanitized);
+      if (!isNaN(num) && num > 1_000_000_000) return;
+    }
+    if (field === "maintenance_charge_amount") {
+      const num = parseFloat(sanitized);
+      if (!isNaN(num) && num > 100_000) return;
+    }
     if (field === "brokerage_percentage") {
       const num = parseFloat(sanitized);
       if (!isNaN(num) && num > 100) return;
@@ -574,10 +582,10 @@ export default function Step2PropertyProfile({
               <Input
                 type="number"
                 min={0}
-                max={50}
+                max={10}
                 disabled={disabled}
                 value={data.bedrooms || ""}
-                onChange={(e) => handleNumberInput("bedrooms", e.target.value, 50)}
+                onChange={(e) => handleNumberInput("bedrooms", e.target.value, 10)}
                 placeholder="e.g. 3"
                 className="rounded-xl border-gray-200 focus-visible:ring-brand"
               />
@@ -592,10 +600,10 @@ export default function Step2PropertyProfile({
               <Input
                 type="number"
                 min={0}
-                max={50}
+                max={10}
                 disabled={disabled}
                 value={data.bathrooms || ""}
-                onChange={(e) => handleNumberInput("bathrooms", e.target.value, 50)}
+                onChange={(e) => handleNumberInput("bathrooms", e.target.value, 10)}
                 placeholder="e.g. 2"
                 className="rounded-xl border-gray-200 focus-visible:ring-brand"
               />
@@ -960,10 +968,10 @@ export default function Step2PropertyProfile({
                       <Input
                         type="number"
                         min={1}
-                        max={500}
+                        max={10}
                         disabled={disabled}
                         value={data.parking_slots_count || ""}
-                        onChange={(e) => handleNumberInput("parking_slots_count", e.target.value, 500)}
+                        onChange={(e) => handleNumberInput("parking_slots_count", e.target.value, 10)}
                         placeholder="e.g. 2"
                         className="rounded-xl border-gray-200 focus-visible:ring-brand"
                       />

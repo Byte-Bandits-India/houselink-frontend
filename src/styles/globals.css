@@ -51,6 +51,19 @@
         cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%3E%3Ccircle%20cx='12'%20cy='12'%20r='6'%20fill='%23163D75'/%3E%3C/svg%3E") 12 12, auto;
     }
 
+    /* Capitalize only the first letter of each text block, not every word. */
+    body :where(h1, h2, h3, h4, h5, h6, p, span, a, li, label, button, td, th, div)::first-letter {
+        text-transform: uppercase;
+    }
+
+    /* Components that split text into per-character spans (e.g. rotating-text
+       animations) must opt out, otherwise every character becomes a "first
+       letter" and the whole string renders in caps. */
+    .no-first-letter-caps,
+    .no-first-letter-caps * {
+        text-transform: none !important;
+    }
+
     /* Hide scrollbar for Chrome, Safari and Opera */
     ::-webkit-scrollbar {
         display: none;

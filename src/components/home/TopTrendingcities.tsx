@@ -2,14 +2,21 @@
 
 import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { MapPin, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { getPopularRegions, getImageUrl, type PopularRegionApiItem } from "@/lib/api";
 import { smoothScrollBy } from "@/lib/smoothScroll";
 import type { CityCardProps } from "@/types/home";
 
-function CityCard({ image, name, propertiesCount, growthRate }: CityCardProps) {
+function CityCard({ image, name, propertiesCount, growthRate, locations }: CityCardProps & { locations?: string[] | null }) {
+  const filterTags = locations && locations.length > 0 ? locations : [name];
+  const href = `/properties?location=${encodeURIComponent(filterTags.join(","))}`;
+
   return (
-    <div className="flex flex-col bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 overflow-hidden w-full max-w-[280px] sm:max-w-none">
+    <Link
+      href={href}
+      className="flex flex-col bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 overflow-hidden w-full max-w-[280px] sm:max-w-none cursor-pointer"
+    >
       {/* Image Container */}
       <div className="relative h-[180px] w-full overflow-hidden select-none image-anime">
         {/* High Demand Badge */}
@@ -44,7 +51,7 @@ function CityCard({ image, name, propertiesCount, growthRate }: CityCardProps) {
           {growthRate} Growth
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -73,10 +80,11 @@ export default function TopTrendingCities() {
     return () => { isMounted = false; };
   }, []);
 
-  // Duplicate cities 4× for a seamless infinite loop
-  const loopedCities = cities.length > 0
+  // Only duplicate for a seamless infinite loop once there are enough distinct
+  // regions to make the loop read as more content, not the same region repeated.
+  const loopedCities = cities.length >= 4
     ? [...cities, ...cities, ...cities, ...cities]
-    : [];
+    : cities;
 
   // Auto-scroll via requestAnimationFrame (works with scrollLeft + arrow buttons)
   useEffect(() => {
@@ -188,6 +196,7 @@ export default function TopTrendingCities() {
                   name={city.name}
                   propertiesCount={city.propertiesCount}
                   growthRate={city.growthRate}
+                  locations={city.locations}
                 />
               </div>
             ))

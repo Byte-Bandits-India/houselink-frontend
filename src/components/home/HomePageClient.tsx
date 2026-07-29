@@ -59,7 +59,7 @@ export default function HomePageClient() {
         if (maxLen <= 1) return 0;
         return (prev + 1) % maxLen;
       });
-    }, 2500);
+    }, 5000);
     return () => clearInterval(interval);
   }, [heroConfig.rotatingTexts1.length, heroConfig.rotatingTexts2.length]);
 

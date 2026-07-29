@@ -173,7 +173,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false, sh
   const handleTotalFloorsChange = (val: string) => {
     const clean = val.replace(/[^0-9]/g, "");
     const num = parseInt(clean, 10);
-    if (clean !== "" && (isNaN(num) || num < 0 || num > 200)) return;
+    if (clean !== "" && (isNaN(num) || num < 0 || num > 100)) return;
     onChange({ total_floors: clean });
   };
 
@@ -181,7 +181,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false, sh
     const clean = val.replace(/[^0-9]/g, "");
     const onFloor = parseInt(clean, 10);
     const total = parseInt(data.total_floors || "", 10);
-    if (clean !== "" && (isNaN(onFloor) || onFloor < 0 || onFloor > 200)) return;
+    if (clean !== "" && (isNaN(onFloor) || onFloor < 0 || onFloor > 100)) return;
     if (!isNaN(onFloor) && !isNaN(total) && onFloor > total) {
       message.error("Property Floor cannot be greater than Total Floors.");
       onChange({ total_floors: "", property_on_floor: "" });
@@ -453,7 +453,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false, sh
                   <Input
                     type="number"
                     min={1}
-                    max={200}
+                    max={100}
                     disabled={disabled}
                     value={data.total_floors || ""}
                     onChange={(e) => handleTotalFloorsChange(e.target.value)}
@@ -478,7 +478,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false, sh
                   <Input
                     type="number"
                     min={0}
-                    max={200}
+                    max={100}
                     disabled={disabled}
                     value={data.property_on_floor || ""}
                     onChange={(e) => handlePropertyOnFloorChange(e.target.value)}

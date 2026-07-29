@@ -7,6 +7,8 @@ export type PopularPropertyApiItem = {
   image: string | null;
   order: number;
   status: "active" | "inactive";
+  propertyId: number | null;
+  property?: { id: number; name: string; permalink: string | null } | null;
 };
 
 export type PopularRegionApiItem = {
@@ -17,4 +19,5 @@ export type PopularRegionApiItem = {
   image: string | null;
   order: number;
   status: "active" | "inactive";
+  locations: string[] | null;
 };

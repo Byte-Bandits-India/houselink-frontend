@@ -66,6 +66,10 @@ export default function PropertyFormWizard({
       const isFloorRequired = ["apartment", "building"].includes(subtype);
       if (showFloorDetails) {
         if (isFloorRequired && (!data.total_floors || !data.property_on_floor)) return false;
+        if (data.total_floors) {
+          const total = parseInt(data.total_floors, 10);
+          if (!isNaN(total) && total > 100) return false;
+        }
         if (data.total_floors && data.property_on_floor) {
           const total = parseInt(data.total_floors, 10);
           const onFloor = parseInt(data.property_on_floor, 10);
@@ -107,7 +111,10 @@ export default function PropertyFormWizard({
         console.log("Validation failed: bathrooms is empty", data.bathrooms);
         return false;
       }
-      
+      if (data.bedrooms && Number(data.bedrooms) > 10) return false;
+      if (data.bathrooms && Number(data.bathrooms) > 10) return false;
+      if (data.parking_slots_count && Number(data.parking_slots_count) > 10) return false;
+
       if (allowedFields.furnishing_type) {
         const isFurnishingRequired = ["apartment", "villa", "individual_house"].includes(subtype);
         if (isFurnishingRequired && !data.furnishing_type) {
@@ -176,7 +183,9 @@ export default function PropertyFormWizard({
           return false;
         }
       }
-      
+      if (data.price && Number(data.price) > 1_000_000_000) return false;
+      if (data.maintenance_charge_amount && Number(data.maintenance_charge_amount) > 100_000) return false;
+
       if (data.rent_lease_type === "lease") {
         if (allowedFields.lease_duration && !data.lease_duration) {
           console.log("Validation failed: lease_duration is empty", data.lease_duration);

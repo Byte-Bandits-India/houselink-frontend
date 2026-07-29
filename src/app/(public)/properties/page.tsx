@@ -169,10 +169,14 @@ function PropertiesListContent() {
 
         if (maxPrice) fetchParams.max_price = maxPrice;
 
+        const locationTags = location
+          ? location.split(",").map((tag) => tag.trim()).filter(Boolean)
+          : [];
+
         if (keyword) {
           fetchParams.search = keyword;
-        } else if (location) {
-          fetchParams.search = location;
+        } else if (locationTags.length === 1) {
+          fetchParams.search = locationTags[0];
         }
 
         if (category && category !== "all") {
@@ -204,10 +208,12 @@ function PropertiesListContent() {
           );
         }
 
-        // 3. Location Filter
-        if (location) {
-          const q = location.toLowerCase();
-          data = data.filter((p) => p.location && p.location.toLowerCase().includes(q));
+        // 3. Location Filter (matches any of the comma-separated location tags)
+        if (locationTags.length > 0) {
+          const tags = locationTags.map((tag) => tag.toLowerCase());
+          data = data.filter((p) =>
+            p.location && tags.some((tag) => p.location.toLowerCase().includes(tag))
+          );
         }
 
         // 4. Category Type

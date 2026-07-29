@@ -60,8 +60,13 @@ function UpcomingPropertyCard({ property }: { property: any }) {
     ? getImageUrl(property.image) 
     : getDefaultImage(property.categoryName);
 
+  const href = property.permalink ? `/properties/${property.permalink}` : `/properties/${property.id}`;
+
   return (
-    <div className="group relative flex h-[396px] w-full max-w-[300px] flex-col rounded-[28px] border border-gray-150 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.08)] transition-all duration-300 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.12)] bg-white select-none">
+    <Link
+      href={href}
+      className="group relative flex h-[396px] w-full max-w-[300px] flex-col rounded-[28px] border border-gray-150 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.08)] transition-all duration-300 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.12)] bg-white select-none cursor-pointer"
+    >
       {/* Top portion: Image */}
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-[28px] image-anime">
         <Image
@@ -129,15 +134,12 @@ function UpcomingPropertyCard({ property }: { property: any }) {
           </div>
 
           {/* Action chevron */}
-          <Link
-            href={property.permalink ? `/properties/${property.permalink}` : `/properties/${property.id}`}
-            className="w-11 h-11 rounded-full bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0 cursor-pointer"
-          >
+          <div className="w-11 h-11 rounded-full bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0">
             <ArrowRight size={18} className="stroke-[2.5px]" />
-          </Link>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
