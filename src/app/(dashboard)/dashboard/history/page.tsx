@@ -188,10 +188,10 @@ export default function HistoryPage() {
 
       {/* Invoice Details Modal */}
       {selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-4 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-4 flex justify-between items-center shrink-0">
               <h2 className="text-lg font-bold">Invoice Details</h2>
               <button
                 onClick={() => setSelectedInvoice(null)}
@@ -202,7 +202,7 @@ export default function HistoryPage() {
             </div>
 
             {/* Invoice Content */}
-            <div className="p-8 space-y-6 overflow-y-auto max-h-[75vh]" id="printable-invoice">
+            <div className="p-8 space-y-6 overflow-y-auto flex-1 min-h-0" id="printable-invoice">
               {/* Header */}
               <div className="flex justify-between items-start border-b pb-6">
                 <div>
@@ -276,7 +276,7 @@ export default function HistoryPage() {
             </div>
 
             {/* Modal Actions */}
-            <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
+            <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t shrink-0">
               <Button
                 onClick={() => setSelectedInvoice(null)}
                 className="px-4 py-2 border rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors"

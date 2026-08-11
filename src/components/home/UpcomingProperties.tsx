@@ -148,7 +148,9 @@ export default function UpcomingProperties() {
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bannerImages, setBannerImages] = useState<string[]>([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
+  // Tracks which face is showing ("active") and which just left ("outgoing"),
+  // so both can be animated with a 3D rotateY transition at the same time.
+  const [slideIndices, setSlideIndices] = useState({ active: 0, outgoing: -1 });
 
   useEffect(() => {
     async function loadFeaturedProperties() {
@@ -192,7 +194,10 @@ export default function UpcomingProperties() {
   useEffect(() => {
     if (bannerImages.length <= 1) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % bannerImages.length);
+      setSlideIndices((prev) => ({
+        active: (prev.active + 1) % bannerImages.length,
+        outgoing: prev.active,
+      }));
     }, 5000);
     return () => clearInterval(timer);
   }, [bannerImages]);
@@ -251,42 +256,59 @@ export default function UpcomingProperties() {
       </div>
 
       <div className="mb-10">
-        <div className="relative w-full overflow-hidden select-none">
-          {bannerImages.map((src, idx) => (
-            <div
-              key={idx}
-              className={`transition-opacity duration-1000 ease-in-out ${
-                idx === currentSlide
-                  ? "opacity-100 relative z-10"
-                  : "opacity-0 absolute inset-0 z-0 pointer-events-none"
-              }`}
-            >
-              <Image
-                src={getImageUrl(src)}
-                alt={`Upcoming Banner ${idx + 1}`}
-                width={0}
-                height={0}
-                sizes="100vw"
-                className="w-full h-auto object-cover"
-                unoptimized
-              />
-            </div>
-          ))}
-          {/* Slide dots indicators */}
-          {bannerImages.length > 1 && (
-            <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center gap-2">
-              {bannerImages.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentSlide(idx)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    idx === currentSlide ? "bg-white scale-125 shadow-md" : "bg-white/50 hover:bg-white/70"
-                  }`}
-                  aria-label={`Go to slide ${idx + 1}`}
+        <div
+          className="banner-cube-wrap relative w-full overflow-hidden select-none"
+          style={{ aspectRatio: "1440 / 240" }}
+        >
+          {/* 3D rotate transition between banner faces */}
+          <style dangerouslySetInnerHTML={{ __html: `
+            .banner-cube-wrap {
+              perspective: 1600px;
+            }
+            .banner-cube-face {
+              position: absolute;
+              inset: 0;
+              backface-visibility: hidden;
+              transform-style: preserve-3d;
+            }
+            .banner-cube-face.is-active {
+              transform: rotateX(0deg);
+              opacity: 1;
+              z-index: 2;
+              transition: transform 1s cubic-bezier(.65,0,.35,1);
+            }
+            .banner-cube-face.is-outgoing {
+              transform: rotateX(-90deg);
+              opacity: 1;
+              z-index: 1;
+              transition: transform 1s cubic-bezier(.65,0,.35,1);
+            }
+            .banner-cube-face.is-idle {
+              transform: rotateX(90deg);
+              opacity: 0;
+              z-index: 0;
+            }
+          `}} />
+
+          {bannerImages.map((src, idx) => {
+            const role =
+              idx === slideIndices.active
+                ? "is-active"
+                : idx === slideIndices.outgoing
+                ? "is-outgoing"
+                : "is-idle";
+            return (
+              <div key={idx} className={`banner-cube-face ${role}`}>
+                <Image
+                  src={getImageUrl(src)}
+                  alt={`Upcoming Banner ${idx + 1}`}
+                  fill
+                  className="object-cover"
+                  unoptimized
                 />
-              ))}
-            </div>
-          )}
+              </div>
+            );
+          })}
         </div>
       </div>
 

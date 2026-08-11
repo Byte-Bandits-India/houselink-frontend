@@ -72,6 +72,7 @@ export default function HomePageClient() {
     }
   }, [textIndex, heroConfig.rotatingTexts1.length, heroConfig.rotatingTexts2.length]);
 
+
   return (
     <HomeFilterProvider>
       {/* ── Hero Section ── */}

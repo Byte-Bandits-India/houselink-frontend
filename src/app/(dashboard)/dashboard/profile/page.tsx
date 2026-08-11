@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Form, Input, DatePicker, Upload, Button, Select } from "antd";
+import { Form, Input, DatePicker, Button, Select } from "antd";
 import dayjs from "dayjs";
 import { useAuth } from "@/context/AuthContext";
 import { updateMe, getImageUrl, getStates, getCities } from "@/lib/api";
 import { PhoneInput } from "@/components/reui/phone-input";
+import { Pattern as AvatarUpload } from "@/components/examples/c-file-upload-2";
+import type { FileWithPreview } from "@/hooks/use-file-upload";
 
 type Tab = "update" | "password";
 
@@ -15,31 +17,16 @@ export default function ProfilePage() {
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMsg, setUpdateMsg] = useState({ type: "", text: "" });
-  const [previewUrl, setPreviewUrl] = useState<string>(
-    user?.avatarImage ? getImageUrl(user.avatarImage) : "/assets/images/about-us/unknown.jpg"
-  );
+  const [avatarFile, setAvatarFile] = useState<FileWithPreview | null>(null);
+  const defaultAvatarUrl = user?.avatarImage
+    ? getImageUrl(user.avatarImage)
+    : "/assets/images/about-us/unknown.jpg";
 
   const [form] = Form.useForm();
 
   const [states, setStates] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
-
-  useEffect(() => {
-    if (user?.avatarImage) {
-      setPreviewUrl(getImageUrl(user.avatarImage));
-    } else {
-      setPreviewUrl("/assets/images/about-us/unknown.jpg");
-    }
-  }, [user]);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
 
   // Load states on mount
   useEffect(() => {
@@ -179,10 +166,9 @@ export default function ProfilePage() {
 
             if (stateId) formData.append("stateId", stateId.toString());
             if (cityId) formData.append("cityId", cityId.toString());
-            if (values.dob) formData.append("dob", values.dob.format("YYYY-MM-DD"));
 
-            if (values.avatar && values.avatar.length > 0 && values.avatar[0].originFileObj) {
-              formData.append("avatar", values.avatar[0].originFileObj);
+            if (avatarFile?.file instanceof File) {
+              formData.append("avatar", avatarFile.file);
             }
 
             try {
@@ -267,6 +253,18 @@ export default function ProfilePage() {
 
           {/* Input field grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Profile Picture — spans the first three rows of column 1 */}
+            <div className="md:row-span-3 flex flex-col">
+              <span className="text-sm text-gray-700 mb-2">Profile Picture</span>
+              <div className="flex-1 bg-white border border-gray-200 rounded-2xl flex items-center justify-center p-4">
+                <AvatarUpload
+                  maxSize={5 * 1024 * 1024}
+                  defaultAvatar={defaultAvatarUrl}
+                  onFileChange={setAvatarFile}
+                />
+              </div>
+            </div>
+
             {/* First Name */}
             <Form.Item
               label={<span>First Name <span className="text-red-500">*</span></span>}
@@ -284,24 +282,6 @@ export default function ProfilePage() {
               className="mb-0"
             >
               <Input size="large" maxLength={50} className="rounded-lg border-gray-300" />
-            </Form.Item>
-
-            {/* Username */}
-            <Form.Item
-              label="Username"
-              name="username"
-              className="mb-0"
-            >
-              <Input size="large" maxLength={50} className="rounded-lg border-gray-300" />
-            </Form.Item>
-
-            {/* Company */}
-            <Form.Item
-              label="Company"
-              name="company"
-              className="mb-0"
-            >
-              <Input size="large" maxLength={100} className="rounded-lg border-gray-300" />
             </Form.Item>
 
             {/* Phone */}
@@ -328,6 +308,24 @@ export default function ProfilePage() {
               className="mb-0"
             >
               <Input size="large" className="rounded-lg border-gray-300" />
+            </Form.Item>
+
+            {/* Username */}
+            <Form.Item
+              label="Username"
+              name="username"
+              className="mb-0"
+            >
+              <Input size="large" maxLength={50} className="rounded-lg border-gray-300" />
+            </Form.Item>
+
+            {/* Company */}
+            <Form.Item
+              label="Company"
+              name="company"
+              className="mb-0"
+            >
+              <Input size="large" maxLength={100} className="rounded-lg border-gray-300" />
             </Form.Item>
 
             {/* Date of Birth */}
@@ -385,49 +383,6 @@ export default function ProfilePage() {
                   label: c.name,
                 }))}
               />
-            </Form.Item>
-          </div>
-
-          {/* Profile Picture drag & drop */}
-          <div className="space-y-2 text-left mt-6">
-            <h4 className="text-sm font-bold text-slate-800">Profile Picture</h4>
-            <Form.Item
-              name="avatar"
-              valuePropName="fileList"
-              getValueFromEvent={(e: any) => (Array.isArray(e) ? e : e?.fileList)}
-              className="mb-0"
-            >
-              <Upload.Dragger
-                beforeUpload={() => false}
-                maxCount={1}
-                accept="image/*"
-                showUploadList={false}
-                onChange={(info) => {
-                  const file = info.fileList[0]?.originFileObj;
-                  if (file) {
-                    const url = URL.createObjectURL(file);
-                    setPreviewUrl(url);
-                  } else {
-                    setPreviewUrl(user?.avatarImage ? getImageUrl(user.avatarImage) : "/assets/images/about-us/unknown.jpg");
-                  }
-                }}
-                className="bg-white border border-gray-200 rounded-2xl hover:border-primary transition-colors py-8 flex flex-col items-center justify-center"
-              >
-                <div className="flex flex-col items-center justify-center space-y-3">
-                  <div className="relative">
-                    <img
-                      src={previewUrl || "/assets/images/about-us/unknown.jpg"}
-                      alt="Profile Preview"
-                      className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-md"
-                    />
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <i className="fa-solid fa-arrow-up-from-bracket text-slate-400 text-2xl mb-2" />
-                    <p className="text-sm font-bold text-slate-700">Drag & Drop or Choose file to upload</p>
-                    <p className="text-xs text-slate-400 mt-1">Max 6 files · Up to 5MB</p>
-                  </div>
-                </div>
-              </Upload.Dragger>
             </Form.Item>
           </div>
         </Form>

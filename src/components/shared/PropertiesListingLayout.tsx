@@ -8,8 +8,21 @@ import PropertiesFilterSidebar from "./PropertiesFilterSidebar";
 import PropertyHorizontalCard from "./PropertyHorizontalCard";
 import PropertyEnquirySidebar from "./PropertyEnquirySidebar";
 import Breadcrumb from "./Breadcrumb";
+import { usePageFilter } from "@/contexts/HomeFilterContext";
 
 import type { PropertiesListingLayoutProps } from "@/types/components";
+
+const CATEGORY_SUMMARY_LABELS: Record<string, string> = {
+  plots: "Plots",
+  apartments: "Apartments",
+  villas: "Villas",
+  house: "Individual Houses",
+  commercial: "Commercial Properties",
+  all: "Properties",
+};
+
+const capitalizeWords = (value: string) =>
+  value.replace(/\b\w/g, (c) => c.toUpperCase());
 
 export default function PropertiesListingLayout({
   properties,
@@ -19,6 +32,22 @@ export default function PropertiesListingLayout({
   breadcrumbLabel,
 }: PropertiesListingLayoutProps) {
   const [enquiryProperty, setEnquiryProperty] = useState<any | null>(null);
+  const { filters } = usePageFilter();
+
+  const categoryLabel = filters.activeCategory && filters.activeCategory !== "all"
+    ? filters.activeCategory
+        .split(",")
+        .filter(Boolean)
+        .map((cat) => CATEGORY_SUMMARY_LABELS[cat] || "Properties")
+        .join(", ")
+    : "Properties";
+  const purposeLabel = filters.activeTab === "rent" ? "Rent" : "Sale";
+  const locationLabel = filters.location
+    ? filters.location.split(",")[0].trim()
+    : filters.city
+    ? capitalizeWords(filters.city)
+    : "Chennai";
+  const resultsSummary = `${properties.length} ${categoryLabel} for ${purposeLabel} in ${locationLabel}`;
 
   return (
     <div className="w-full min-h-screen bg-gray-50/50 pb-16">
@@ -71,6 +100,11 @@ export default function PropertiesListingLayout({
 
           {/* Right Column: Properties List */}
           <div className="w-full">
+            {!isLoading && !error && properties.length > 0 && (
+              <p className="text-sm font-bold text-gray-700 mb-4">
+                {resultsSummary}
+              </p>
+            )}
             {isLoading ? (
               <div className="flex flex-col gap-5">
                 {[1, 2, 3].map((n) => (

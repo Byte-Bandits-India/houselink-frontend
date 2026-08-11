@@ -284,38 +284,6 @@ export default function CareerDetailPage() {
           />
         )}
 
-        {/* Apply CTA */}
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-          variants={fadeUp}
-          className="bg-brand/5 border border-brand/20 rounded-2xl p-8 flex flex-col sm:flex-row items-center justify-between gap-6 mb-16"
-        >
-          <div>
-            <h3 className="text-xl font-bold text-ink mb-1">
-              Interested in this role?
-            </h3>
-            <p className="text-ink-secondary text-[1.05rem]">
-              Send your résumé to{" "}
-              <a
-                href="mailto:support@houselink360.com"
-                className="text-brand font-semibold hover:underline"
-              >
-                support@houselink360.com
-              </a>{" "}
-              with the subject line{" "}
-              <em>&quot;Application – {job.title}&quot;</em>.
-            </p>
-          </div>
-          <a
-            href="mailto:support@houselink360.com"
-            className="shrink-0 inline-flex items-center gap-2 bg-brand text-white font-semibold px-7 py-3 rounded-lg hover:bg-brand-700 transition-colors duration-200"
-          >
-            Apply Now <ArrowRight className="w-4 h-4" />
-          </a>
-        </motion.div>
-
         {/* Related Careers */}
         {related.length > 0 && (
           <div>

@@ -51,7 +51,7 @@ function HoverDropdown({
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger asChild>
         <div
           onMouseEnter={handleMouseEnter}
@@ -156,7 +156,7 @@ export default function Header() {
 
   const userMenu = [
     { key: "1", label: <Link href="/dashboard/enquiries">My Enquiries</Link> },
-    { key: "2", label: <Link href="/dashboard">Property Leads</Link> },
+    { key: "2", label: <Link href="/dashboard/properties">Property Leads</Link> },
     { key: "3", label: <Link href="/dashboard/profile">Settings</Link> },
     { type: "divider" },
     {

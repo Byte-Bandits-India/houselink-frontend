@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Heart } from "lucide-react";
 import { getImageUrl } from "@/lib/api";
+import { useWishlist } from "@/context/WishlistContext";
 import type { PropertyHorizontalCardProps } from "@/types/components";
 
 function getDefaultImage(categoryName?: string): string {
@@ -70,8 +72,17 @@ export default function PropertyHorizontalCard(props: PropertyHorizontalCardProp
   const amenitiesList = props.features || [];
   const extraAmenitiesCount = amenitiesList.length > 4 ? amenitiesList.length - 4 : 0;
 
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const wishlisted = isWishlisted(Number(props.id));
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(Number(props.id));
+  };
+
   return (
-    <div className="relative flex flex-col md:flex-row border border-gray-205 rounded-2xl p-4 gap-6 bg-white shadow-xs select-none font-inter">
+    <div className="relative flex flex-col md:flex-row border border-gray-205 rounded-2xl p-4 gap-6 bg-white shadow-xs select-none">
       
       {/* ── IMAGE SECTION ── */}
       <div className="relative w-full md:w-[320px] h-[200px] md:h-[250px] lg:w-[390px] lg:h-[278px] rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 select-none image-anime">
@@ -91,6 +102,16 @@ export default function PropertyHorizontalCard(props: PropertyHorizontalCardProp
             Featured
           </span>
         )}
+
+        {/* Wishlist heart button */}
+        <button
+          onClick={handleWishlistClick}
+          className="absolute bottom-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-neutral-700 hover:bg-white/90 hover:text-black shadow-sm transition-colors cursor-pointer border-none"
+          type="button"
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart className={`h-4.5 w-4.5 stroke-[2px] ${wishlisted ? "fill-red-500 text-red-500" : "text-neutral-700"}`} />
+        </button>
       </div>
 
       {/* ── DETAILS SECTION ── */}

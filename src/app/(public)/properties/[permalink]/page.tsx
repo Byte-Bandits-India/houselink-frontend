@@ -1,4 +1,4 @@
-import { getPropertyByPermalink, getImageUrl } from "@/lib/api";
+import { getPropertyByPermalink, getProperties, getImageUrl } from "@/lib/api";
 import RequestInfoCard from "@/components/shared/RequestInfoCard";
 import PropertyTabs from "@/components/shared/PropertyTabs";
 import PropertyEnquirySidebar from "@/components/shared/PropertyEnquirySidebar";
@@ -97,6 +97,41 @@ export default async function PropertyDetailPage({
         .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" ")
     : "Apartment";
+
+  // Count of other approved, active listings that share this property's category & city
+  const SIMILAR_CATEGORY_LABELS: Record<number, string> = {
+    1: "Apartments",
+    2: "Villas",
+    3: "Plots",
+    4: "Individual Houses",
+    5: "Plots",
+    6: "Commercial Properties",
+    7: "Commercial Properties",
+    8: "Commercial Properties",
+    9: "Commercial Properties",
+    10: "Commercial Properties",
+  };
+
+  let similarCount = 0;
+  const similarCategoryLabel = SIMILAR_CATEGORY_LABELS[Number(property.categoriesId)] || "Properties";
+  const similarLocationLabel = property.city?.name || property.location?.split(",")[0]?.trim() || "your area";
+
+  if (property.categoriesId && property.cityId) {
+    try {
+      const similarRes = await getProperties({
+        categories_id: property.categoriesId,
+        city_id: property.cityId,
+        moderation: "approved",
+        is_active: "true",
+        page_size: "1",
+      });
+      similarCount = similarRes.meta?.total ?? similarRes.data?.length ?? 0;
+      // Exclude the property being viewed from its own "similar" count
+      if (similarCount > 0) similarCount -= 1;
+    } catch (err) {
+      console.error("Error fetching similar properties count:", err);
+    }
+  }
 
   const formatHouseType = (t?: any) => {
     if (t == null) return "";
@@ -238,10 +273,15 @@ export default async function PropertyDetailPage({
             <h1 className="text-lg md:text-2xl lg:text-[28px] font-black text-gray-900 leading-snug tracking-tight mb-1">
               {property.name}
             </h1>
-            <p className="text-sm text-gray-500 font-medium flex items-center gap-1 mb-4">
+            <p className="text-sm text-gray-500 font-medium flex items-center gap-1 mb-2">
               <MapPin size={13} className="text-gray-400 shrink-0" />
               {property.location}
             </p>
+            {similarCount > 0 && (
+              <span className="inline-flex w-fit items-center gap-1.5 mb-4 px-3 py-1.5 bg-blue-50 text-primary rounded-full text-xs font-bold">
+                {similarCount} {similarCategoryLabel} available in {similarLocationLabel}
+              </span>
+            )}
             </div>
 
             {/* Pills row */}

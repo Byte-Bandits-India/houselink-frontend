@@ -419,7 +419,7 @@ export default function PropertiesSearchHeader() {
                     : "bg-white text-black border border-transparent hover:bg-white/95"
                 }`}
               >
-                Sell
+                Buy
               </button>
               <button
                 type="button"

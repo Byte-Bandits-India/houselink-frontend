@@ -197,7 +197,7 @@ export default function SearchFilterModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className={`w-full p-6 rounded-2xl bg-white border border-gray-100 shadow-2xl overflow-hidden font-inter select-none transition-all duration-300 ${
+      <DialogContent className={`w-full p-6 rounded-2xl bg-white border border-gray-100 shadow-2xl overflow-hidden select-none transition-all duration-300 ${
         step === 1 ? "max-w-[460px]" : "max-w-[880px]"
       }`}>
         <DialogHeader className="text-left">

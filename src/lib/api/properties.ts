@@ -980,7 +980,11 @@ export async function updateProperty(
 /**
  * Fetch all properties with optional query filters
  */
-export async function getProperties(params?: Record<string, any>): Promise<{ success: boolean; data: any[] }> {
+export async function getProperties(params?: Record<string, any>): Promise<{
+  success: boolean;
+  data: any[];
+  meta?: { total: number; page: number; page_size: number; total_pages: number };
+}> {
   let query = "";
   if (params) {
     const cleanParams: Record<string, string> = {};
@@ -992,7 +996,11 @@ export async function getProperties(params?: Record<string, any>): Promise<{ suc
     const searchParams = new URLSearchParams(cleanParams);
     query = `?${searchParams.toString()}`;
   }
-  return apiClient.get<{ success: boolean; data: any[] }>(`/properties${query}`, { skipAuth: true });
+  return apiClient.get<{
+    success: boolean;
+    data: any[];
+    meta?: { total: number; page: number; page_size: number; total_pages: number };
+  }>(`/properties${query}`, { skipAuth: true });
 }
 
 /**

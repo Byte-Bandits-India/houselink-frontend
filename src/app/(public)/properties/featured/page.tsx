@@ -173,11 +173,13 @@ function FeaturedPropertiesListContent() {
           fetchParams.search = location;
         }
 
-        if (category && category !== "all") {
-          if (category === "apartments") fetchParams.categories_id = 1;
-          else if (category === "villas") fetchParams.categories_id = 2;
-          else if (category === "house") fetchParams.categories_id = 4;
-          else if (category === "plots") fetchParams.categories_id = propertyPurpose === "sell" ? 3 : 5;
+        const selectedCategories = category && category !== "all" ? category.split(",").filter(Boolean) : [];
+        if (selectedCategories.length === 1) {
+          const cat = selectedCategories[0];
+          if (cat === "apartments") fetchParams.categories_id = 1;
+          else if (cat === "villas") fetchParams.categories_id = 2;
+          else if (cat === "house") fetchParams.categories_id = 4;
+          else if (cat === "plots") fetchParams.categories_id = propertyPurpose === "sell" ? 3 : 5;
         }
 
         const res = await getProperties(fetchParams);
@@ -217,17 +219,18 @@ function FeaturedPropertiesListContent() {
           data = data.filter((p) => p.category?.type && p.category.type.toLowerCase() === type);
         }
 
-        // 5. Subcategory Filter
-        if (category && category !== "all") {
-          const cat = category.toLowerCase();
+        // 5. Subcategory Filter (matches any of the selected categories)
+        if (selectedCategories.length > 0) {
           data = data.filter((p) => {
             const catName = (p.category?.name || "").toLowerCase().replace(/_/g, " ");
-            if (cat === "plots") return catName.includes("plot") || catName.includes("land");
-            if (cat === "apartments") return catName.includes("apartment");
-            if (cat === "villas") return catName.includes("villa");
-            if (cat === "house") return catName.includes("individual house") || catName.includes("house");
-            if (cat === "commercial") return catName.includes("commercial") || catName.includes("shop") || catName.includes("building") || catName.includes("godown") || catName.includes("warehouse") || catName.includes("office");
-            return true;
+            return selectedCategories.some((cat) => {
+              if (cat === "plots") return catName.includes("plot") || catName.includes("land");
+              if (cat === "apartments") return catName.includes("apartment");
+              if (cat === "villas") return catName.includes("villa");
+              if (cat === "house") return catName.includes("individual house") || catName.includes("house");
+              if (cat === "commercial") return catName.includes("commercial") || catName.includes("shop") || catName.includes("building") || catName.includes("godown") || catName.includes("warehouse") || catName.includes("office");
+              return true;
+            });
           });
         }
 
@@ -243,20 +246,19 @@ function FeaturedPropertiesListContent() {
           if (!isNaN(areaLimit)) data = data.filter((p) => Number(p.builtUpArea || p.plotLandArea || 0) <= areaLimit);
         }
 
-        // 9. House Type Filter
+        // 9. House Type Filter (matches any of the selected configurations)
         if (houseType) {
-          const rawType = houseType.replace(/\s+/g, "").toUpperCase();
-          if (rawType.startsWith("5")) {
-            data = data.filter((p) => p.houseType === "five_bhk");
-          } else {
-            const mapped = rawType === "1RK" ? "one_bk" :
-                           rawType === "1BHK" ? "one_bhk" :
-                           rawType === "2BHK" ? "two_bhk" :
-                           rawType === "3BHK" ? "three_bhk" :
-                           rawType === "4BHK" ? "four_bhk" : "";
-            if (mapped) {
-              data = data.filter((p) => p.houseType === mapped);
-            }
+          const mappedTypes = houseType.split(",").filter(Boolean).map((t) => {
+            const rawType = t.replace(/\s+/g, "").toUpperCase();
+            if (rawType.startsWith("5")) return "five_bhk";
+            return rawType === "1RK" ? "one_bk" :
+                   rawType === "1BHK" ? "one_bhk" :
+                   rawType === "2BHK" ? "two_bhk" :
+                   rawType === "3BHK" ? "three_bhk" :
+                   rawType === "4BHK" ? "four_bhk" : "";
+          }).filter(Boolean);
+          if (mappedTypes.length > 0) {
+            data = data.filter((p) => mappedTypes.includes(p.houseType));
           }
         }
 
