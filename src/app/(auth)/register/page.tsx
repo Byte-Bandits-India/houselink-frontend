@@ -233,9 +233,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full max-w-[1100px] bg-white rounded-xl shadow-[3px_3px_6px_0px_#e4e4e4] overflow-hidden flex flex-col md:flex-row">
+    <div className="w-full max-w-[900px] bg-white rounded-xl shadow-[3px_3px_6px_0px_#e4e4e4] overflow-hidden flex flex-col md:flex-row">
       {/* Left Side Image */}
-      <div className="hidden md:block md:w-5/12 relative bg-gray-100">
+      <div className="hidden md:block md:w-1/2 relative bg-gray-100">
         <Image
           src="/assets/images/footer/login_image.png"
           alt="Register"
@@ -245,21 +245,25 @@ export default function RegisterPage() {
       </div>
 
       {/* Right Side Form */}
-      <div className="w-full md:w-7/12 p-8 lg:p-10">
-        <h3 className="text-3xl font-bold text-center text-gray-900 mb-2">Sign Up</h3>
-        <h5 className="text-center text-gray-500 mb-8 font-medium">Create your account</h5>
+      <div className="w-full md:w-1/2 p-6 lg:p-8 flex flex-col justify-center">
+        <h3 className="text-2xl font-bold text-center text-gray-900 mb-1">
+          Create Account
+        </h3>
+        <p className="text-center text-gray-500 mb-5 text-xs font-medium">
+          Enter your details to get started
+        </p>
 
         {errors.general && (
-          <div className="p-3 mb-6 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100">
+          <div className="p-2.5 mb-4 bg-red-50 text-red-600 rounded-lg text-xs border border-red-100">
             {errors.general}
           </div>
         )}
 
-        <form onSubmit={handleRegister} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* First Name */}
+        <form onSubmit={handleRegister} className="space-y-3.5">
+          {/* Name Row */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 First Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -269,16 +273,15 @@ export default function RegisterPage() {
                   setFirstName(e.target.value.replace(/[^A-Za-z\s]/g, ""))
                 }
                 placeholder="First Name"
-                className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
+                className="w-full h-10 px-3 text-xs border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
               />
               {errors.firstName && (
-                <p className="mt-1 text-xs text-red-500">{errors.firstName}</p>
+                <p className="mt-0.5 text-[11px] text-red-500">{errors.firstName}</p>
               )}
             </div>
 
-            {/* Last Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Last Name
               </label>
               <input
@@ -287,33 +290,33 @@ export default function RegisterPage() {
                 onChange={(e) =>
                   setLastName(e.target.value.replace(/[^A-Za-z\s]/g, ""))
                 }
-                placeholder="Last Name (optional)"
-                className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
+                placeholder="Optional"
+                className="w-full h-10 px-3 text-xs border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
               />
             </div>
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
               Email <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email Address"
-              className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
+              placeholder="name@example.com"
+              className="w-full h-10 px-3 text-xs border border-gray-300 rounded-md focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
             />
             {errors.email && (
-              <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+              <p className="mt-0.5 text-[11px] text-red-500">{errors.email}</p>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* State */}
+          {/* State & City Row */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 State <span className="text-red-500">*</span>
               </label>
               <Select
@@ -324,25 +327,24 @@ export default function RegisterPage() {
                 }}
                 disabled={loadingStates}
               >
-                <SelectTrigger className="w-full h-11 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand bg-white disabled:bg-gray-50 text-left">
-                  <SelectValue placeholder={loadingStates ? "Loading states..." : "Select State"} />
+                <SelectTrigger className="w-full h-10 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand bg-white disabled:bg-gray-50 text-left">
+                  <SelectValue placeholder={loadingStates ? "Loading..." : "Select State"} />
                 </SelectTrigger>
-                <SelectContent className="bg-white max-h-[300px] z-[60]">
+                <SelectContent className="bg-white max-h-[220px] z-[60]">
                   {states.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>
+                    <SelectItem key={s.id} value={String(s.id)} className="text-xs">
                       {s.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {errors.state && (
-                <p className="mt-1 text-xs text-red-500">{errors.state}</p>
+                <p className="mt-0.5 text-[11px] text-red-500">{errors.state}</p>
               )}
             </div>
 
-            {/* City */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 City <span className="text-red-500">*</span>
               </label>
               <Select
@@ -353,34 +355,34 @@ export default function RegisterPage() {
                 }}
                 disabled={!stateId || loadingCities || cities.length === 0}
               >
-                <SelectTrigger className="w-full h-11 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand bg-white disabled:bg-gray-50 text-left">
+                <SelectTrigger className="w-full h-10 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand bg-white disabled:bg-gray-50 text-left">
                   <SelectValue
                     placeholder={
                       loadingCities
-                        ? "Loading cities..."
+                        ? "Loading..."
                         : !stateId
-                        ? "Select State first"
+                        ? "Select State"
                         : "Select City"
                     }
                   />
                 </SelectTrigger>
-                <SelectContent className="bg-white max-h-[300px] z-[60]">
+                <SelectContent className="bg-white max-h-[220px] z-[60]">
                   {cities.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
+                    <SelectItem key={c.id} value={String(c.id)} className="text-xs">
                       {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {errors.city && (
-                <p className="mt-1 text-xs text-red-500">{errors.city}</p>
+                <p className="mt-0.5 text-[11px] text-red-500">{errors.city}</p>
               )}
             </div>
           </div>
 
           {/* Phone & OTP */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
               Phone Number <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2">
@@ -390,36 +392,49 @@ export default function RegisterPage() {
                 onChange={(val) => setPhone(val || "")}
                 disabled={otpSent}
                 placeholder="Phone Number"
-                className="flex-1 [&_button]:h-11 [&_input]:h-11"
+                className="flex-1 [&_button]:h-10 [&_input]:h-10 [&_input]:text-xs"
               />
               {!otpSent && (
                 <Button
                   type="button"
                   onClick={handleSendOtp}
                   disabled={isLoading || get10DigitPhone(phone).length !== 10}
-                  size="lg"
+                  size="sm"
                   variant="gradient"
-                  className="rounded-[50px] h-11"
+                  className="rounded-[50px] h-10 px-4 text-xs whitespace-nowrap"
                 >
                   {isLoading ? "Sending..." : "Send OTP"}
                 </Button>
               )}
             </div>
             {errors.phone && (
-              <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
+              <p className="mt-0.5 text-[11px] text-red-500">{errors.phone}</p>
             )}
           </div>
 
-          {/* OTP Verification Section */}
+          {/* Inline OTP Verification Section */}
           {otpSent && (
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 animate-fade-in mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                Enter 4-digit OTP{" "}
-                <span className="text-green-600 text-xs ml-1">
-                  ✓ sent to +91 {phone}
+            <div className="bg-emerald-50/60 p-3 rounded-lg border border-emerald-100 animate-fade-in space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-emerald-800 font-medium">
+                  OTP sent to +91 {get10DigitPhone(phone)}
                 </span>
-              </label>
-              <div className="flex justify-center gap-2 mb-3">
+                {timeLeft > 0 ? (
+                  <span className="text-gray-500 text-[11px]">
+                    Resend in {timeLeft}s
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={isLoading}
+                    className="text-brand hover:underline text-[11px] font-medium disabled:opacity-50"
+                  >
+                    Resend OTP
+                  </button>
+                )}
+              </div>
+              <div className="flex justify-center gap-2">
                 {otp.map((digit, index) => (
                   <input
                     key={index}
@@ -429,56 +444,37 @@ export default function RegisterPage() {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className={`w-10 h-10 text-center text-lg font-bold border-2 rounded-md transition-all outline-none
-                      ${digit ? "border-primary-light bg-[#f8fff9]" : "border-gray-200 bg-white"}
-                      focus:border-brand focus:ring-2`}
+                    className={`w-9 h-9 text-center text-base font-bold border rounded-md transition-all outline-none
+                      ${digit ? "border-brand bg-white" : "border-gray-300 bg-white"}
+                      focus:border-brand focus:ring-1 focus:ring-brand`}
                   />
                 ))}
               </div>
               {errors.otp && (
-                <p className="text-center text-xs text-red-500 mb-2">
+                <p className="text-center text-[11px] text-red-500">
                   {errors.otp}
                 </p>
               )}
-
-              <div className="text-center text-xs">
-                <span className="text-gray-500">Didn&apos;t receive OTP? </span>
-                {timeLeft > 0 ? (
-                  <span className="text-red-500 font-bold">
-                    Resend in {timeLeft}s
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleResendOtp}
-                    disabled={isLoading}
-                    className="text-brand hover:underline font-medium disabled:opacity-50"
-                  >
-                    Resend OTP
-                  </button>
-                )}
-              </div>
             </div>
           )}
 
-          <div className="pt-2">
+          <div className="pt-1.5">
             <Button
               type="submit"
               disabled={isLoading}
               variant="gradient"
-              className="rounded-[50px] w-full text-lg h-12"
+              className="rounded-[50px] w-full text-sm h-11"
             >
               {isLoading ? "Registering..." : "Register"}
             </Button>
           </div>
         </form>
 
-        <p className="text-center mt-6 text-gray-600 text-sm">
+        <p className="text-center mt-4 text-gray-600 text-xs">
           Already have an account?{" "}
           <Link href="/login" className="text-brand font-medium hover:underline">
             Login here
-          </Link>{" "}
-          to manage your listings.
+          </Link>
         </p>
       </div>
     </div>

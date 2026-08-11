@@ -139,22 +139,28 @@ export default function HighDemandProperties() {
             scrollbar-width: none;
           }
         `}} />
-        {properties.map((property) => (
-          <div key={property.id} className="flex-shrink-0">
-            <PropertyCard
-              image={getImageUrl(property.image)}
-              type={property.type}
-              title={property.title}
-              price={property.price}
-              location={property.location}
-              href={
-                property.propertyId
-                  ? `/properties/${property.property?.permalink ?? property.propertyId}`
-                  : undefined
-              }
-            />
-          </div>
-        ))}
+        {properties.map((property) => {
+          const cardHref = property.property?.permalink
+            ? `/properties/${property.property.permalink}`
+            : property.propertyId
+            ? `/properties/${property.propertyId}`
+            : property.title
+            ? `/properties?search=${encodeURIComponent(property.title)}`
+            : `/properties`;
+
+          return (
+            <div key={property.id} className="flex-shrink-0">
+              <PropertyCard
+                image={getImageUrl(property.image)}
+                type={property.type}
+                title={property.title}
+                price={property.price}
+                location={property.location}
+                href={cardHref}
+              />
+            </div>
+          );
+        })}
       </div>
     </section>
   );

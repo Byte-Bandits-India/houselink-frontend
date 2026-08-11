@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { PropertyFormData, getSchemaFields } from "@/types/property";
 import { cn } from "@/lib/utils";
 import { useFileUpload } from "@/hooks/use-file-upload";
-import { ImageIcon, UploadIcon, XIcon, ZoomInIcon } from "lucide-react";
+import { ImageIcon, UploadIcon, XIcon, ZoomInIcon, ScissorsIcon } from "lucide-react";
+import { ImageCropModal } from "@/components/ui/ImageCropModal";
 import {
   Dialog,
   DialogContent,
@@ -74,17 +75,31 @@ function SingleImageUpload({
   accept = "image/jpeg,image/jpg,image/png,image/webp",
 }: SingleImageUploadProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const isInitialized = useRef(false);
 
   const [{ files, isDragging }, { removeFile, handleDragEnter, handleDragLeave, handleDragOver, handleDrop, openFileDialog, getInputProps }] =
     useFileUpload({
       multiple: false,
       accept,
-      // ⚠️ Do NOT use onFilesChange — hook calls it inside setState updater
-      // which triggers parent setState during render. Use useEffect instead.
     });
 
-  // Sync file selection → parent AFTER render (safe)
+  const prevFilesLen = useRef(files.length);
+
+  // Auto-open cropper when a file is selected
+  useEffect(() => {
+    if (files.length > prevFilesLen.current && files[0]) {
+      const src = files[0].preview ?? (files[0].file instanceof File ? URL.createObjectURL(files[0].file) : null);
+      if (src) {
+        setCropImageSrc(src);
+        setCropModalOpen(true);
+      }
+    }
+    prevFilesLen.current = files.length;
+  }, [files]);
+
+  // Sync file selection → parent AFTER render
   useEffect(() => {
     if (!isInitialized.current) {
       isInitialized.current = true;
@@ -96,6 +111,14 @@ function SingleImageUpload({
       onValue(files[0].preview ?? "");
     }
   }, [files]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleCropSave = (file: File, dataUrl: string) => {
+    if (files[0]) {
+      files[0].preview = dataUrl;
+      files[0].file = file;
+    }
+    onValue(dataUrl);
+  };
 
   const previewUrl = value;
 
@@ -112,14 +135,25 @@ function SingleImageUpload({
           />
           {/* Hover overlay */}
           {!disabled && (
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setCropImageSrc(previewUrl);
+                  setCropModalOpen(true);
+                }}
+                className="bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white rounded-full p-1.5 transition-colors"
+                title="Crop & Adjust"
+              >
+                <ScissorsIcon className="w-3.5 h-3.5" />
+              </button>
               <button
                 type="button"
                 onClick={() => setPreviewOpen(true)}
                 className="bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white rounded-full p-1.5 transition-colors"
                 title="Preview"
               >
-                <ZoomInIcon className="w-4 h-4" />
+                <ZoomInIcon className="w-3.5 h-3.5" />
               </button>
               <button
                 type="button"
@@ -130,7 +164,7 @@ function SingleImageUpload({
                 className="bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors"
                 title="Remove"
               >
-                <XIcon className="w-4 h-4" />
+                <XIcon className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
@@ -150,6 +184,20 @@ function SingleImageUpload({
             />
           </DialogContent>
         </Dialog>
+
+        {/* Image Crop Modal */}
+        <ImageCropModal
+          open={cropModalOpen}
+          imageSrc={cropImageSrc}
+          onClose={() => setCropModalOpen(false)}
+          onCropSave={handleCropSave}
+          aspectRatio={16 / 9}
+          circular={false}
+          imageSize="800px * 450px"
+          targetWidth={800}
+          targetHeight={450}
+          title={`Crop ${label}`}
+        />
       </div>
     );
   }
@@ -204,6 +252,20 @@ function SingleImageUpload({
           )}
         </div>
       </div>
+
+      {/* Image Crop Modal */}
+      <ImageCropModal
+        open={cropModalOpen}
+        imageSrc={cropImageSrc}
+        onClose={() => setCropModalOpen(false)}
+        onCropSave={handleCropSave}
+        aspectRatio={16 / 9}
+        circular={false}
+        imageSize="800px * 450px"
+        targetWidth={800}
+        targetHeight={450}
+        title={`Crop ${label}`}
+      />
     </div>
   );
 }

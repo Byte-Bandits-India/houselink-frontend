@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { message } from "antd";
 import { checkPermalinkAvailability } from "@/lib/api";
 import { Label } from "@/components/ui/label";
@@ -14,8 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useFileUpload, type FileWithPreview, type FileMetadata } from "@/hooks/use-file-upload";
-import { ImageIcon, UploadIcon, ZoomInIcon, XIcon } from "lucide-react";
+import { useFileUpload, type FileMetadata } from "@/hooks/use-file-upload";
+import { ImageIcon, UploadIcon, ZoomInIcon, XIcon, ScissorsIcon } from "lucide-react";
 import {
   PropertyFormData,
   HOUSE_TYPES,
@@ -35,6 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {ImageCropModal} from "@/components/ui/ImageCropModal";
 
 import type { Step2Props as Props } from "@/types/property-form";
 
@@ -168,6 +169,8 @@ import type { PropertyImagesUploadProps } from "@/types/property-form";
 
 function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }: PropertyImagesUploadProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropTarget, setCropTarget] = useState<{ id: string; url: string } | null>(null);
   const isInitialized = useRef(false);
 
   // Seed existing image URLs as FileMetadata so the hook shows them on mount
@@ -186,25 +189,56 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
   ] = useFileUpload({
     multiple: true,
     maxFiles: imageLimit,
-    maxSize: 2 * 1024 * 1024, // 2 MB
+    maxSize: 5 * 1024 * 1024, // 5 MB
     accept: "image/jpeg,image/jpg,image/png,image/webp",
     initialFiles,
-    // ⚠️ Do NOT use onFilesChange here — the hook calls it inside a setState
-    // updater which triggers parent setState during render (React error).
-    // We use a useEffect below instead.
   });
 
-  // Sync files → parent AFTER render (safe, avoids setState-in-render)
+  const prevFilesLen = useRef(files.length);
+
+  // Auto-trigger cropper when new file(s) are added
+  useEffect(() => {
+    if (files.length > prevFilesLen.current) {
+      const latestFile = files[files.length - 1];
+      const previewUrl = latestFile.preview ?? (latestFile.file as FileMetadata).url ?? "";
+      if (previewUrl) {
+        setCropTarget({ id: latestFile.id, url: previewUrl });
+        setCropModalOpen(true);
+      }
+    }
+    prevFilesLen.current = files.length;
+  }, [files.length]);
+
+  // Sync files → parent AFTER render
   useEffect(() => {
     if (!isInitialized.current) {
       isInitialized.current = true;
-      return; // skip initial mount — images already seeded via initialFiles
+      return; // skip initial mount
     }
     const urls = files
       .map((f) => f.preview ?? (f.file as FileMetadata).url ?? "")
       .filter(Boolean);
     onChange(urls);
   }, [files]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleCropSave = (croppedFile: File, croppedDataUrl: string) => {
+    if (!cropTarget) return;
+    const targetId = cropTarget.id;
+
+    const nextUrls = files
+      .map((f) => {
+        if (f.id === targetId) {
+          f.preview = croppedDataUrl;
+          f.file = croppedFile;
+          return croppedDataUrl;
+        }
+        return f.preview ?? (f.file as FileMetadata).url ?? "";
+      })
+      .filter(Boolean);
+
+    onChange(nextUrls);
+    setCropTarget(null);
+  };
 
   const canAdd = !disabled && files.length < imageLimit;
 
@@ -213,7 +247,7 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
       <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2">
         Property Images{" "}
         <span className="text-gray-400 font-normal text-xs ml-1">
-          (Max 2MB each, up to {imageLimit})
+          (Max 5MB each, up to {imageLimit})
         </span>
       </h4>
 
@@ -242,7 +276,7 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
             <div className="space-y-1">
               <p className="text-sm font-medium text-gray-700">Drag & drop images here</p>
               <p className="text-xs text-gray-400">
-                JPG, PNG, WEBP · Max 2MB each · {files.length}/{imageLimit} uploaded
+                JPG, PNG, WEBP · Max 5MB each · {files.length}/{imageLimit} uploaded
               </p>
             </div>
             <button
@@ -268,7 +302,7 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
       {files.length > 0 && (
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
           {files.map((fileItem) => {
-            const previewUrl = fileItem.preview ?? "";
+            const previewUrl = fileItem.preview ?? (fileItem.file as FileMetadata).url ?? "";
             return (
               <div
                 key={fileItem.id}
@@ -277,19 +311,30 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={previewUrl}
-                  alt={fileItem.file.name}
+                  alt={fileItem.file.name || "Property image"}
                   className="w-full h-full object-cover transition-transform duration-200 group-hover/item:scale-105"
                 />
                 {/* Hover overlay */}
                 {!disabled && (
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCropTarget({ id: fileItem.id, url: previewUrl });
+                        setCropModalOpen(true);
+                      }}
+                      className="bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white rounded-full p-1.5 transition-colors"
+                      title="Crop & Adjust"
+                    >
+                      <ScissorsIcon className="w-3.5 h-3.5" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => setSelectedImage(previewUrl)}
                       className="bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white rounded-full p-1.5 transition-colors"
                       title="Preview"
                     >
-                      <ZoomInIcon className="w-4 h-4" />
+                      <ZoomInIcon className="w-3.5 h-3.5" />
                     </button>
                     <button
                       type="button"
@@ -297,7 +342,7 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
                       className="bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors"
                       title="Remove"
                     >
-                      <XIcon className="w-4 h-4" />
+                      <XIcon className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 )}
@@ -323,6 +368,20 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Image Crop Modal */}
+      <ImageCropModal
+        open={cropModalOpen}
+        imageSrc={cropTarget?.url || null}
+        onClose={() => setCropModalOpen(false)}
+        onCropSave={handleCropSave}
+        aspectRatio={4 / 3}
+        circular={false}
+        imageSize="800px * 600px"
+        targetWidth={800}
+        targetHeight={600}
+        title="Crop Property Image"
+      />
     </div>
   );
 }

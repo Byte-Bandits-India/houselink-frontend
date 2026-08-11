@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { FacebookFilled, InstagramFilled, DribbbleOutlined } from "@ant-design/icons";
+import { FacebookFilled, InstagramFilled, LinkedinFilled } from "@ant-design/icons";
 import { useState } from "react";
 
 const navLinks = [
@@ -30,9 +30,21 @@ const contactLinks = [
 ];
 
 const socialLinks = [
-  { Icon: FacebookFilled, href: "https://facebook.com/houselink360", label: "Facebook" },
-  { Icon: DribbbleOutlined, href: "https://dribbble.com/houselink360", label: "Dribbble" },
-  { Icon: InstagramFilled, href: "https://instagram.com/houselink360", label: "Instagram" },
+  {
+    Icon: FacebookFilled,
+    href: "https://www.facebook.com/people/HouseLink360/61572652041015/?utm_source=ig&utm_medium=social&utm_content=link_in_bio",
+    label: "Facebook",
+  },
+  {
+    Icon: InstagramFilled,
+    href: "https://www.instagram.com/houselink360/",
+    label: "Instagram",
+  },
+  {
+    Icon: LinkedinFilled,
+    href: "https://www.linkedin.com/company/houselink360/?fbclid=IwY2xjawTnyf5wZG9mAWV4dG4DYWVtAjEwAGJyaWQRMG9JV0RCeFNvbUVsR0t3eGlzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEeHou51yW9ggPqSOPvyJ52ezoJhT-FGyhFcnYRVFDbC1cnyJE0pC-169alNvE_aem_ls8YTsyYi4lNWzyHrDLwuQ",
+    label: "LinkedIn",
+  },
 ];
 
 export default function Footer() {

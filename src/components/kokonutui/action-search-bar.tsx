@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Send } from "lucide-react";
+import { Search, Send, SlidersHorizontal } from "lucide-react";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ interface ActionSearchBarProps {
   setShowAdvanced?: (val: boolean) => void;
   selectedAmenities?: string[];
   setSelectedAmenities?: React.Dispatch<React.SetStateAction<string[]>>;
+  onOpenFilter?: () => void;
 }
 
 const ANIMATION_VARIANTS = {
@@ -72,6 +73,7 @@ export default function ActionSearchBar({
   setShowAdvanced,
   selectedAmenities,
   setSelectedAmenities,
+  onOpenFilter,
 }: ActionSearchBarProps) {
   const [isFocused, setIsFocused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -132,6 +134,22 @@ export default function ActionSearchBar({
             }
           }}
         />
+
+        {/* Filter button */}
+        {onOpenFilter && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenFilter();
+            }}
+            className="p-2 md:px-3.5 md:py-2 rounded-full border border-gray-200 text-gray-600 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center gap-1.5 ml-1 flex-shrink-0 cursor-pointer"
+            title="Open Filters"
+          >
+            <SlidersHorizontal className="w-4 h-4 md:w-[18px] md:h-[18px]" />
+            <span className="hidden lg:inline text-xs font-semibold">Filter</span>
+          </button>
+        )}
 
         {/* Search button */}
         <Button

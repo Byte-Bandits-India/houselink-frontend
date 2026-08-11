@@ -398,28 +398,7 @@ export default function PropertySearch() {
     const hasAmenityFilter = overrides && overrides.amenities !== undefined;
     const isTargetedSearch = hasLocationFilter || hasCategoryFilter || hasCityFilter || hasAmenityFilter;
 
-    if (isHomePage && !fromModal && !isTargetedSearch) {
-      if (!isSearching) {
-        setIsModalOpen(true);
-        return;
-      }
 
-      const propertyCategories = ["plots", "apartments", "villas", "house", "commercial"];
-      const defaultAmenitiesList = ["wifi", "swimming pool", "security", "garden", "balcony", "air conditioning", "fitness center", "car parking", "bike parking"];
-      
-      const hasSuggestions =
-        popularProperties.some((p) => p.title.toLowerCase().includes(q)) ||
-        popularRegions.some((r) => r.name.toLowerCase().includes(q)) ||
-        ["chennai", "bangalore", "mumbai", "hyderabad"].some((c) => c.includes(q)) ||
-        recentSearches.some((s) => s.query.toLowerCase().includes(q)) ||
-        propertyCategories.some((c) => c.includes(q)) ||
-        defaultAmenitiesList.some((a) => a.includes(q));
-
-      if (!hasSuggestions) {
-        setIsModalOpen(true);
-        return;
-      }
-    }
 
     let queryToRecord = "";
     if (searchKeyword && searchKeyword.trim() && searchLocation && searchLocation.trim()) {
@@ -618,6 +597,7 @@ export default function PropertySearch() {
           setShowAdvanced={setShowAdvanced}
           selectedAmenities={selectedAmenities}
           setSelectedAmenities={setSelectedAmenities}
+          onOpenFilter={() => setIsModalOpen(true)}
         />
 
         {/* Recent searches */}

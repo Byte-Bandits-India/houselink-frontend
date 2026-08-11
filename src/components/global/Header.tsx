@@ -14,7 +14,6 @@ import {
   X,
   Mail,
   Phone,
-  Home,
 } from "lucide-react"
 
 import {
@@ -253,7 +252,7 @@ export default function Header() {
 
             {/* Post Your Property */}
             <Button
-              href={isLoggedIn ? "/dashboard/properties" : "/login"}
+              href={isLoggedIn ? "/dashboard/properties/new" : "/login"}
               variant="gradient"
               className="gap-2 px-6 h-11 whitespace-nowrap"
             >
@@ -375,7 +374,7 @@ export default function Header() {
 
             {/* Post Property CTA */}
             <Button
-              href={isLoggedIn ? "/dashboard/properties" : "/login"}
+              href={isLoggedIn ? "/dashboard/properties/new" : "/login"}
               variant="gradient"
               className="gap-2 px-4 py-3"
               onClick={() => setIsMobileMenuOpen(false)}
