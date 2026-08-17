@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -21,14 +22,25 @@ function loadRazorpayScript() {
   });
 }
 
-export default function CreditsPage() {
+function CreditsPageContent() {
   const { user, refreshUser } = useAuth();
+  const searchParams = useSearchParams();
+  const typeParam = searchParams.get("type");
+
   const [packages, setPackages] = useState<Package[]>([]);
   const [invoices, setInvoices] = useState<UserInvoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<Filter>("sell");
+  const [filter, setFilter] = useState<Filter>(typeParam === "rent" || typeParam === "rent_lease" ? "rent" : "sell");
   const [userTab, setUserTab] = useState<UserTab>("owners");
   const [buyingId, setBuyingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeParam === "rent" || typeParam === "rent_lease") {
+      setFilter("rent");
+    } else if (typeParam === "sell") {
+      setFilter("sell");
+    }
+  }, [typeParam]);
 
   const loadPackages = async () => {
     try {
@@ -68,61 +80,16 @@ export default function CreditsPage() {
     loadUserInvoices();
   }, [user?.id]);
 
-  // 1. Separate user credits by type
-  let ownerCreditsLeft = user?.creditPointsOwner ?? 0;
-  let builderCreditsLeft = user?.creditPointsBuilder ?? 0;
-  let consultantCreditsLeft = user?.creditPointsConsultant ?? 0;
-
-  // 2. Sort invoices by created_at desc (most recent first) to allocate points properly
-  const sortedInvoices = [...invoices].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
-
-  let ownerSellCredits = 0;
-  let builderSellCredits = 0;
-  let consultantSellCredits = 0;
-  let rentCredits = 0;
-
-  sortedInvoices.forEach((inv) => {
-    const type: "sell" | "rent" = inv.package_type === "rent" ? "rent" : "sell";
-    const userType = inv.user_type || "Owner";
-
-    let allocatedCredits = 0;
-    const totalPoints = inv.no_of_credit;
-
-    if (inv.status === "Paid") {
-      if (type === "rent") {
-        allocatedCredits = Math.min(totalPoints, ownerCreditsLeft);
-        ownerCreditsLeft -= allocatedCredits;
-        rentCredits += allocatedCredits;
-      } else {
-        const uType = userType.toLowerCase();
-        if (uType === "builder") {
-          allocatedCredits = Math.min(totalPoints, builderCreditsLeft);
-          builderCreditsLeft -= allocatedCredits;
-          builderSellCredits += allocatedCredits;
-        } else if (uType === "consultant") {
-          allocatedCredits = Math.min(totalPoints, consultantCreditsLeft);
-          consultantCreditsLeft -= allocatedCredits;
-          consultantSellCredits += allocatedCredits;
-        } else {
-          allocatedCredits = Math.min(totalPoints, ownerCreditsLeft);
-          ownerCreditsLeft -= allocatedCredits;
-          ownerSellCredits += allocatedCredits;
-        }
-      }
-    }
-  });
-
-  // Add any leftover credits (e.g. from manual admin adjustments)
-  ownerSellCredits += ownerCreditsLeft;
-  builderSellCredits += builderCreditsLeft;
-  consultantSellCredits += consultantCreditsLeft;
+  // 1. Dual Credit balances directly from user profile
+  const ownerSellCredits = user?.creditPointsOwner ?? 0;
+  const builderSellCredits = user?.creditPointsBuilder ?? 0;
+  const consultantSellCredits = user?.creditPointsConsultant ?? 0;
+  const rentUnlockPoints = user?.remainingRentPoints ?? user?.rentPoints ?? 0;
 
   const hasOwnerCredits = ownerSellCredits > 0;
   const hasBuilderCredits = builderSellCredits > 0;
   const hasConsultantCredits = consultantSellCredits > 0;
-  const hasRentCredits = rentCredits > 0;
+  const hasRentCredits = rentUnlockPoints > 0;
 
   // Helper to check if a specific package is the active one
   const getActivePackageId = (userType: string, isRent: boolean): number | null => {
@@ -130,7 +97,7 @@ export default function CreditsPage() {
       (userType.toLowerCase() === "owner" && !isRent && ownerSellCredits > 0) ||
       (userType.toLowerCase() === "builder" && !isRent && builderSellCredits > 0) ||
       (userType.toLowerCase() === "consultant" && !isRent && consultantSellCredits > 0) ||
-      (isRent && rentCredits > 0);
+      (isRent && rentUnlockPoints > 0);
 
     if (!hasCredits) return null;
 
@@ -166,11 +133,12 @@ export default function CreditsPage() {
     }
 
     const uType = pkg.userType?.toLowerCase();
+    const isRent = pkg.type === "rent";
     const alreadyHasCredits =
-      (uType === "owner" && hasOwnerCredits) ||
-      (uType === "builder" && hasBuilderCredits) ||
-      (uType === "consultant" && hasConsultantCredits) ||
-      (pkg.type === "rent" && hasRentCredits);
+      (!isRent && uType === "owner" && hasOwnerCredits) ||
+      (!isRent && uType === "builder" && hasBuilderCredits) ||
+      (!isRent && uType === "consultant" && hasConsultantCredits) ||
+      (isRent && hasRentCredits);
 
     if (alreadyHasCredits) {
       message.error("You already have active credits in this category. You cannot purchase another package until they are exhausted.");
@@ -287,10 +255,26 @@ export default function CreditsPage() {
     );
   }
 
-
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-ink">Buy Packages</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-ink">Buy Packages</h1>
+        {/* Quick balance pills */}
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full border border-blue-200 font-semibold">
+            Owner: <strong>{ownerSellCredits}</strong>
+          </span>
+          <span className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full border border-purple-200 font-semibold">
+            Builder: <strong>{builderSellCredits}</strong>
+          </span>
+          <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-200 font-semibold">
+            Consultant: <strong>{consultantSellCredits}</strong>
+          </span>
+          <span className="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full border border-amber-200 font-semibold">
+            Rent Unlock: <strong>{rentUnlockPoints}</strong> pts
+          </span>
+        </div>
+      </div>
 
       {/* Sell / Rent-Lease toggle */}
       <PurposeToggle value={filter} onChange={setFilter} />
@@ -335,15 +319,16 @@ export default function CreditsPage() {
               : 0;
             const savingsPercent = rawSavings % 1 === 0 ? rawSavings.toFixed(0) : rawSavings.toFixed(1);
 
-            const activePackageId = getActivePackageId(pkg.userType || "Owner", pkg.type === "rent");
+            const isRent = pkg.type === "rent";
+            const activePackageId = getActivePackageId(pkg.userType || "Owner", isRent);
             const isThisPackageActive = activePackageId === pkg.id;
 
             const uType = pkg.userType?.toLowerCase();
             const alreadyHasCredits =
-              (uType === "owner" && hasOwnerCredits) ||
-              (uType === "builder" && hasBuilderCredits) ||
-              (uType === "consultant" && hasConsultantCredits) ||
-              (pkg.type === "rent" && hasRentCredits);
+              (!isRent && uType === "owner" && hasOwnerCredits) ||
+              (!isRent && uType === "builder" && hasBuilderCredits) ||
+              (!isRent && uType === "consultant" && hasConsultantCredits) ||
+              (isRent && hasRentCredits);
 
             const isDarkCard = (hasSavings || idx === 1) && !isThisPackageActive && !alreadyHasCredits;
 
@@ -392,7 +377,7 @@ export default function CreditsPage() {
                     {pkg.name}
                   </h4>
                   <p className={cn("text-xs mt-1", isDarkCard ? "text-white/60" : "text-ink-muted")}>
-                    For {pkg.userType || "Users"}
+                    {isRent ? "For Tenants / Property Seekers" : `For ${pkg.userType || "Users"}`}
                   </p>
 
                   {/* Price info */}
@@ -464,15 +449,23 @@ export default function CreditsPage() {
                 >
                   <li className="flex items-center gap-2">
                     <i className="fa-regular fa-circle-check text-sm opacity-80" />
-                    <span>{pkg.noOfCredit} posts till the plan expires</span>
+                    <span>
+                      {isRent
+                        ? `${pkg.noOfCredit} Landlord Contact Unlocks`
+                        : `${pkg.noOfCredit} posts till the plan expires`}
+                    </span>
                   </li>
                   <li className="flex items-center gap-2">
                     <i className="fa-regular fa-circle-check text-sm opacity-80" />
-                    <span>Valid up-to {pkg.totalDaysLimit ? `${Math.round(pkg.totalDaysLimit / 30)} month${Math.round(pkg.totalDaysLimit / 30) > 1 ? 's' : ''}` : "1 month"}</span>
+                    <span>
+                      {isRent
+                        ? "45-Day Active Validity per Contact Unlock"
+                        : `Valid up-to ${pkg.totalDaysLimit ? `${Math.round(pkg.totalDaysLimit / 30)} month${Math.round(pkg.totalDaysLimit / 30) > 1 ? 's' : ''}` : "1 month"}`}
+                    </span>
                   </li>
                   <li className="flex items-center gap-2">
                     <i className="fa-regular fa-circle-check text-sm opacity-80" />
-                    <span>Basic Listings</span>
+                    <span>{isRent ? "Direct Phone & Email Access" : "Basic Listings"}</span>
                   </li>
                 </ul>
               </div>
@@ -485,5 +478,13 @@ export default function CreditsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CreditsPage() {
+  return (
+    <Suspense fallback={null}>
+      <CreditsPageContent />
+    </Suspense>
   );
 }

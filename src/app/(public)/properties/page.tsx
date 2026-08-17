@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import PropertiesListingLayout from "@/components/shared/PropertiesListingLayout";
 import { getProperties, mapApiPropertyToCardProps, getCityIdByName, getPopularRegions, getPropertyCategories, getFeatures, getFacilities } from "@/lib/api";
-import { PageFilterProvider, usePageFilter } from "@/contexts/HomeFilterContext";
+import { PageFilterProvider, usePageFilter, PRICE_RANGES } from "@/contexts/HomeFilterContext";
 
 
 function PropertiesListContent() {
@@ -13,6 +13,7 @@ function PropertiesListContent() {
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedInitially = useRef(false);
   const [popularRegionsList, setPopularRegionsList] = useState<string[]>([]);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [dbFeatures, setDbFeatures] = useState<any[]>([]);
@@ -145,11 +146,13 @@ function PropertiesListContent() {
     }
   }, [searchParams, popularRegionsList, dbCategories, dbFeatures, dbFacilities]);
 
-  const { activeTab: propertyPurpose, city, keyword, location, categoryType, activeCategory: category, maxPrice, maxArea, amenities, houseType } = filters;
+  const { activeTab: propertyPurpose, city, keyword, location, categoryType, activeCategory: category, minPrice, maxPrice, priceRanges, maxArea, amenities, houseType } = filters;
 
   useEffect(() => {
     async function fetchFilteredProperties() {
-      setIsLoading(true);
+      if (!hasLoadedInitially.current) {
+        setIsLoading(true);
+      }
       setError(null);
       try {
         const fetchParams: any = {
@@ -239,10 +242,25 @@ function PropertiesListContent() {
           });
         }
 
-        // 6. Max Price Filter
-        if (maxPrice) {
-          const priceLimit = Number(maxPrice);
-          if (!isNaN(priceLimit)) data = data.filter((p) => Number(p.price || 0) <= priceLimit);
+        // 6. Price Filter (handles multi-select price ranges and min/max limits)
+        if (priceRanges) {
+          const selectedRangeIds = priceRanges.split(",").filter(Boolean);
+          if (selectedRangeIds.length > 0) {
+            const selectedDefs = PRICE_RANGES.filter((r) => selectedRangeIds.includes(r.id));
+            data = data.filter((p) => {
+              const priceNum = Number(p.price || 0);
+              return selectedDefs.some((r) => priceNum >= r.min && (r.max === Infinity ? true : priceNum <= r.max));
+            });
+          }
+        } else {
+          if (minPrice) {
+            const minLimit = Number(minPrice);
+            if (!isNaN(minLimit)) data = data.filter((p) => Number(p.price || 0) >= minLimit);
+          }
+          if (maxPrice) {
+            const priceLimit = Number(maxPrice);
+            if (!isNaN(priceLimit)) data = data.filter((p) => Number(p.price || 0) <= priceLimit);
+          }
         }
 
         // 7. Max Area Filter
@@ -293,6 +311,7 @@ function PropertiesListContent() {
         });
 
         setProperties(data.map(mapApiPropertyToCardProps));
+        hasLoadedInitially.current = true;
       } catch (err: any) {
         console.error("Error loading properties list:", err);
         setError("Failed to search properties. Please try again.");

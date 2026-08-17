@@ -2,6 +2,21 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 
+export type PriceRangeOption = {
+  id: string;
+  label: string;
+  min: number;
+  max: number;
+};
+
+export const PRICE_RANGES: PriceRangeOption[] = [
+  { id: "1L-25L", label: "1 L - 25 L", min: 100000, max: 2500000 },
+  { id: "25L-50L", label: "25 L - 50 L", min: 2500000, max: 5000000 },
+  { id: "50L-75L", label: "50 L - 75 L", min: 5000000, max: 7500000 },
+  { id: "75L-1Cr", label: "75 L - 1 Crore", min: 7500000, max: 10000000 },
+  { id: "1Cr+", label: "1 Crore +", min: 10000000, max: Infinity },
+];
+
 export type PageFilterValues = {
   activeTab: "sell" | "rent";
   activeCategory: string;
@@ -9,7 +24,9 @@ export type PageFilterValues = {
   keyword: string;
   location: string;
   categoryType: string;
+  minPrice?: string;
   maxPrice: string;
+  priceRanges?: string;
   maxArea: string;
   amenities: string;
   houseType?: string;
@@ -22,7 +39,9 @@ export const defaultFilterValues: PageFilterValues = {
   keyword: "",
   location: "",
   categoryType: "",
+  minPrice: "",
   maxPrice: "",
+  priceRanges: "",
   maxArea: "",
   amenities: "",
   houseType: "",

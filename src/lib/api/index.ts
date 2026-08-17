@@ -105,6 +105,7 @@ export {
   getLeads,
   getMyEnquiries,
   checkEnquiryStatus,
+  unlockPropertyContact,
 } from "./leads";
 export type { EnquiryStatusResponse } from "./leads";
 

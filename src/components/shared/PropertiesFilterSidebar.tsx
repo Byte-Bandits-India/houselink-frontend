@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { usePageFilter } from "@/contexts/HomeFilterContext";
+import { useState, useEffect, useRef } from "react";
+import { ChevronDown, ChevronUp, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { usePageFilter, PRICE_RANGES, type PageFilterValues } from "@/contexts/HomeFilterContext";
 import PropertyTypeSwitch from "./PropertyTypeSwitch";
-import { Button } from "@/components/ui/button";
 import { getFeatures, getFacilities } from "@/lib/api";
 
 export default function PropertiesFilterSidebar() {
   const { filters, setFilters } = usePageFilter();
 
-  // Collapsible states
+  // Collapsible section states
   const [priceExpanded, setPriceExpanded] = useState(true);
   const [categoryExpanded, setCategoryExpanded] = useState(true);
   const [configExpanded, setConfigExpanded] = useState(true);
@@ -20,6 +19,10 @@ export default function PropertiesFilterSidebar() {
   // Dynamic filter lists fetched from backend
   const [dbFeatures, setDbFeatures] = useState<Array<{ id: number; name: string }>>([]);
   const [dbFacilities, setDbFacilities] = useState<Array<{ id: number; name: string }>>([]);
+
+  // Local state for instantaneous UI responsiveness
+  const [localFilters, setLocalFilters] = useState<PageFilterValues>(filters);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     async function loadFilterData() {
@@ -37,56 +40,133 @@ export default function PropertiesFilterSidebar() {
     loadFilterData();
   }, []);
 
-  // Local values synchronized with page filter context
-  const initialPrice = filters.maxPrice ? Number(filters.maxPrice) / 10000000 : 100;
-  const [price, setPrice] = useState(initialPrice);
-  const percentage = ((price - 0.1) / (99.9)) * 100;
-
+  // Synchronize external filter changes when no active debounce timer is running
   useEffect(() => {
-    setPrice(filters.maxPrice ? Number(filters.maxPrice) / 10000000 : 100);
-  }, [filters.maxPrice]);
+    if (!debounceTimerRef.current) {
+      setLocalFilters(filters);
+    }
+  }, [filters]);
 
-  const handlePriceChange = (val: number) => {
-    setPrice(val);
-    setFilters({
-      ...filters,
-      maxPrice: val === 100 ? "" : String(val * 10000000),
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Dispatch debounced filter update to context (400ms)
+  const applyFilterChange = (nextFilters: PageFilterValues) => {
+    setLocalFilters(nextFilters);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      setFilters(nextFilters);
+      debounceTimerRef.current = null;
+    }, 400);
+  };
+
+  // Immediate Clear Filters handler
+  const handleClearFilters = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    const resetFilters: PageFilterValues = {
+      ...localFilters,
+      activeCategory: "all",
+      priceRanges: "",
+      minPrice: "",
+      maxPrice: "",
+      houseType: "",
+      amenities: "",
+    };
+    setLocalFilters(resetFilters);
+    setFilters(resetFilters);
+  };
+
+  const hasActiveFilters = Boolean(
+    (localFilters.activeCategory && localFilters.activeCategory !== "all") ||
+    localFilters.priceRanges ||
+    localFilters.houseType ||
+    localFilters.amenities ||
+    localFilters.maxPrice ||
+    localFilters.minPrice
+  );
+
+  // ── Price Range Selection (Checkboxes) ──
+  const selectedPriceRanges = localFilters.priceRanges
+    ? localFilters.priceRanges.split(",").filter(Boolean)
+    : [];
+
+  const handlePriceRangeSelect = (rangeId: string) => {
+    const currentRanges = localFilters.priceRanges
+      ? localFilters.priceRanges.split(",").filter(Boolean)
+      : [];
+    const updated = currentRanges.includes(rangeId)
+      ? currentRanges.filter((id) => id !== rangeId)
+      : [...currentRanges, rangeId];
+    applyFilterChange({
+      ...localFilters,
+      priceRanges: updated.join(","),
     });
   };
 
-  // "Show All Properties" is exclusive; any other category can be multi-selected
-  // alongside other specific categories (stored as a comma-separated string).
+  // ── Property Category Selection (Checkboxes) ──
   const selectedCategories =
-    filters.activeCategory && filters.activeCategory !== "all"
-      ? filters.activeCategory.split(",").filter(Boolean)
+    localFilters.activeCategory && localFilters.activeCategory !== "all"
+      ? localFilters.activeCategory.split(",").filter(Boolean)
       : [];
 
   const handleCategorySelect = (categoryValue: string) => {
     if (categoryValue === "all") {
-      setFilters({ ...filters, activeCategory: "all" });
+      applyFilterChange({ ...localFilters, activeCategory: "all" });
       return;
     }
-    const updated = selectedCategories.includes(categoryValue)
-      ? selectedCategories.filter((c) => c !== categoryValue)
-      : [...selectedCategories, categoryValue];
-    setFilters({
-      ...filters,
+    const currentSelected =
+      localFilters.activeCategory && localFilters.activeCategory !== "all"
+        ? localFilters.activeCategory.split(",").filter(Boolean)
+        : [];
+    const updated = currentSelected.includes(categoryValue)
+      ? currentSelected.filter((c) => c !== categoryValue)
+      : [...currentSelected, categoryValue];
+    applyFilterChange({
+      ...localFilters,
       activeCategory: updated.length > 0 ? updated.join(",") : "all",
     });
   };
 
-  // Toggling amenities (stored as comma-separated string)
-  const activeAmenitiesList = filters.amenities ? filters.amenities.split(",") : [];
+  // ── BHK Type Selection (Pill Buttons) ──
+  const selectedHouseTypes = localFilters.houseType
+    ? localFilters.houseType.split(",").filter(Boolean)
+    : [];
+
+  const handleHouseTypeSelect = (value: string) => {
+    const current = localFilters.houseType ? localFilters.houseType.split(",").filter(Boolean) : [];
+    const updated = current.includes(value)
+      ? current.filter((v) => v !== value)
+      : [...current, value];
+    applyFilterChange({
+      ...localFilters,
+      houseType: updated.join(","),
+    });
+  };
+
+  // ── Amenities / Features / Facilities Selection ──
+  const activeAmenitiesList = localFilters.amenities
+    ? localFilters.amenities.split(",").filter(Boolean)
+    : [];
+
   const handleToggleAmenity = (amenityName: string) => {
-    let updated: string[];
+    const currentList = localFilters.amenities ? localFilters.amenities.split(",").filter(Boolean) : [];
     const lowerName = amenityName.toLowerCase();
-    if (activeAmenitiesList.includes(lowerName)) {
-      updated = activeAmenitiesList.filter((a) => a !== lowerName);
-    } else {
-      updated = [...activeAmenitiesList, lowerName];
-    }
-    setFilters({
-      ...filters,
+    const updated = currentList.includes(lowerName)
+      ? currentList.filter((a) => a !== lowerName)
+      : [...currentList, lowerName];
+    applyFilterChange({
+      ...localFilters,
       amenities: updated.join(","),
     });
   };
@@ -109,23 +189,27 @@ export default function PropertiesFilterSidebar() {
     { value: "5+ BHK", label: "5+ BHK" },
   ];
 
-  // Multi-select, stored as a comma-separated string (same convention as amenities)
-  const selectedHouseTypes = filters.houseType ? filters.houseType.split(",").filter(Boolean) : [];
-  const handleHouseTypeSelect = (value: string) => {
-    const updated = selectedHouseTypes.includes(value)
-      ? selectedHouseTypes.filter((v) => v !== value)
-      : [...selectedHouseTypes, value];
-    setFilters({
-      ...filters,
-      houseType: updated.join(","),
-    });
-  };
-
-  // Static amenities array removed in favor of dynamic DB features & facilities
-
   return (
-    <div className="w-full max-w-[318px] bg-white rounded-2xl border border-gray-150 p-5 text-left shadow-sm flex flex-col gap-6">
+    <div className="w-full max-w-[318px] bg-white rounded-2xl border border-gray-150 p-5 text-left shadow-sm flex flex-col gap-6 select-none">
       
+      {/* ── SIDEBAR TOP HEADER & CLEAR BUTTON ── */}
+      <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal className="w-4 h-4 text-primary" />
+          <h3 className="font-extrabold text-sm text-gray-900 uppercase tracking-wider">Filters</h3>
+        </div>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 hover:underline cursor-pointer transition-colors active:scale-95"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Clear All</span>
+          </button>
+        )}
+      </div>
+
       {/* ── PRICE RANGE SECTION ── */}
       <div>
         <button
@@ -138,25 +222,25 @@ export default function PropertiesFilterSidebar() {
         </button>
         {priceExpanded && (
           <div className="pt-4 flex flex-col gap-3">
-            <span className="text-xs font-semibold text-gray-500">
-              Starting From ₹0 To ₹{price} Cr
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={0.1}
-              value={price}
-              onChange={(e) => handlePriceChange(Number(e.target.value))}
-              style={{
-                background: `linear-gradient(to right, #163D75 ${percentage}%, #f3f4f6 ${percentage}%)`
-              }}
-              className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-primary"
-            />
-            <div className="flex items-center justify-between text-[10px] font-bold text-gray-400">
-              <span>₹0</span>
-              <span>₹100 Cr</span>
-            </div>
+            {PRICE_RANGES.map((range) => {
+              const isChecked = selectedPriceRanges.includes(range.id);
+              return (
+                <label
+                  key={range.id}
+                  className="flex items-center gap-3 cursor-pointer group select-none"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => handlePriceRangeSelect(range.id)}
+                    className="w-[17px] h-[17px] rounded border-gray-300 text-primary focus:ring-primary accent-primary cursor-pointer transition-transform group-active:scale-95"
+                  />
+                  <span className="text-[13px] text-gray-600 font-semibold group-hover:text-gray-900 transition-colors">
+                    {range.label}
+                  </span>
+                </label>
+              );
+            })}
           </div>
         )}
       </div>
@@ -176,8 +260,8 @@ export default function PropertiesFilterSidebar() {
             
             {/* Toggle Buy / Rent */}
             <PropertyTypeSwitch
-              activeTab={filters.activeTab}
-              onChange={(tab) => setFilters({ ...filters, activeTab: tab })}
+              activeTab={localFilters.activeTab}
+              onChange={(tab) => applyFilterChange({ ...localFilters, activeTab: tab })}
               variant="sidebar"
             />
 
@@ -186,18 +270,18 @@ export default function PropertiesFilterSidebar() {
               {categories.map((cat) => {
                 const isChecked =
                   cat.value === "all"
-                    ? !filters.activeCategory || filters.activeCategory === "all"
+                    ? !localFilters.activeCategory || localFilters.activeCategory === "all"
                     : selectedCategories.includes(cat.value);
                 return (
                   <label
                     key={cat.value}
-                    className="flex items-center gap-3 cursor-pointer group"
+                    className="flex items-center gap-3 cursor-pointer group select-none"
                   >
                     <input
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => handleCategorySelect(cat.value)}
-                      className="w-[17px] h-[17px] rounded border-gray-300 text-primary focus:ring-primary accent-primary cursor-pointer"
+                      className="w-[17px] h-[17px] rounded border-gray-300 text-primary focus:ring-primary accent-primary cursor-pointer transition-transform group-active:scale-95"
                     />
                     <span className="text-[13px] text-gray-600 font-semibold group-hover:text-gray-900 transition-colors">
                       {cat.label}
@@ -226,18 +310,18 @@ export default function PropertiesFilterSidebar() {
             {houseTypes.map((ht) => {
               const isSelected = selectedHouseTypes.includes(ht.value);
               return (
-                <Button
-                  variant="gradient"
+                <button
+                  type="button"
                   key={ht.value}
                   onClick={() => handleHouseTypeSelect(ht.value)}
-                  className={`px-4 py-2 rounded-full border text-[11px] font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
+                  className={`px-4 py-2 rounded-full border text-[11px] font-bold transition-all duration-150 cursor-pointer active:scale-95 select-none ${
                     isSelected
-                      ? "bg-gradient-to-r from-primary to-secondary text-white shadow-sm"
-                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
+                      ? "bg-gradient-to-r from-primary to-secondary text-white border-transparent shadow-sm"
+                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-400 hover:text-gray-900"
                   }`}
                 >
                   {ht.label}
-                </Button>
+                </button>
               );
             })}
           </div>
@@ -259,18 +343,18 @@ export default function PropertiesFilterSidebar() {
             {dbFeatures.map((feat) => {
               const isSelected = activeAmenitiesList.includes(feat.name.toLowerCase());
               return (
-                <Button
-                  variant="gradient"
+                <button
+                  type="button"
                   key={feat.id}
                   onClick={() => handleToggleAmenity(feat.name)}
-                  className={`px-4 py-2 rounded-full border text-[11px] font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
+                  className={`px-4 py-2 rounded-full border text-[11px] font-bold transition-all duration-150 cursor-pointer active:scale-95 select-none ${
                     isSelected
-                      ? "bg-gradient-to-r from-primary to-secondary text-white shadow-sm"
-                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
+                      ? "bg-gradient-to-r from-primary to-secondary text-white border-transparent shadow-sm"
+                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-400 hover:text-gray-900"
                   }`}
                 >
                   + {feat.name}
-                </Button>
+                </button>
               );
             })}
           </div>
@@ -292,24 +376,39 @@ export default function PropertiesFilterSidebar() {
             {dbFacilities.map((fac) => {
               const isSelected = activeAmenitiesList.includes(fac.name.toLowerCase());
               return (
-                <Button
-                  variant="gradient"
+                <button
+                  type="button"
                   key={fac.id}
                   onClick={() => handleToggleAmenity(fac.name)}
-                  className={`px-4 py-2 rounded-full border text-[11px] font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
+                  className={`px-4 py-2 rounded-full border text-[11px] font-bold transition-all duration-150 cursor-pointer active:scale-95 select-none ${
                     isSelected
-                      ? "bg-gradient-to-r from-primary to-secondary text-white shadow-sm"
-                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
+                      ? "bg-gradient-to-r from-primary to-secondary text-white border-transparent shadow-sm"
+                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-400 hover:text-gray-900"
                   }`}
                 >
                   + {fac.name}
-                </Button>
+                </button>
               );
             })}
           </div>
         )}
       </div>
 
+      {/* ── BOTTOM RESET FILTERS BUTTON ── */}
+      {hasActiveFilters && (
+        <div className="pt-2 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs transition-all cursor-pointer shadow-xs active:scale-[0.98]"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset All Filters</span>
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }
+

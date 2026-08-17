@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Save, Send } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { PropertyFormData, defaultFormData, getSchemaFields } from "@/types/property";
 import Step1BasicDetails from "./Step1BasicDetails";
 import Step2PropertyProfile from "./Step2PropertyProfile";
@@ -28,6 +29,7 @@ export default function PropertyFormWizard({
   onSubmit,
   onEdit,
 }: Props) {
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<PropertyFormData>({
     ...defaultFormData,
@@ -48,6 +50,16 @@ export default function PropertyFormWizard({
     if (stepIndex === 0) {
       if (!data.property_for || !data.owner_type || !data.property_main_type || !subtype) {
         return false;
+      }
+      if (data.property_for === "sell" && user) {
+        const role = data.owner_type;
+        const credits =
+          role === "Owner"
+            ? (user.creditPointsOwner ?? 0)
+            : role === "Builder"
+            ? (user.creditPointsBuilder ?? 0)
+            : (user.creditPointsConsultant ?? 0);
+        if (credits <= 0) return false;
       }
       const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
 

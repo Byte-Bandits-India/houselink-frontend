@@ -99,7 +99,7 @@ export default function PropertiesListingLayout({
           </div>
 
           {/* Right Column: Properties List */}
-          <div className="w-full">
+          <div className="w-full lg:sticky lg:top-20">
             {!isLoading && !error && properties.length > 0 && (
               <p className="text-sm font-bold text-gray-700 mb-4">
                 {resultsSummary}

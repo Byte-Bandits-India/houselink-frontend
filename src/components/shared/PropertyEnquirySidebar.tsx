@@ -4,16 +4,38 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Lock,
+  Unlock,
   CheckCircle2,
   AlertCircle,
   Clock,
   Tag,
+  Phone,
+  Mail,
+  User,
+  Sparkles,
+  Coins,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { sendOtp, verifyOtpLogin, ApiError, createLead, checkEnquiryStatus } from "@/lib/api";
+import {
+  sendOtp,
+  verifyOtpLogin,
+  ApiError,
+  createLead,
+  checkEnquiryStatus,
+  unlockPropertyContact,
+} from "@/lib/api";
 import type { EnquiryStatusResponse } from "@/lib/api";
 import { Button } from "../ui/button";
 import { PhoneInput } from "@/components/reui/phone-input";
+import { message } from "antd";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 import type { PropertyEnquirySidebarProps } from "@/types/components";
 
@@ -52,16 +74,19 @@ function PropertyForBadge({ propertyFor }: { propertyFor?: string }) {
 }
 
 export default function PropertyEnquirySidebar({ property }: PropertyEnquirySidebarProps) {
-  const { isLoggedIn, user, setAuthUser } = useAuth();
+  const { isLoggedIn, user, setAuthUser, refreshUser } = useAuth();
   const propertyFor = (property.propertyFor || "sell").toLowerCase();
+  const isRentOrLease = propertyFor === "rent" || propertyFor === "lease";
 
   // Common T&C Checkbox
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // ── Enquiry status state (cooldown / points) ──────────────────────────────
+  // ── Enquiry status state (cooldown / points / unlocked) ─────────────────────
   const [statusLoading, setStatusLoading] = useState(false);
-  const [enquiryStatus, setEnquiryStatus] = useState<EnquiryStatusResponse["data"] | null>(null);
+  const [enquiryStatus, setEnquiryStatus] = useState<any>(null);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [showPointModal, setShowPointModal] = useState(false);
 
   // ── Logged-out state variables ────────────────────────────────────────────
   const [phone, setPhone] = useState("");
@@ -86,6 +111,7 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
       return () => clearTimeout(timerId);
     }
   }, [timeLeft]);
+
   // ── Logged-in state variables ─────────────────────────────────────────────
   const [formData, setFormData] = useState({
     name: "",
@@ -104,6 +130,20 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     return digits;
   };
 
+  const fetchStatus = async () => {
+    setStatusLoading(true);
+    try {
+      const res = await checkEnquiryStatus(property.id);
+      if (res.success) {
+        setEnquiryStatus(res.data);
+      }
+    } catch {
+      // silent
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
   // Sync user details when logged in + fetch enquiry status
   useEffect(() => {
     if (isLoggedIn && user) {
@@ -114,15 +154,7 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
         message: "I'm interested in your property...",
       });
       setAgreedToTerms(true);
-
-      // Pre-flight: check cooldown + points
-      setStatusLoading(true);
-      checkEnquiryStatus(property.id)
-        .then((res) => {
-          if (res.success) setEnquiryStatus(res.data);
-        })
-        .catch(() => {/* silent — don't block the form */})
-        .finally(() => setStatusLoading(false));
+      fetchStatus();
     }
   }, [isLoggedIn, user, property.id]);
 
@@ -195,6 +227,32 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     }
   };
 
+  const handleDirectUnlock = async () => {
+    setFormError("");
+    const availablePoints = enquiryStatus?.remaining_points ?? (user?.remainingRentPoints ?? user?.rentPoints ?? 0);
+    if (availablePoints <= 0) {
+      setShowPointModal(true);
+      return;
+    }
+    setIsUnlocking(true);
+    try {
+      const res = await unlockPropertyContact(property.id);
+      if (res.success) {
+        message.success("Contact details unlocked successfully for 45 days!");
+        await fetchStatus();
+        await refreshUser();
+      }
+    } catch (err: any) {
+      if (err instanceof ApiError && err.status === 403) {
+        setShowPointModal(true);
+      } else {
+        setFormError(err.message || "Failed to unlock contact info.");
+      }
+    } finally {
+      setIsUnlocking(false);
+    }
+  };
+
   const handleEnquireLoggedIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreedToTerms) {
@@ -202,6 +260,16 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
       return;
     }
     setFormError("");
+
+    const isUnlocked = isRentOrLease && (enquiryStatus?.already_unlocked || enquiryStatus?.is_unlocked);
+    const availablePoints = enquiryStatus?.remaining_points ?? (user?.remainingRentPoints ?? user?.rentPoints ?? 0);
+
+    // If Rent / Lease property and not yet unlocked, check if points are insufficient
+    if (isRentOrLease && !isUnlocked && availablePoints <= 0) {
+      setShowPointModal(true);
+      return;
+    }
+
     setIsLoading(true);
     try {
       await createLead({
@@ -212,9 +280,13 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
         message: formData.message,
       });
       setIsSubmitted(true);
-    } catch (err) {
+      await refreshUser();
+      await fetchStatus();
+    } catch (err: any) {
       if (err instanceof ApiError) {
-        if (err.status === 429) {
+        if (err.status === 403) {
+          setShowPointModal(true);
+        } else if (err.status === 429) {
           // Cooldown hit — refresh status
           const errData = (err as any).data?.data;
           if (errData) setEnquiryStatus(errData);
@@ -248,11 +320,8 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
         <button
           onClick={() => {
             setIsSubmitted(false);
-            // Re-check status after enquiry so cooldown reflects immediately
             if (isLoggedIn) {
-              checkEnquiryStatus(property.id)
-                .then((res) => { if (res.success) setEnquiryStatus(res.data); })
-                .catch(() => {});
+              fetchStatus();
             }
           }}
           className="w-full bg-[#1a3c6b] hover:bg-[#142e52] text-white font-semibold py-3 rounded-xl transition-colors text-sm"
@@ -265,7 +334,9 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
 
   // ── RENDER: Logged in state ───────────────────────────────────────────────
   if (isLoggedIn) {
-    const cooldownActive = enquiryStatus && !enquiryStatus.can_enquire && !!enquiryStatus.remaining_seconds;
+    const isUnlocked = isRentOrLease && (enquiryStatus?.already_unlocked || enquiryStatus?.is_unlocked);
+    const availablePoints = enquiryStatus?.remaining_points ?? (user?.remainingRentPoints ?? user?.rentPoints ?? 0);
+    const cooldownActive = !isRentOrLease && enquiryStatus && !enquiryStatus.can_enquire && !!enquiryStatus.remaining_seconds;
 
     return (
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
@@ -275,7 +346,40 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
           <PropertyForBadge propertyFor={propertyFor} />
         </div>
 
-        {/* ── COOLDOWN BLOCK ─────────────────────────────────────────── */}
+        {/* ── RENT / LEASE CONTACT UNLOCKED CARD ────────────────────────────── */}
+        {isRentOrLease && isUnlocked && (
+          <div className="mb-5 bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3">
+            <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <span>Contact Details Unlocked</span>
+            </div>
+            <p className="text-xs text-emerald-700">
+              Valid for 45 days. You can contact the owner directly or send an enquiry below for free.
+            </p>
+            {enquiryStatus?.owner_phone && (
+              <div className="bg-white rounded-lg p-3 border border-emerald-100 space-y-1.5 text-xs text-slate-800">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-emerald-600" />
+                  <span className="font-semibold">{enquiryStatus.owner_name || "Property Owner"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-emerald-600" />
+                  <a href={`tel:${enquiryStatus.owner_phone}`} className="font-bold text-emerald-700 hover:underline">
+                    {enquiryStatus.owner_phone}
+                  </a>
+                </div>
+                {enquiryStatus.owner_email && enquiryStatus.owner_email !== "-" && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-emerald-600" />
+                    <span>{enquiryStatus.owner_email}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── SELL COOLDOWN BLOCK ─────────────────────────────────────── */}
         {cooldownActive ? (
           <div className="space-y-4">
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col items-center text-center gap-3">
@@ -285,10 +389,7 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
               <div>
                 <p className="text-sm font-semibold text-amber-800">Already Enquired</p>
                 <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-                  You have already enquired about this property.{" "}
-                  {propertyFor === "sell"
-                    ? "You can enquire again after the 60-minute cooldown."
-                    : "You can enquire again after the 30-day cooldown."}
+                  You have already enquired about this property. You can enquire again after the 60-minute cooldown.
                 </p>
               </div>
               <div className="bg-white border border-amber-200 rounded-lg px-4 py-2 w-full">
@@ -296,26 +397,15 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
                   Time Remaining
                 </p>
                 <p className="text-base font-bold text-amber-700">
-                  {formatCooldown(enquiryStatus!.remaining_seconds!, propertyFor)}
+                  {formatCooldown(enquiryStatus!.remaining_seconds!, "sell")}
                 </p>
               </div>
-              {enquiryStatus?.owner_details_expires_at && (
-                <p className="text-[10px] text-amber-600">
-                  Cooldown ends:{" "}
-                  {new Date(enquiryStatus.owner_details_expires_at).toLocaleString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              )}
             </div>
           </div>
         ) : (
           /* ── ENQUIRY FORM ──────────────────────────────────────────── */
           <form onSubmit={handleEnquireLoggedIn} className="space-y-4">
-            {/* ENQUIRY FORM BODY */}
+            {/* Property Name */}
             <div>
               <label className="text-xs font-semibold text-gray-600 block mb-1">
                 Property Name
@@ -411,10 +501,38 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
               disabled={isLoading || !agreedToTerms || statusLoading}
               className="w-full font-extrabold text-sm py-2.5 px-4 rounded-xl shadow transition-all duration-200 active:scale-[0.98] cursor-pointer text-center"
             >
-              {isLoading || statusLoading ? "Please wait..." : "Verify and Enquire"}
+              {isLoading || statusLoading ? "Please wait..." : "Send Enquiry"}
             </Button>
           </form>
         )}
+
+        {/* ── RENT POINT REQUIRED MODAL POPUP ──────────────────────────── */}
+        <Dialog open={showPointModal} onOpenChange={setShowPointModal}>
+          <DialogContent className="max-w-sm p-6 rounded-2xl bg-white border border-slate-100 shadow-2xl">
+            <DialogHeader className="flex flex-col items-center text-center space-y-3">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-amber-50 text-amber-600 border border-amber-100 shadow-inner">
+                <Sparkles className="w-7 h-7" />
+              </div>
+              <DialogTitle className="text-lg font-bold text-slate-900">
+                Rent Points Required
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500 leading-relaxed text-center">
+                You need 1 Rent Unlock Point to unlock this landlord&apos;s contact details and send an enquiry. Please purchase a rent plan to proceed.
+              </DialogDescription>
+            </DialogHeader>
+
+            <DialogFooter className="mt-4">
+              <Link
+                href="/dashboard/credits?type=rent"
+                onClick={() => setShowPointModal(false)}
+                className="w-full flex items-center justify-center gap-1.5 bg-brand hover:bg-brand/90 text-white rounded-xl text-xs font-bold py-2.5 shadow-sm transition-all text-center"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Buy Rent Plan</span>
+              </Link>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }

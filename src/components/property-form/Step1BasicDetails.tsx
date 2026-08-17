@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -120,6 +122,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false, sh
   const hasOwnerCredits = (user?.creditPointsOwner ?? 0) > 0;
   const hasBuilderCredits = (user?.creditPointsBuilder ?? 0) > 0;
   const hasConsultantCredits = (user?.creditPointsConsultant ?? 0) > 0;
+  const hasAnySellCredits = hasOwnerCredits || hasBuilderCredits || hasConsultantCredits;
 
   // ── Step 1 fields based strictly on step1.MD ──
   const allowedFields = getSchemaFields(data.property_for, data.owner_type, subtype);
@@ -229,6 +232,22 @@ export default function Step1BasicDetails({ data, onChange, disabled = false, sh
         show={showErrors && !data.property_for}
         message="Please select property listing purpose"
       />
+
+      {/* Warning banner when Sell is chosen and user has 0 credits across all roles */}
+      {data.property_for === "sell" && user && !hasAnySellCredits && (
+        <div className="mt-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between gap-3 text-amber-800 text-xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span className="font-medium">No active package is found.</span>
+          </div>
+          <Link
+            href="/dashboard/credits?type=sell"
+            className="font-bold text-brand hover:underline shrink-0 bg-white px-3 py-1.5 rounded-lg border border-amber-300 shadow-xs transition-colors"
+          >
+            Click here to post a property
+          </Link>
+        </div>
+      )}
 
       {/* Owner Type */}
       <RequiredSectionTitle>Are you?</RequiredSectionTitle>

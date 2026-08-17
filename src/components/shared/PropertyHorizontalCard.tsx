@@ -61,12 +61,43 @@ function formatIndianPrice(price: number | string | undefined | null): string {
   }
 }
 
+function getCategoryColor(category?: string) {
+  if (!category) return "text-primary";
+  const c = category.toLowerCase().trim();
+  if (c.includes("plot") || c.includes("land")) return "text-amber-500";
+  if (c.includes("villa")) return "text-emerald-600";
+  if (c.includes("individual house") || c.includes("individual_house") || c.includes("house")) return "text-rose-500";
+  if (c.includes("commercial") || c.includes("office") || c.includes("shop") || c.includes("godown") || c.includes("warehouse")) return "text-violet-600";
+  if (c.includes("apartment")) return "text-sky-600";
+  return "text-amber-500";
+}
+
+function getShortCategoryName(category?: string) {
+  if (!category) return "";
+  const name = category.trim();
+  if (name.toLowerCase() === "individual house") return "House";
+  if (name.toLowerCase() === "commercial property" || name.toLowerCase() === "commercial") return "Commercial";
+  return name;
+}
+
 export default function PropertyHorizontalCard(props: PropertyHorizontalCardProps) {
   const url = props.permalink ? `/properties/${props.permalink}` : `/properties/${props.id}`;
   const priceFormatted = formatIndianPrice(props.price);
   const areaFormatted = props.area !== undefined && props.area !== null
     ? (typeof props.area === "number" || !isNaN(Number(props.area)) ? `${props.area}/ sqft.` : props.area)
     : "";
+
+  // Badges calculation
+  const ownerRole = props.type || (props as any).propertyOwnership || "Owner";
+  const rawPurpose = props.property_for || (props as any).propertyFor || "sell";
+  const purposeTag = rawPurpose.toLowerCase().includes("rent")
+    ? "Rent"
+    : rawPurpose.toLowerCase().includes("lease")
+    ? "Lease"
+    : "Sell";
+
+  const categoryColorClass = getCategoryColor(props.categoryName);
+  const displayCategoryName = getShortCategoryName(props.categoryName);
 
   // Icons mapping for amenities representation
   const amenitiesList = props.features || [];
@@ -84,6 +115,18 @@ export default function PropertyHorizontalCard(props: PropertyHorizontalCardProp
   return (
     <div className="relative flex flex-col md:flex-row border border-gray-205 rounded-2xl p-4 gap-6 bg-white shadow-xs select-none">
       
+      {/* ── Category ribbon / badge ── */}
+      {displayCategoryName && (
+        <div className={`absolute -top-3.5 right-4 z-20 select-none filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.15)] ${categoryColorClass}`}>
+          <svg width="84" height="34" viewBox="0 0 84 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 8 0 H 76 C 80 0, 84 4, 84 8 C 80 12, 80 22, 84 26 C 84 30, 80 34, 76 34 H 8 C 4 34, 0 30, 0 26 C 4 22, 4 12, 0 8 C 0 4, 4 0, 8 0 Z" fill="currentColor" />
+          </svg>
+          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white tracking-wider uppercase">
+            {displayCategoryName}
+          </span>
+        </div>
+      )}
+
       {/* ── IMAGE SECTION ── */}
       <div className="relative w-full md:w-[320px] h-[200px] md:h-[250px] lg:w-[390px] lg:h-[278px] rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 select-none image-anime">
         <Link href={url} className="block w-full h-full relative">
@@ -96,12 +139,24 @@ export default function PropertyHorizontalCard(props: PropertyHorizontalCardProp
           />
         </Link>
 
-        {/* Featured Tag on top-left of image */}
-        {props.isFeatured && (
-          <span className="absolute top-3 left-3 rounded-full bg-gradient-to-r from-primary to-secondary text-white px-3.5 py-1 font-bold text-[10px] uppercase tracking-wider shadow-sm select-none">
-            Featured
-          </span>
-        )}
+        {/* Badges on top-left of image */}
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
+          {props.isFeatured && (
+            <span className="rounded-md bg-emerald-100 text-emerald-800 px-2.5 py-1 font-semibold text-[11px] md:text-xs shadow-sm select-none">
+              Featured
+            </span>
+          )}
+          {ownerRole && (
+            <span className="rounded-md bg-blue-100 text-blue-800 px-2.5 py-1 font-semibold text-[11px] md:text-xs shadow-sm select-none capitalize">
+              {ownerRole}
+            </span>
+          )}
+          {purposeTag && (
+            <span className="rounded-md bg-[#153e75] text-white px-2.5 py-1 font-semibold text-[11px] md:text-xs shadow-sm select-none capitalize">
+              {purposeTag}
+            </span>
+          )}
+        </div>
 
         {/* Wishlist heart button */}
         <button
@@ -115,30 +170,14 @@ export default function PropertyHorizontalCard(props: PropertyHorizontalCardProp
       </div>
 
       {/* ── DETAILS SECTION ── */}
-      <div className="flex flex-col flex-1 justify-between min-w-0 text-left py-4 pr-1">
+      <div className="flex flex-col flex-1 justify-between min-w-0 text-left py-2 pr-1">
         
-        {/* Header row: Location & Category Tag */}
-        <div className="flex items-center justify-between gap-3 select-none flex-wrap">
-          <span className="text-gray-500 text-xs font-semibold truncate mt-1">
+        {/* Header row: Location */}
+        <div className="flex items-center justify-between gap-3 select-none flex-wrap pt-1">
+          <span className="text-gray-500 text-xs font-semibold truncate">
             {props.location}
           </span>
-
-          {/* Mobile Category Tag */}
-          {props.categoryName && (
-            <span className="flex md:hidden items-center gap-1.5 px-3 py-1 bg-[#bfdbfe]/80 text-[#000000] rounded-full font-bold text-[9px] uppercase tracking-wider select-none border border-gray-150 shrink-0">
-              <i className={`fi ${getCategoryIconClass(props.categoryName)} text-[9px] text-black leading-none`}></i>
-              {props.categoryName}
-            </span>
-          )}
         </div>
-
-        {/* Desktop Category Tag */}
-        {props.categoryName && (
-          <div className="hidden md:flex absolute top-0 right-0 items-center gap-1.5 px-4 py-1.5 bg-[#bfdbfe]/80 text-[#000000] rounded-bl-xl rounded-tr-2xl font-bold text-[11px] uppercase tracking-wider select-none border-b border-l border-gray-150">
-            <i className={`fi ${getCategoryIconClass(props.categoryName)} text-[12px] text-black leading-none`}></i>
-            {props.categoryName}
-          </div>
-        )}
 
         {/* Title & Description Excerpt */}
         <div className="my-2 select-text">

@@ -30,6 +30,8 @@ export type Customer = {
   creditPointsOwner?: number;
   creditPointsBuilder?: number;
   creditPointsConsultant?: number;
+  remainingRentPoints?: number;
+  rentPoints?: number;
   createdAt: string;
 };
 
