@@ -76,7 +76,6 @@ export default function SearchFilterModal({
   const [popularRegions, setPopularRegions] = useState<PopularRegionApiItem[]>([]);
   const [categoriesList, setCategoriesList] = useState<Array<{ id: number; name: string }>>([]);
   const [regionError, setRegionError] = useState(false);
-  const [categoryError, setCategoryError] = useState(false);
 
   // Step 2 States
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]); // in Crores
@@ -96,7 +95,6 @@ export default function SearchFilterModal({
       setRegion("");
       setCategory("");
       setRegionError(false);
-      setCategoryError(false);
       setPriceRange([0, 1]);
       setAreaRange([0, 10000]);
       setSelectedAmenities([]);
@@ -170,18 +168,9 @@ export default function SearchFilterModal({
 
   const handleCategoryChange = (val: string) => {
     setCategory(val);
-    if (val && val !== "all") {
-      setCategoryError(false);
-    }
   };
 
   const handleSubmit = () => {
-    if (!category || category === "all") {
-      setCategoryError(true);
-      return;
-    }
-    setCategoryError(false);
-
     onSearch({
       keyword: initialKeyword,
       location: region || undefined,
@@ -190,7 +179,7 @@ export default function SearchFilterModal({
       max_area: areaRange[1] === 10000 ? undefined : String(areaRange[1]),
       amenities: selectedAmenities.length > 0 ? selectedAmenities : undefined,
       house_type: selectedHouseType || undefined,
-      category: category,
+      category: category && category !== "all" ? category : undefined,
     });
     onClose();
   };
@@ -265,20 +254,21 @@ export default function SearchFilterModal({
                     <Sliders className="w-5 h-5" />
                   </div>
                   <span className="font-medium text-sm text-gray-800">
-                    Property Category <span className="text-red-500">*</span>
+                    Property Category
                   </span>
                 </div>
                 
                 <div className="relative flex flex-col items-start w-full">
                   <Select value={category} onValueChange={handleCategoryChange}>
-                    <SelectTrigger className={`w-full text-sm font-medium text-gray-700 bg-gray-50 border rounded-xl h-11 px-4 my-0 focus:ring-2 focus:ring-primary/20 transition-all duration-200 flex items-center gap-2 ${
-                      categoryError ? "border-red-500 focus:ring-red-200" : "border-gray-200"
-                    }`}>
+                    <SelectTrigger className="w-full text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-xl h-11 px-4 my-0 focus:ring-2 focus:ring-primary/20 transition-all duration-200 flex items-center gap-2">
                       <div className="flex items-center gap-2">
-                        <SelectValue placeholder="Select Category..." />
+                        <SelectValue placeholder="All Categories" />
                       </div>
                     </SelectTrigger>
                     <SelectContent className="bg-white max-h-[220px] z-[60]">
+                      <SelectItem value="all" className="text-sm font-medium">
+                        All Categories
+                      </SelectItem>
                       {categoriesList.map((c) => (
                         <SelectItem key={c.id} value={c.name.toLowerCase()} className="text-sm font-medium">
                           {c.name}
@@ -286,11 +276,6 @@ export default function SearchFilterModal({
                       ))}
                     </SelectContent>
                   </Select>
-                  {categoryError && (
-                    <span className="text-[11px] font-medium text-red-500 mt-1 block">
-                      Please select a category to proceed.
-                    </span>
-                  )}
                 </div>
               </div>
 

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Search, SlidersHorizontal } from "lucide-react";
 import { usePageFilter } from "@/contexts/HomeFilterContext";
 import { getStates, getCities, getPopularRegions, getPropertyCategories, getFeatures, getFacilities } from "@/lib/api";
 import TypewriterTitle from "@/components/ui/TypewriterTitle";
 import { AnimatePresence, motion } from "framer-motion";
 import SearchSuggestions from "@/components/shared/SearchSuggestions";
+import SearchFilterModal from "@/components/shared/SearchFilterModal";
 
 function parseKeywordToFilters(
   keyword: string, 
@@ -115,6 +116,7 @@ export default function PropertiesSearchHeader() {
   const [dbFeatures, setDbFeatures] = useState<any[]>([]);
   const [dbFacilities, setDbFacilities] = useState<any[]>([]);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Load backend filter metadata dynamically on mount
@@ -204,6 +206,55 @@ export default function PropertiesSearchHeader() {
     });
   };
 
+  const handleFilterModalSearch = (overrides?: {
+    keyword?: string;
+    location?: string;
+    category?: string;
+    city?: string;
+    amenities?: string[];
+    fromModal?: boolean;
+    property_purpose?: "sell" | "rent";
+    max_price?: string;
+    max_area?: string;
+    house_type?: string;
+  }) => {
+    const nextFilters = { ...filters };
+    if (overrides) {
+      if (overrides.location) {
+        nextFilters.location = overrides.location;
+        nextFilters.keyword = overrides.location;
+        setLocalKeyword(overrides.location);
+      } else if (overrides.keyword !== undefined) {
+        nextFilters.keyword = overrides.keyword;
+        setLocalKeyword(overrides.keyword);
+      }
+      if (overrides.category !== undefined) {
+        nextFilters.activeCategory = overrides.category;
+      }
+      if (overrides.city !== undefined) {
+        nextFilters.city = overrides.city.toLowerCase();
+        setLocalCity(overrides.city.toLowerCase());
+      }
+      if (overrides.property_purpose !== undefined) {
+        nextFilters.activeTab = overrides.property_purpose;
+        setLocalActiveTab(overrides.property_purpose);
+      }
+      if (overrides.max_price !== undefined) {
+        nextFilters.maxPrice = overrides.max_price;
+      }
+      if (overrides.max_area !== undefined) {
+        nextFilters.maxArea = overrides.max_area;
+      }
+      if (overrides.house_type !== undefined) {
+        nextFilters.houseType = overrides.house_type;
+      }
+      if (Array.isArray(overrides.amenities)) {
+        nextFilters.amenities = overrides.amenities.join(",");
+      }
+    }
+    setFilters(nextFilters);
+  };
+
   return (
     <div className="w-full bg-gradient-to-r from-primary to-secondary py-5 px-4 md:px-8 shadow-md">
       <div className="container mx-auto flex flex-col lg:flex-row items-stretch px-6 lg:items-end justify-between gap-4 md:gap-6">
@@ -245,7 +296,7 @@ export default function PropertiesSearchHeader() {
           <label className="text-[11px] uppercase font-bold text-white/70 mb-1.5 tracking-wider">
             Keyword, Location, Property Name
           </label>
-          <div className="relative bg-white rounded-full h-11 px-5 flex items-center shadow-sm w-full">
+          <div className="relative bg-white rounded-full h-11 px-4 sm:px-5 flex items-center shadow-sm w-full">
             <Search size={16} className="text-gray-400 mr-2.5 flex-shrink-0" />
             <div className="relative flex-1 h-full flex items-center">
               <input
@@ -280,6 +331,21 @@ export default function PropertiesSearchHeader() {
                 </div>
               )}
             </div>
+
+            {/* Filter Modal Trigger Button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsInputFocused(false);
+                setIsFilterModalOpen(true);
+              }}
+              className="p-1.5 sm:px-3 sm:py-1 rounded-full border border-gray-200 text-gray-600 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ml-2 z-10"
+              title="Open Advanced Filters"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+              <span className="hidden sm:inline text-xs font-bold text-gray-700">Filter</span>
+            </button>
           </div>
 
           {/* Search Suggestions Dropdown Overlay */}
@@ -312,19 +378,17 @@ export default function PropertiesSearchHeader() {
                     });
                   }}
                   onSelectLocation={(loc) => {
-                    setLocalKeyword(""); // Clear local keyword display for location suggestions
+                    setLocalKeyword(loc); // Show the chosen high demand region in the search text input
                     setFilters({
                       ...filters,
                       location: loc,
-                      keyword: "", // Clear conflicting keyword
+                      keyword: loc,
                     });
                   }}
                   onSelectCategory={(cat) => {
                     setFilters({
                       ...filters,
                       activeCategory: cat,
-                      keyword: "", // Clear conflicting keyword
-                      location: "", // Clear conflicting region location
                     });
                   }}
                   onSelectCity={(cityVal) => {
@@ -332,8 +396,6 @@ export default function PropertiesSearchHeader() {
                     setFilters({
                       ...filters,
                       city: cityVal.toLowerCase(),
-                      keyword: "",
-                      location: "",
                     });
                   }}
                   onSelectAmenity={(amenityVal) => {
@@ -350,8 +412,8 @@ export default function PropertiesSearchHeader() {
                     if (overrides) {
                       if (overrides.keyword !== undefined) {
                         nextFilters.keyword = overrides.keyword;
+                        setLocalKeyword(overrides.keyword);
                         if (overrides.keyword) {
-                          nextFilters.location = ""; // Clear conflicting location
                           const parsed = parseKeywordToFilters(
                             overrides.keyword, 
                             nextFilters, 
@@ -366,8 +428,8 @@ export default function PropertiesSearchHeader() {
                       if (overrides.location !== undefined) {
                         nextFilters.location = overrides.location;
                         if (overrides.location) {
-                          nextFilters.keyword = ""; // Clear conflicting keyword
-                          setLocalKeyword("");
+                          setLocalKeyword(overrides.location);
+                          nextFilters.keyword = overrides.location;
                         }
                       }
                       if (overrides.category !== undefined) {
@@ -379,6 +441,7 @@ export default function PropertiesSearchHeader() {
                       }
                       if (overrides.property_purpose !== undefined) {
                         nextFilters.activeTab = overrides.property_purpose;
+                        setLocalActiveTab(overrides.property_purpose);
                       }
                       if (overrides.max_price !== undefined) {
                         nextFilters.maxPrice = overrides.max_price;
@@ -448,6 +511,15 @@ export default function PropertiesSearchHeader() {
         </div>
 
       </div>
+
+      {/* Advanced Filter Modal */}
+      <SearchFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        initialPurpose={localActiveTab}
+        initialKeyword={localKeyword}
+        onSearch={handleFilterModalSearch}
+      />
     </div>
   );
 }

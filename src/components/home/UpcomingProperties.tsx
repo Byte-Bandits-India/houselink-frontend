@@ -147,7 +147,7 @@ export default function UpcomingProperties() {
   const scrollContainer = useRef<HTMLDivElement>(null);
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [bannerImages, setBannerImages] = useState<string[]>([]);
+  const [banners, setBanners] = useState<{ image: string; link?: string }[]>([]);
   // Tracks which face is showing ("active") and which just left ("outgoing"),
   // so both can be animated with a 3D rotateY transition at the same time.
   const [slideIndices, setSlideIndices] = useState({ active: 0, outgoing: -1 });
@@ -176,14 +176,18 @@ export default function UpcomingProperties() {
     async function loadBanner() {
       try {
         const res = await getUpcomingConfig();
-        if (res.success && res.data && res.data.images && res.data.images.length > 0) {
-          setBannerImages(res.data.images);
-        } else {
-          setBannerImages(['/assets/home/upComming.png']);
+        if (res.success && res.data) {
+          if (res.data.banners && res.data.banners.length > 0) {
+            setBanners(res.data.banners);
+          } else if (res.data.images && res.data.images.length > 0) {
+            setBanners(res.data.images.map((img) => ({ image: img, link: "" })));
+          } else {
+            setBanners([{ image: "/assets/home/upComming.png", link: "" }]);
+          }
         }
       } catch (err) {
         console.error("Failed to load upcoming banner images:", err);
-        setBannerImages(['/assets/home/upComming.png']);
+        setBanners([{ image: "/assets/home/upComming.png", link: "" }]);
       }
     }
 
@@ -192,15 +196,15 @@ export default function UpcomingProperties() {
   }, []);
 
   useEffect(() => {
-    if (bannerImages.length <= 1) return;
+    if (banners.length <= 1) return;
     const timer = setInterval(() => {
       setSlideIndices((prev) => ({
-        active: (prev.active + 1) % bannerImages.length,
+        active: (prev.active + 1) % banners.length,
         outgoing: prev.active,
       }));
     }, 5000);
     return () => clearInterval(timer);
-  }, [bannerImages]);
+  }, [banners]);
 
   const handleScroll = (direction: "left" | "right") => {
     if (scrollContainer.current) {
@@ -290,22 +294,50 @@ export default function UpcomingProperties() {
             }
           `}} />
 
-          {bannerImages.map((src, idx) => {
+          {banners.map((item, idx) => {
             const role =
               idx === slideIndices.active
                 ? "is-active"
                 : idx === slideIndices.outgoing
                 ? "is-outgoing"
                 : "is-idle";
+
+            const isExternal =
+              item.link && (item.link.startsWith("http://") || item.link.startsWith("https://"));
+
+            const content = (
+              <Image
+                src={getImageUrl(item.image)}
+                alt={`Upcoming Banner ${idx + 1}`}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            );
+
             return (
               <div key={idx} className={`banner-cube-face ${role}`}>
-                <Image
-                  src={getImageUrl(src)}
-                  alt={`Upcoming Banner ${idx + 1}`}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
+                {item.link ? (
+                  isExternal ? (
+                    <a
+                      href={item.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full h-full cursor-pointer relative"
+                    >
+                      {content}
+                    </a>
+                  ) : (
+                    <Link
+                      href={item.link}
+                      className="block w-full h-full cursor-pointer relative"
+                    >
+                      {content}
+                    </Link>
+                  )
+                ) : (
+                  content
+                )}
               </div>
             );
           })}

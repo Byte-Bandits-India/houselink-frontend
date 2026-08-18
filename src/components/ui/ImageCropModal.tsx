@@ -123,7 +123,7 @@ export function ImageCropModal({
     ctx.fillStyle = "#0f172a";
     ctx.fillRect(0, 0, width, height);
 
-    // Calculate baseScale so image fills crop area initially
+    // Calculate baseScale so image covers the full length and width of the crop area
     const baseScale = Math.max(width / img.width, height / img.height);
     const scale = baseScale * zoom;
 
@@ -219,9 +219,9 @@ export function ImageCropModal({
     }
   };
 
-  const canvasWidth = 320;
-  const canvasHeight = Math.round(320 / (aspectRatio || 1));
-  const maxCanvasH = 340;
+  const canvasWidth = 360;
+  const canvasHeight = Math.round(360 / (aspectRatio || (4 / 3)));
+  const maxCanvasH = 300;
   const finalCanvasH = Math.min(canvasHeight, maxCanvasH);
 
   return (
@@ -263,7 +263,7 @@ export function ImageCropModal({
         <div className="p-5 flex flex-col items-center bg-slate-900/95 relative select-none">
           <div
             className={`relative overflow-hidden border-2 border-dashed border-white/60 cursor-grab active:cursor-grabbing shadow-inner flex items-center justify-center ${
-              circular ? "rounded-full" : "rounded-xl"
+              circular ? "rounded-full aspect-square" : "rounded-xl"
             }`}
             style={{
               width: canvasWidth,
@@ -309,7 +309,7 @@ export function ImageCropModal({
             <ZoomOut size={15} className="text-slate-400" />
             <input
               type="range"
-              min="0.5"
+              min="0.2"
               max="3"
               step="0.05"
               value={zoom}

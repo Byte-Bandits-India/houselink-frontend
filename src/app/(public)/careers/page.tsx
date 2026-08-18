@@ -7,7 +7,7 @@ import { motion, Variants } from "framer-motion"
 import {
   Users,
   TrendingUp,
-  DollarSign,
+  IndianRupee,
   Lightbulb,
   MapPin,
   Clock,
@@ -31,7 +31,7 @@ const whyUs = [
     body: "Opportunities for career growth inside a fast-expanding real-estate company.",
   },
   {
-    icon: <DollarSign className="w-10 h-10 mx-auto text-warning" />,
+    icon: <IndianRupee className="w-10 h-10 mx-auto text-warning" />,
     title: "Competitive Benefits",
     body: "Attractive salaries, health cover, and performance-linked bonuses.",
   },

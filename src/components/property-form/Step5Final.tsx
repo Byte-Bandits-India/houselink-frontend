@@ -82,6 +82,7 @@ function SingleImageUpload({
   const [{ files, isDragging }, { removeFile, handleDragEnter, handleDragLeave, handleDragOver, handleDrop, openFileDialog, getInputProps }] =
     useFileUpload({
       multiple: false,
+      maxSize: 10 * 1024 * 1024, // 10 MB
       accept,
     });
 
@@ -172,7 +173,7 @@ function SingleImageUpload({
 
         {/* Full preview dialog */}
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-          <DialogContent className="bg-transparent border-none shadow-none p-0 sm:max-w-2xl">
+          <DialogContent className="bg-transparent border-none shadow-none p-0 sm:max-w-3xl flex items-center justify-center">
             <DialogHeader className="sr-only">
               <DialogTitle>{label} Preview</DialogTitle>
             </DialogHeader>
@@ -180,7 +181,7 @@ function SingleImageUpload({
             <img
               src={previewUrl}
               alt={label}
-              className="rounded-xl w-full h-auto object-contain"
+              className="rounded-2xl max-h-[85vh] w-auto max-w-full object-contain shadow-2xl bg-black/40 mx-auto"
             />
           </DialogContent>
         </Dialog>
@@ -236,7 +237,9 @@ function SingleImageUpload({
               {disabled ? emptyLabel : "Drag & drop or click to upload"}
             </p>
             {!disabled && (
-              <p className="text-xs text-gray-400">PNG, JPG, WEBP supported</p>
+              <p className="text-xs text-gray-400">
+                PNG, JPG, WEBP · Recommended: 800×450 px (16:9) · Max 10MB
+              </p>
             )}
           </div>
           {!disabled && (

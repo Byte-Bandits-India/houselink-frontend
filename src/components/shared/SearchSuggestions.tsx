@@ -109,16 +109,18 @@ export default function SearchSuggestions({
 
   const handleRegionClick = (region: string) => {
     onSelectLocation(region);
-    onSearch({ location: region });
+    onSelectKeyword(region);
+    onSearch({ location: region, keyword: region });
     onClose();
   };
 
-  const handleCategoryClick = (catVal: string) => {
+  const handleCategoryClick = (catVal: string, catLabel?: string) => {
     if (onSelectCategory) {
       onSelectCategory(catVal);
     }
-    onSelectKeyword("");
-    onSearch({ category: catVal, keyword: "" });
+    const text = catLabel || catVal;
+    onSelectKeyword(text);
+    onSearch({ category: catVal, keyword: text });
     onClose();
   };
 
@@ -126,7 +128,8 @@ export default function SearchSuggestions({
     if (onSelectCity) {
       onSelectCity(cityVal);
     }
-    onSearch({ city: cityVal });
+    onSelectKeyword(cityVal);
+    onSearch({ city: cityVal, keyword: cityVal });
     onClose();
   };
 
@@ -382,7 +385,7 @@ export default function SearchSuggestions({
                   <motion.div
                     variants={itemVariants}
                     key={category.value}
-                    onClick={() => handleCategoryClick(category.value)}
+                    onClick={() => handleCategoryClick(category.value, category.label)}
                     className="flex items-center gap-2.5 cursor-pointer hover:bg-indigo-50/50 p-1.5 rounded-xl transition-colors duration-150 group border border-dashed border-indigo-100"
                   >
                     <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">

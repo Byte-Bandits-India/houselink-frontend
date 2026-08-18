@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Lock,
   Unlock,
@@ -24,7 +25,6 @@ import {
   checkEnquiryStatus,
   unlockPropertyContact,
 } from "@/lib/api";
-import type { EnquiryStatusResponse } from "@/lib/api";
 import { Button } from "../ui/button";
 import { PhoneInput } from "@/components/reui/phone-input";
 import { message } from "antd";
@@ -39,11 +39,22 @@ import {
 
 import type { PropertyEnquirySidebarProps } from "@/types/components";
 
+/** Format seconds remaining into MM:SS for real-time live display */
+function formatMinutesSeconds(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+}
+
 /** Format seconds remaining into a human-readable string */
 function formatCooldown(seconds: number, propertyFor: string): string {
   if (propertyFor === "sell") {
-    const mins = Math.ceil(seconds / 60);
-    return mins <= 60 ? `${mins} minute${mins !== 1 ? "s" : ""}` : `${Math.ceil(mins / 60)} hour${Math.ceil(mins / 60) !== 1 ? "s" : ""}`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) {
+      return `${mins}m ${secs}s`;
+    }
+    return `${secs}s`;
   }
   // rent / lease
   const days = Math.ceil(seconds / 86400);
@@ -56,12 +67,18 @@ function PropertyForBadge({ propertyFor }: { propertyFor?: string }) {
   const pf = propertyFor.toLowerCase();
   const config =
     pf === "sell"
-      ? { label: "For Sale", bg: "bg-emerald-50 text-emerald-700 border-emerald-200" }
+      ? {
+          label: "For Sale",
+          bg: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        }
       : pf === "rent"
-      ? { label: "For Rent", bg: "bg-blue-50 text-blue-700 border-blue-200" }
-      : pf === "lease"
-      ? { label: "For Lease", bg: "bg-purple-50 text-purple-700 border-purple-200" }
-      : null;
+        ? { label: "For Rent", bg: "bg-blue-50 text-blue-700 border-blue-200" }
+        : pf === "lease"
+          ? {
+              label: "For Lease",
+              bg: "bg-purple-50 text-purple-700 border-purple-200",
+            }
+          : null;
   if (!config) return null;
   return (
     <span
@@ -73,10 +90,16 @@ function PropertyForBadge({ propertyFor }: { propertyFor?: string }) {
   );
 }
 
-export default function PropertyEnquirySidebar({ property }: PropertyEnquirySidebarProps) {
+export default function PropertyEnquirySidebar({
+  property,
+}: PropertyEnquirySidebarProps) {
   const { isLoggedIn, user, setAuthUser, refreshUser } = useAuth();
   const propertyFor = (property.propertyFor || "sell").toLowerCase();
   const isRentOrLease = propertyFor === "rent" || propertyFor === "lease";
+  const pathname = usePathname();
+  const returnUrl = property.permalink
+    ? `/properties/${property.permalink}`
+    : pathname;
 
   // Common T&C Checkbox
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -87,6 +110,38 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
   const [enquiryStatus, setEnquiryStatus] = useState<any>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [showPointModal, setShowPointModal] = useState(false);
+
+  // ── Live Cooldown countdown timer ──────────────────────────────────────────
+  const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
+
+  // Sync remaining seconds into live state whenever enquiryStatus updates
+  useEffect(() => {
+    if (
+      enquiryStatus?.remaining_seconds &&
+      enquiryStatus.remaining_seconds > 0
+    ) {
+      setCooldownSeconds(enquiryStatus.remaining_seconds);
+    } else {
+      setCooldownSeconds(0);
+    }
+  }, [enquiryStatus]);
+
+  // Live 1-second interval timer
+  useEffect(() => {
+    if (cooldownSeconds <= 0) return;
+    const interval = setInterval(() => {
+      setCooldownSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          fetchStatus(); // automatically re-enable form when cooldown completes!
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [cooldownSeconds]);
 
   // ── Logged-out state variables ────────────────────────────────────────────
   const [phone, setPhone] = useState("");
@@ -120,6 +175,11 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     message: "I'm interested in your property...",
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedOwner, setSubmittedOwner] = useState<{
+    name?: string;
+    phone?: string;
+    email?: string;
+  } | null>(null);
 
   // Helper to extract 10-digit phone number
   const get10DigitPhone = (phoneVal: string) => {
@@ -194,13 +254,16 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     if (value && index < 3) otpRefs[index + 1].current?.focus();
   };
 
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleOtpKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       otpRefs[index - 1].current?.focus();
     }
   };
 
-  const handleVerifyAndEnquireLoggedOut = async () => {
+  const handleVerifyOtp = async () => {
     if (!agreedToTerms) {
       setFormError("You must agree to the Terms & Conditions.");
       return;
@@ -214,7 +277,10 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     setOtpError("");
     setIsLoading(true);
     try {
-      const res = await verifyOtpLogin({ phone: get10DigitPhone(phone), otp: otpValue });
+      const res = await verifyOtpLogin({
+        phone: get10DigitPhone(phone),
+        otp: otpValue,
+      });
       setAuthUser(res.customer);
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
@@ -229,7 +295,11 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
 
   const handleDirectUnlock = async () => {
     setFormError("");
-    const availablePoints = enquiryStatus?.remaining_points ?? (user?.remainingRentPoints ?? user?.rentPoints ?? 0);
+    const availablePoints =
+      enquiryStatus?.remaining_points ??
+      user?.remainingRentPoints ??
+      user?.rentPoints ??
+      0;
     if (availablePoints <= 0) {
       setShowPointModal(true);
       return;
@@ -261,8 +331,14 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
     }
     setFormError("");
 
-    const isUnlocked = isRentOrLease && (enquiryStatus?.already_unlocked || enquiryStatus?.is_unlocked);
-    const availablePoints = enquiryStatus?.remaining_points ?? (user?.remainingRentPoints ?? user?.rentPoints ?? 0);
+    const isUnlocked =
+      isRentOrLease &&
+      (enquiryStatus?.already_unlocked || enquiryStatus?.is_unlocked);
+    const availablePoints =
+      enquiryStatus?.remaining_points ??
+      user?.remainingRentPoints ??
+      user?.rentPoints ??
+      0;
 
     // If Rent / Lease property and not yet unlocked, check if points are insufficient
     if (isRentOrLease && !isUnlocked && availablePoints <= 0) {
@@ -272,13 +348,22 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
 
     setIsLoading(true);
     try {
-      await createLead({
+      const leadRes = await createLead({
         property_id: property.id,
         name: formData.name,
         phone: get10DigitPhone(formData.phone),
         email: formData.email,
         message: formData.message,
       });
+
+      if (leadRes.data) {
+        setSubmittedOwner({
+          name: leadRes.data.owner_name,
+          phone: leadRes.data.owner_phone,
+          email: (leadRes.data as any).owner_email,
+        });
+      }
+
       setIsSubmitted(true);
       await refreshUser();
       await fetchStatus();
@@ -304,19 +389,70 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
 
   // ── RENDER: Success state ─────────────────────────────────────────────────
   if (isSubmitted) {
+    const ownerInfo =
+      submittedOwner ||
+      (enquiryStatus?.owner_phone
+        ? {
+            name: enquiryStatus.owner_name,
+            phone: enquiryStatus.owner_phone,
+            email: enquiryStatus.owner_email,
+          }
+        : null);
+
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm text-center space-y-4 animate-fade-in">
-        <div className="mx-auto bg-emerald-50 w-16 h-16 rounded-full flex items-center justify-center text-emerald-500">
-          <CheckCircle2 size={36} />
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm text-center space-y-4 animate-fade-in">
+        <div className="mx-auto bg-emerald-50 w-14 h-14 rounded-full flex items-center justify-center text-emerald-500">
+          <CheckCircle2 size={32} />
         </div>
-        <h3 className="text-xl font-bold text-gray-900">Enquiry Sent!</h3>
-        <p className="text-sm text-gray-500 leading-relaxed">
-          Thank you for your interest in{" "}
-          <span className="font-semibold text-gray-800">{property.name}</span>.
-        </p>
-        <p className="text-xs text-gray-400 bg-gray-50 rounded-lg p-3">
-          The owner/agent will contact you shortly on your registered details.
-        </p>
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">
+            Enquiry Sent Successfully!
+          </h3>
+          <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+            Thank you for your interest in{" "}
+            <span className="font-semibold text-gray-800">{property.name}</span>
+            .
+          </p>
+        </div>
+
+        {/* Display Owner Details Card on Success */}
+        {ownerInfo && ownerInfo.phone && ownerInfo.phone !== "-" && (
+          <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-4 text-left space-y-2.5">
+            <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs border-b border-emerald-200/60 pb-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Owner Contact Details</span>
+            </div>
+            <div className="space-y-1.5 text-xs text-slate-800">
+              <div className="flex items-center gap-2">
+                <User className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span className="font-semibold">
+                  {ownerInfo.name || "Property Owner"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <a
+                  href={`tel:${ownerInfo.phone}`}
+                  className="font-bold text-emerald-700 hover:underline"
+                >
+                  {ownerInfo.phone}
+                </a>
+              </div>
+              {ownerInfo.email && ownerInfo.email !== "-" && (
+                <div className="flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <a
+                    href={`mailto:${ownerInfo.email}`}
+                    className="text-slate-600 hover:underline"
+                  >
+                    {ownerInfo.email}
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <button
           onClick={() => {
             setIsSubmitted(false);
@@ -324,7 +460,7 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
               fetchStatus();
             }
           }}
-          className="w-full bg-[#1a3c6b] hover:bg-[#142e52] text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+          className="w-full bg-[#1a3c6b] hover:bg-[#142e52] text-white font-semibold py-2.5 rounded-xl transition-colors text-xs cursor-pointer shadow-sm"
         >
           Send Another Enquiry
         </button>
@@ -334,9 +470,17 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
 
   // ── RENDER: Logged in state ───────────────────────────────────────────────
   if (isLoggedIn) {
-    const isUnlocked = isRentOrLease && (enquiryStatus?.already_unlocked || enquiryStatus?.is_unlocked);
-    const availablePoints = enquiryStatus?.remaining_points ?? (user?.remainingRentPoints ?? user?.rentPoints ?? 0);
-    const cooldownActive = !isRentOrLease && enquiryStatus && !enquiryStatus.can_enquire && !!enquiryStatus.remaining_seconds;
+    const isUnlocked =
+      isRentOrLease &&
+      (enquiryStatus?.already_unlocked || enquiryStatus?.is_unlocked);
+    const availablePoints =
+      enquiryStatus?.remaining_points ??
+      user?.remainingRentPoints ??
+      user?.rentPoints ??
+      0;
+    const cooldownActive =
+      !isRentOrLease &&
+      ((enquiryStatus && !enquiryStatus.can_enquire) || cooldownSeconds > 0);
 
     return (
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
@@ -354,50 +498,104 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
               <span>Contact Details Unlocked</span>
             </div>
             <p className="text-xs text-emerald-700">
-              Valid for 45 days. You can contact the owner directly or send an enquiry below for free.
+              Valid for 45 days. You can contact the owner directly or send an
+              enquiry below for free.
             </p>
             {enquiryStatus?.owner_phone && (
               <div className="bg-white rounded-lg p-3 border border-emerald-100 space-y-1.5 text-xs text-slate-800">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-emerald-600" />
-                  <span className="font-semibold">{enquiryStatus.owner_name || "Property Owner"}</span>
+                  <span className="font-semibold">
+                    {enquiryStatus.owner_name || "Property Owner"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4 text-emerald-600" />
-                  <a href={`tel:${enquiryStatus.owner_phone}`} className="font-bold text-emerald-700 hover:underline">
+                  <a
+                    href={`tel:${enquiryStatus.owner_phone}`}
+                    className="font-bold text-emerald-700 hover:underline"
+                  >
                     {enquiryStatus.owner_phone}
                   </a>
                 </div>
-                {enquiryStatus.owner_email && enquiryStatus.owner_email !== "-" && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-emerald-600" />
-                    <span>{enquiryStatus.owner_email}</span>
-                  </div>
-                )}
+                {enquiryStatus.owner_email &&
+                  enquiryStatus.owner_email !== "-" && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-emerald-600" />
+                      <span>{enquiryStatus.owner_email}</span>
+                    </div>
+                  )}
               </div>
             )}
           </div>
         )}
 
-        {/* ── SELL COOLDOWN BLOCK ─────────────────────────────────────── */}
+        {/* ── BUY / SELL COOLDOWN & OWNER DETAILS BLOCK ────────────────── */}
         {cooldownActive ? (
           <div className="space-y-4">
+            {/* Show Owner Contact Details for Buy/Sell when already enquired */}
+            {enquiryStatus?.owner_phone &&
+              enquiryStatus.owner_phone !== "-" && (
+                <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl p-4 space-y-2.5 text-left">
+                  <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs border-b border-emerald-200 pb-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Owner Contact Details</span>
+                  </div>
+                  <div className="space-y-1.5 text-xs text-slate-800">
+                    <div className="flex items-center gap-2">
+                      <User className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span className="font-semibold">
+                        {enquiryStatus.owner_name || "Property Owner"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <a
+                        href={`tel:${enquiryStatus.owner_phone}`}
+                        className="font-bold text-emerald-700 hover:underline"
+                      >
+                        {enquiryStatus.owner_phone}
+                      </a>
+                    </div>
+                    {enquiryStatus.owner_email &&
+                      enquiryStatus.owner_email !== "-" && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <a
+                            href={`mailto:${enquiryStatus.owner_email}`}
+                            className="text-slate-600 hover:underline"
+                          >
+                            {enquiryStatus.owner_email}
+                          </a>
+                        </div>
+                      )}
+                  </div>
+                </div>
+              )}
+
+            {/* Live Minutes & Seconds Countdown Card */}
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col items-center text-center gap-3">
-              <div className="bg-amber-100 w-12 h-12 rounded-full flex items-center justify-center">
-                <Clock size={24} className="text-amber-600" />
+              <div className="bg-amber-100 w-11 h-11 rounded-full flex items-center justify-center">
+                <Clock size={22} className="text-amber-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-amber-800">Already Enquired</p>
-                <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-                  You have already enquired about this property. You can enquire again after the 60-minute cooldown.
+                <p className="text-sm font-bold text-amber-900">
+                  Enquiry Submitted
+                </p>
+                <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                  You have already enquired about this property. You can send
+                  another enquiry once the cooldown timer expires.
                 </p>
               </div>
-              <div className="bg-white border border-amber-200 rounded-lg px-4 py-2 w-full">
-                <p className="text-[10px] text-amber-600 font-semibold uppercase tracking-wider mb-0.5">
-                  Time Remaining
+              <div className="bg-white border border-amber-200/80 rounded-xl px-4 py-2.5 w-full shadow-xs">
+                <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider mb-0.5">
+                  Next Enquiry In (Minutes : Seconds)
                 </p>
-                <p className="text-base font-bold text-amber-700">
-                  {formatCooldown(enquiryStatus!.remaining_seconds!, "sell")}
+                <p className="text-2xl font-black text-amber-800 tracking-wider font-mono">
+                  {formatMinutesSeconds(cooldownSeconds)}
+                </p>
+                <p className="text-[11px] text-amber-600 mt-0.5 font-medium">
+                  {formatCooldown(cooldownSeconds, "sell")} remaining
                 </p>
               </div>
             </div>
@@ -420,11 +618,15 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
 
             {/* Name */}
             <div>
-              <label className="text-xs font-semibold text-gray-600 block mb-1">Name</label>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">
+                Name
+              </label>
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 text-xs text-gray-700 font-medium outline-none focus:border-[#1a3c6b] focus:bg-white transition-colors"
                 required
               />
@@ -432,11 +634,15 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
 
             {/* Phone */}
             <div>
-              <label className="text-xs font-semibold text-gray-600 block mb-1">Phone</label>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">
+                Phone
+              </label>
               <PhoneInput
                 defaultCountry="IN"
                 value={formData.phone}
-                onChange={(val) => setFormData({ ...formData, phone: val || "" })}
+                onChange={(val) =>
+                  setFormData({ ...formData, phone: val || "" })
+                }
                 className="w-full text-xs [&_button]:h-9 [&_input]:h-9 [&_input]:rounded-r-lg [&_button]:rounded-l-lg [&_input]:bg-gray-100 [&_button]:bg-gray-100 [&_input]:border-gray-200 [&_button]:border-gray-200"
                 required
               />
@@ -444,11 +650,15 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
 
             {/* Email */}
             <div>
-              <label className="text-xs font-semibold text-gray-600 block mb-1">Email</label>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">
+                Email
+              </label>
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 text-xs text-gray-700 font-medium outline-none focus:border-[#1a3c6b] focus:bg-white transition-colors"
                 required
               />
@@ -457,44 +667,84 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
             {/* Message */}
             <div>
               <label className="text-xs font-semibold text-gray-600 block mb-1">
-                Do you have anything on mind ?
+                Message
               </label>
               <textarea
                 rows={3}
                 value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-xs text-gray-700 placeholder-gray-400 outline-none focus:border-[#1a3c6b] transition-colors resize-none"
-                placeholder="I'm interested in your property..."
+                onChange={(e) =>
+                  setFormData({ ...formData, message: e.target.value })
+                }
+                className="w-full bg-gray-100 border border-gray-200 rounded-lg p-2.5 text-xs text-gray-700 font-medium outline-none focus:border-[#1a3c6b] focus:bg-white transition-colors resize-none"
               />
             </div>
 
-            {/* T&C */}
+            {/* T&C Checkbox */}
             <div className="flex items-start gap-2 pt-1">
               <input
                 type="checkbox"
                 id="terms-loggedin"
                 checked={agreedToTerms}
                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="mt-0.5 accent-[#1a3c6b] cursor-pointer"
+                className="mt-0.5 w-4 h-4 text-[#1a3c6b] rounded border-gray-300 focus:ring-[#1a3c6b] cursor-pointer"
               />
               <label
                 htmlFor="terms-loggedin"
-                className="text-xs text-gray-500 leading-relaxed cursor-pointer select-none"
+                className="text-[11px] text-gray-500 leading-tight"
               >
-                By clicking you agree to our{" "}
-                <a href="#" className="text-[#1a3c6b] underline hover:text-[#142e52]">
+                I agree to the{" "}
+                <Link
+                  href="/terms"
+                  className="text-[#1a3c6b] hover:underline font-semibold"
+                >
                   Terms &amp; Conditions
-                </a>
+                </Link>{" "}
+                and acknowledge Houselink may contact me regarding this
+                property.
               </label>
             </div>
 
             {formError && (
-              <div className="flex items-center gap-1.5 text-xs text-red-500">
-                <AlertCircle size={14} className="shrink-0" />
-                <span>{formError}</span>
+              <p className="text-xs text-red-500 font-medium flex items-center gap-1">
+                <AlertCircle size={13} className="shrink-0" />
+                {formError}
+              </p>
+            )}
+
+            {/* Rent Points Requirement Pill */}
+            {isRentOrLease && !isUnlocked && (
+              <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+                  <Coins className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Cost: 1 Rent Point</span>
+                </div>
+                <span
+                  className={`font-bold ${availablePoints > 0 ? "text-emerald-600" : "text-red-500"}`}
+                >
+                  {availablePoints} point{availablePoints !== 1 ? "s" : ""}{" "}
+                  available
+                </span>
               </div>
             )}
 
+            {/* Direct Unlock button for Rent / Lease with points */}
+            {isRentOrLease && !isUnlocked && availablePoints > 0 && (
+              <button
+                type="button"
+                onClick={handleDirectUnlock}
+                disabled={isUnlocking}
+                className="w-full flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold py-2.5 shadow-sm transition-all text-center cursor-pointer"
+              >
+                <Unlock className="w-3.5 h-3.5" />
+                <span>
+                  {isUnlocking
+                    ? "Unlocking Contact..."
+                    : "Unlock Contact (1 Point)"}
+                </span>
+              </button>
+            )}
+
+            {/* Submit Button */}
             <Button
               type="submit"
               variant="gradient"
@@ -517,13 +767,15 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
                 Rent Points Required
               </DialogTitle>
               <DialogDescription className="text-xs text-slate-500 leading-relaxed text-center">
-                You need 1 Rent Unlock Point to unlock this landlord&apos;s contact details and send an enquiry. Please purchase a rent plan to proceed.
+                You need 1 Rent Unlock Point to unlock this landlord&apos;s
+                contact details and send an enquiry. Please purchase a rent plan
+                to proceed.
               </DialogDescription>
             </DialogHeader>
 
             <DialogFooter className="mt-4">
               <Link
-                href="/dashboard/credits?type=rent"
+                href={`/dashboard/credits?type=rent&returnUrl=${encodeURIComponent(returnUrl)}`}
                 onClick={() => setShowPointModal(false)}
                 className="w-full flex items-center justify-center gap-1.5 bg-brand hover:bg-brand/90 text-white rounded-xl text-xs font-bold py-2.5 shadow-sm transition-all text-center"
               >
@@ -541,141 +793,142 @@ export default function PropertyEnquirySidebar({ property }: PropertyEnquirySide
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-1">
-        <h3 className="text-base font-semibold text-gray-900">Login/Signup to Request Info</h3>
+        <h3 className="text-base font-semibold text-gray-900">
+          Login/Signup to Request Info
+        </h3>
         <PropertyForBadge propertyFor={propertyFor} />
       </div>
 
       {/* Property Name */}
       <p className="text-xs text-gray-400 mb-1 mt-3">Property Name</p>
       <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 mb-4">
-        <span className="text-xs text-gray-500 truncate flex-1">{property.name}</span>
+        <span className="text-xs text-gray-600 truncate flex-1">
+          {property.name}
+        </span>
         <Lock size={13} className="text-gray-400 shrink-0" />
       </div>
 
-      {/* Phone Number Entry */}
-      <p className="text-xs text-gray-400 mb-2">Phone Number</p>
-      <div className="flex gap-2 mb-1">
-        <PhoneInput
-          defaultCountry="IN"
-          value={phone}
-          onChange={(val) => setPhone(val || "")}
-          disabled={otpSent || isLoading}
-          placeholder="Enter 10-digit mobile number"
-          className="flex-1 text-sm [&_button]:h-[40px] [&_input]:h-[40px] [&_input]:rounded-r-lg [&_button]:rounded-l-lg [&_input]:bg-gray-50 [&_button]:bg-gray-50 [&_input]:border-gray-200 [&_button]:border-gray-200"
-        />
-        {!otpSent && (
+      {/* Mobile Input */}
+      <div className="mb-3">
+        <label className="text-xs font-semibold text-gray-600 block mb-1">
+          Mobile Number <span className="text-red-500">*</span>
+        </label>
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <PhoneInput
+              defaultCountry="IN"
+              value={phone}
+              onChange={(val) => {
+                setPhone(val || "");
+                if (otpSent) setOtpSent(false);
+              }}
+              disabled={otpSent}
+              className="w-full text-xs [&_button]:h-9 [&_input]:h-9 [&_input]:rounded-r-lg [&_button]:rounded-l-lg [&_input]:bg-gray-50 [&_button]:bg-gray-50 [&_input]:border-gray-200 [&_button]:border-gray-200"
+            />
+          </div>
           <button
+            type="button"
             onClick={handleSendOtp}
-            disabled={isLoading || get10DigitPhone(phone).length !== 10}
-            className="bg-[#1a3c6b] hover:bg-[#142e52] disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors whitespace-nowrap"
+            disabled={isLoading || (otpSent && timeLeft > 0)}
+            className="px-3 py-1.5 bg-[#1a3c6b] hover:bg-[#142e52] disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors shrink-0 cursor-pointer"
           >
-            {isLoading ? "Sending..." : "Send OTP"}
+            {isLoading
+              ? "..."
+              : otpSent
+                ? timeLeft > 0
+                  ? `${timeLeft}s`
+                  : "Resend"
+                : "Send OTP"}
           </button>
+        </div>
+        {phoneError && (
+          <p className="text-xs text-red-500 mt-1">{phoneError}</p>
         )}
       </div>
 
-      {phoneError && <p className="text-xs text-red-500 mb-3 block">{phoneError}</p>}
-
-      {/* OTP verification fields */}
+      {/* OTP Input — only shown after OTP sent */}
       {otpSent && (
-        <div className="mt-4 mb-4 space-y-3 animate-fade-in">
-          <label className="block text-xs font-medium text-gray-600 text-center">
-            Enter 4-digit OTP sent to{" "}
-            <span className="font-semibold text-gray-800">+91 {get10DigitPhone(phone)}</span>
+        <div className="mb-4 space-y-2">
+          <label className="text-xs font-semibold text-gray-600 block">
+            Enter 4-Digit OTP <span className="text-red-500">*</span>
           </label>
-          <div className="flex justify-center gap-2">
-            {otp.map((digit, index) => (
+          <div className="flex justify-between gap-2">
+            {otp.map((digit, i) => (
               <input
-                key={index}
-                ref={otpRefs[index]}
+                key={i}
+                ref={otpRefs[i]}
                 type="text"
                 maxLength={1}
                 value={digit}
-                onChange={(e) => handleOtpChange(index, e.target.value)}
-                onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                className={`w-10 h-10 text-center text-lg font-bold border rounded-lg transition-all outline-none
-                  ${digit ? "border-[#1a3c6b] bg-blue-50/20" : "border-gray-200 bg-gray-50"}
-                  focus:border-[#1a3c6b] focus:ring-1 focus:ring-[#1a3c6b]/20`}
+                onChange={(e) => handleOtpChange(i, e.target.value)}
+                onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                className="w-12 h-11 text-center font-bold text-base bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-[#1a3c6b] focus:bg-white transition-colors"
               />
             ))}
           </div>
-          {otpError && <p className="text-xs text-center text-red-500">{otpError}</p>}
-          <div className="text-center text-xs">
-            <span className="text-gray-500">Didn&apos;t receive OTP? </span>
+          {otpError && <p className="text-xs text-red-500">{otpError}</p>}
+          <div className="flex items-center justify-between text-xs text-gray-400">
+            <span>Didn't receive code?</span>
             {timeLeft > 0 ? (
-              <span className="text-red-500 font-bold">Resend in {timeLeft}s</span>
+              <span className="text-gray-500 font-medium">
+                Resend in {timeLeft}s
+              </span>
             ) : (
-              <Button
+              <button
                 type="button"
                 onClick={handleSendOtp}
-                variant="gradient"
-                disabled={isLoading}
-                className="w-full font-extrabold text-sm py-2.5 px-4 rounded-xl shadow transition-all duration-200 active:scale-[0.98] cursor-pointer text-center"
+                className="text-[#1a3c6b] hover:underline font-semibold cursor-pointer"
               >
                 Resend OTP
-              </Button>
+              </button>
             )}
           </div>
         </div>
       )}
 
       {/* T&C Checkbox */}
-      <div className="flex items-start gap-2 mb-4 mt-3">
+      <div className="flex items-start gap-2 mb-4">
         <input
           type="checkbox"
           id="terms-loggedout"
           checked={agreedToTerms}
           onChange={(e) => setAgreedToTerms(e.target.checked)}
-          className="mt-0.5 accent-[#1a3c6b] cursor-pointer"
+          className="mt-0.5 w-4 h-4 text-[#1a3c6b] rounded border-gray-300 focus:ring-[#1a3c6b] cursor-pointer"
         />
         <label
           htmlFor="terms-loggedout"
-          className="text-xs text-gray-500 leading-relaxed cursor-pointer select-none"
+          className="text-[11px] text-gray-500 leading-tight"
         >
-          By clicking you agree to our{" "}
-          <a href="#" className="text-[#1a3c6b] underline hover:text-[#142e52]">
+          I agree to the{" "}
+          <Link
+            href="/terms"
+            className="text-[#1a3c6b] hover:underline font-semibold"
+          >
             Terms &amp; Conditions
-          </a>
+          </Link>{" "}
+          and acknowledge Houselink may contact me regarding this property.
         </label>
       </div>
 
       {formError && (
-        <div className="flex items-center gap-1.5 text-xs text-red-500 mb-3">
-          <AlertCircle size={14} className="shrink-0" />
-          <span>{formError}</span>
-        </div>
+        <p className="text-xs text-red-500 font-medium mb-3 flex items-center gap-1">
+          <AlertCircle size={13} className="shrink-0" />
+          {formError}
+        </p>
       )}
 
-      {otpSent ? (
+      {/* Verify & Login Button */}
+      {otpSent && (
         <Button
-          onClick={handleVerifyAndEnquireLoggedOut}
+          type="button"
           variant="gradient"
-          disabled={isLoading || !agreedToTerms || otp.join("").length !== 4}
+          onClick={handleVerifyOtp}
+          disabled={isLoading || !agreedToTerms}
           className="w-full font-extrabold text-sm py-2.5 px-4 rounded-xl shadow transition-all duration-200 active:scale-[0.98] cursor-pointer text-center"
         >
-          {isLoading ? "Verifying..." : "Verify and Enquire"}
-        </Button>
-      ) : (
-        <Button
-          onClick={handleSendOtp}
-          variant="gradient"
-          disabled={isLoading || phone.length !== 10 || !agreedToTerms}
-          className="w-full font-extrabold text-sm py-2.5 px-4 rounded-xl shadow transition-all duration-200 active:scale-[0.98] cursor-pointer text-center"
-        >
-          Verify and Enquire
+          {isLoading ? "Verifying..." : "Verify & Continue"}
         </Button>
       )}
-
-      <p className="text-center mt-4 text-gray-500 text-[11px] leading-relaxed">
-        Not registered yet?{" "}
-        <Link
-          href={`/register?redirect=/properties/${property.permalink}`}
-          className="text-[#1a3c6b] font-semibold hover:underline"
-        >
-          Sign Up here
-        </Link>{" "}
-        to enquire.
-      </p>
     </div>
   );
 }

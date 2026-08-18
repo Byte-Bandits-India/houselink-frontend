@@ -64,7 +64,7 @@ export const useFileUpload = (
 ): [FileUploadState, FileUploadActions] => {
   const {
     maxFiles = Number.POSITIVE_INFINITY,
-    maxSize = Number.POSITIVE_INFINITY,
+    maxSize = 10 * 1024 * 1024, // 10 MB default
     accept = "*",
     multiple = false,
     initialFiles = [],

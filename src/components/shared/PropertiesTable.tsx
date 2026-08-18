@@ -288,7 +288,13 @@ export default function PropertiesTable({ properties, leads, onDelete }: Propert
       if (statusFilter !== "all" && p.moderationStatus !== statusFilter) return false;
       // 4. Search query filter
       if (searchInputValue.trim() !== "") {
-        if (!p.name.toLowerCase().includes(searchInputValue.toLowerCase())) return false;
+        const q = searchInputValue.toLowerCase().trim();
+        const matchesName = p.name.toLowerCase().includes(q);
+        const matchesState = (p.state || "").toLowerCase().includes(q);
+        const matchesId = String(p.id).includes(q) || `#${p.id}`.includes(q);
+        const matchesCategory = (CATEGORY_LABELS[p.categoriesId || 1] || "").toLowerCase().includes(q);
+        const matchesStatus = (p.moderationStatus || "").toLowerCase().includes(q);
+        if (!matchesName && !matchesState && !matchesId && !matchesCategory && !matchesStatus) return false;
       }
       // 5. Hide archived
       if (p.moderationStatus === "archived") return false;
@@ -548,6 +554,7 @@ export default function PropertiesTable({ properties, leads, onDelete }: Propert
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    autoResetPageIndex: false,
   });
 
   return (

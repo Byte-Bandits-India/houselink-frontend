@@ -1,7 +1,13 @@
 import { apiClient } from "./client";
 
+export interface UpcomingBannerItem {
+  image: string;
+  link?: string;
+}
+
 export interface UpcomingConfig {
   images: string[];
+  banners?: UpcomingBannerItem[];
 }
 
 export interface UpcomingConfigResponse {
@@ -11,7 +17,7 @@ export interface UpcomingConfigResponse {
 
 /**
  * GET /api/v1/upcoming
- * Fetches the upcoming banner configurations.
+ * Fetches the upcoming banner configurations with images and destination links.
  */
 export async function getUpcomingConfig(): Promise<UpcomingConfigResponse> {
   const res = await apiClient.get<UpcomingConfigResponse>("/upcoming");

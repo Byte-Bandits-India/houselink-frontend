@@ -4,8 +4,21 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getStates, getCities, getFeatures, recordSearch, getSearches, getPopularProperties, getPopularRegions, tokenStore } from "@/lib/api";
-import type { SearchApiItem, PopularPropertyApiItem, PopularRegionApiItem } from "@/lib/api";
+import {
+  getStates,
+  getCities,
+  getFeatures,
+  recordSearch,
+  getSearches,
+  getPopularProperties,
+  getPopularRegions,
+  tokenStore,
+} from "@/lib/api";
+import type {
+  SearchApiItem,
+  PopularPropertyApiItem,
+  PopularRegionApiItem,
+} from "@/lib/api";
 import { useHomeFilter } from "@/contexts/HomeFilterContext";
 import ActionSearchBar from "@/components/kokonutui/action-search-bar";
 import PropertyTypeSwitch from "./PropertyTypeSwitch";
@@ -17,13 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const DEFAULT_TOP_SEARCHES = [
-  { id: -1, query: "2 BHK apartment in Adyar", count: 1 },
-  { id: -2, query: "Flats in porur", count: 1 },
-  { id: -3, query: "Lands in Kundrathur", count: 1 },
-  { id: -4, query: "3 BHK Villas in ECR", count: 1 },
-];
 
 const categories = [
   { id: "all", name: "All" },
@@ -114,7 +120,7 @@ function Field({
       className={cn(
         "flex flex-col justify-center px-4 py-2",
         divider && "border-r border-gray-200",
-        className
+        className,
       )}
     >
       <p className="text-[16px] font-medium text-black tracking-wide mb-3">
@@ -131,7 +137,12 @@ export default function PropertySearch() {
   const searchParams = useSearchParams();
   const { filters: homeFilters, setFilters } = useHomeFilter();
 
-  const isListingPage = ["/", "/properties", "/properties/featured", "/properties/owner"].includes(pathname);
+  const isListingPage = [
+    "/",
+    "/properties",
+    "/properties/featured",
+    "/properties/owner",
+  ].includes(pathname);
   const isHomePage = pathname === "/";
   // basePath only matters for non-listing pages (e.g., a blog page clicking Search → go to /properties)
   const basePath = isListingPage ? pathname : "/properties";
@@ -159,15 +170,22 @@ export default function PropertySearch() {
   const [priceRange, setPriceRange] = useState(100);
   const [areaRange, setAreaRange] = useState(100000);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
-  const [citiesList, setCitiesList] = useState<{ value: string; label: string }[]>(cities);
+  const [citiesList, setCitiesList] =
+    useState<{ value: string; label: string }[]>(cities);
   const [amenityList, setAmenityList] = useState<string[]>(defaultAmenities);
   const [recentSearches, setRecentSearches] = useState<SearchApiItem[]>([]);
-  const [popularProperties, setPopularProperties] = useState<PopularPropertyApiItem[]>([]);
-  const [popularRegions, setPopularRegions] = useState<PopularRegionApiItem[]>([]);
+  const [popularProperties, setPopularProperties] = useState<
+    PopularPropertyApiItem[]
+  >([]);
+  const [popularRegions, setPopularRegions] = useState<PopularRegionApiItem[]>(
+    [],
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Typewriter placeholder animation
-  const [placeholderText, setPlaceholderText] = useState("Search for properties in Chennai...");
+  const [placeholderText, setPlaceholderText] = useState(
+    "Search for properties in Chennai...",
+  );
   useEffect(() => {
     const placeholderSequences = [
       "Search for properties in Chennai...",
@@ -184,7 +202,7 @@ export default function PropertySearch() {
 
     const runTypewriter = () => {
       const currentText = placeholderSequences[sequenceIndex];
-      
+
       if (isDeleting) {
         if (charIndex > 0) {
           charIndex--;
@@ -238,7 +256,7 @@ export default function PropertySearch() {
       setShowAdvanced(true);
       setSelectedAmenities(homeFilters.amenities.split(","));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeFilters]);
 
   useEffect(() => {
@@ -251,7 +269,7 @@ export default function PropertySearch() {
             const citiesRes = await getCities(Number(state.id));
             if (citiesRes.success && citiesRes.data) {
               citiesRes.data.forEach((c) => {
-                if (!list.some(item => item.value === c.name.toLowerCase())) {
+                if (!list.some((item) => item.value === c.name.toLowerCase())) {
                   list.push({
                     value: c.name.toLowerCase(),
                     label: c.name,
@@ -271,13 +289,16 @@ export default function PropertySearch() {
       try {
         const featuresRes = await getFeatures();
         if (featuresRes.success && featuresRes.data) {
-          const list = featuresRes.data.map(f => f.name);
+          const list = featuresRes.data.map((f) => f.name);
           if (list.length > 0) {
             setAmenityList(list);
           }
         }
       } catch (e) {
-        console.error("Failed to load features from backend, using fallback:", e);
+        console.error(
+          "Failed to load features from backend, using fallback:",
+          e,
+        );
       }
 
       if (tokenStore.isLoggedIn()) {
@@ -313,7 +334,10 @@ export default function PropertySearch() {
             setRecentSearches([]);
           }
         } catch (e) {
-          console.error("Failed to parse recent searches from localStorage:", e);
+          console.error(
+            "Failed to parse recent searches from localStorage:",
+            e,
+          );
           setRecentSearches([]);
         }
       }
@@ -347,11 +371,11 @@ export default function PropertySearch() {
       setLocation(searchParams.get("location") || "");
       setCity(searchParams.get("city") || "");
       setCategoryType(searchParams.get("category_type") || "");
-      
+
       const hasMaxPrice = searchParams.get("max_price");
       const hasMaxArea = searchParams.get("max_area");
       const hasAmenities = searchParams.get("amenities");
-      
+
       if (hasMaxPrice || hasMaxArea || hasAmenities) {
         setShowAdvanced(true);
         if (hasMaxPrice) setPriceRange(Number(hasMaxPrice) / 10000000);
@@ -378,15 +402,44 @@ export default function PropertySearch() {
     max_area?: string;
     house_type?: string;
   }) => {
-    const searchKeyword = overrides && overrides.keyword !== undefined ? overrides.keyword : keyword;
-    const searchLocation = overrides && overrides.location !== undefined ? overrides.location : location;
-    const searchCategory = overrides && overrides.category !== undefined ? overrides.category : activeCategory;
-    const searchCity = overrides && overrides.city !== undefined ? overrides.city : city;
-    const searchAmenities = overrides && overrides.amenities !== undefined ? overrides.amenities : selectedAmenities;
-    const searchPurpose = overrides && overrides.property_purpose !== undefined ? overrides.property_purpose : activeTab;
-    const searchMaxPrice = overrides && overrides.max_price !== undefined ? overrides.max_price : (showAdvanced ? String(priceRange * 10000000) : "");
-    const searchMaxArea = overrides && overrides.max_area !== undefined ? overrides.max_area : (showAdvanced ? String(areaRange) : "");
-    const searchHouseType = overrides && overrides.house_type !== undefined ? overrides.house_type : "";
+    const searchKeyword =
+      overrides && overrides.keyword !== undefined
+        ? overrides.keyword
+        : keyword;
+    const searchLocation =
+      overrides && overrides.location !== undefined
+        ? overrides.location
+        : location;
+    const searchCategory =
+      overrides && overrides.category !== undefined
+        ? overrides.category
+        : activeCategory;
+    const searchCity =
+      overrides && overrides.city !== undefined ? overrides.city : city;
+    const searchAmenities =
+      overrides && overrides.amenities !== undefined
+        ? overrides.amenities
+        : selectedAmenities;
+    const searchPurpose =
+      overrides && overrides.property_purpose !== undefined
+        ? overrides.property_purpose
+        : activeTab;
+    const searchMaxPrice =
+      overrides && overrides.max_price !== undefined
+        ? overrides.max_price
+        : showAdvanced
+          ? String(priceRange * 10000000)
+          : "";
+    const searchMaxArea =
+      overrides && overrides.max_area !== undefined
+        ? overrides.max_area
+        : showAdvanced
+          ? String(areaRange)
+          : "";
+    const searchHouseType =
+      overrides && overrides.house_type !== undefined
+        ? overrides.house_type
+        : "";
 
     const q = searchKeyword.trim().toLowerCase();
     const isSearching = q.length > 0;
@@ -396,12 +449,19 @@ export default function PropertySearch() {
     const hasCategoryFilter = overrides && overrides.category !== undefined;
     const hasCityFilter = overrides && overrides.city !== undefined;
     const hasAmenityFilter = overrides && overrides.amenities !== undefined;
-    const isTargetedSearch = hasLocationFilter || hasCategoryFilter || hasCityFilter || hasAmenityFilter;
-
-
+    const isTargetedSearch =
+      hasLocationFilter ||
+      hasCategoryFilter ||
+      hasCityFilter ||
+      hasAmenityFilter;
 
     let queryToRecord = "";
-    if (searchKeyword && searchKeyword.trim() && searchLocation && searchLocation.trim()) {
+    if (
+      searchKeyword &&
+      searchKeyword.trim() &&
+      searchLocation &&
+      searchLocation.trim()
+    ) {
       queryToRecord = `${searchKeyword.trim()} in ${searchLocation.trim()}`;
     } else if (searchKeyword && searchKeyword.trim()) {
       queryToRecord = searchKeyword.trim();
@@ -410,13 +470,27 @@ export default function PropertySearch() {
     }
 
     if (queryToRecord) {
-      recordSearch(queryToRecord).catch((err) => console.error("Error recording search query:", err));
+      recordSearch(queryToRecord).catch((err) =>
+        console.error("Error recording search query:", err),
+      );
       setRecentSearches((prev) => {
-        const filtered = prev.filter((s) => s.query.toLowerCase() !== queryToRecord.toLowerCase());
-        const updated = [{ id: Date.now(), query: queryToRecord, updatedAt: new Date().toISOString() }, ...filtered].slice(0, 6);
+        const filtered = prev.filter(
+          (s) => s.query.toLowerCase() !== queryToRecord.toLowerCase(),
+        );
+        const updated = [
+          {
+            id: Date.now(),
+            query: queryToRecord,
+            updatedAt: new Date().toISOString(),
+          },
+          ...filtered,
+        ].slice(0, 6);
         if (typeof window !== "undefined" && !tokenStore.isLoggedIn()) {
           try {
-            localStorage.setItem("houselink_recent_searches", JSON.stringify(updated));
+            localStorage.setItem(
+              "houselink_recent_searches",
+              JSON.stringify(updated),
+            );
           } catch (e) {
             console.error("Failed to save recent searches to localStorage:", e);
           }
@@ -433,7 +507,10 @@ export default function PropertySearch() {
     if (categoryType) params.set("category_type", categoryType);
     if (searchCategory !== "all") params.set("category", searchCategory);
 
-    const hasAdvanced = showAdvanced || (overrides && overrides.amenities !== undefined) || (overrides && overrides.max_price !== undefined);
+    const hasAdvanced =
+      showAdvanced ||
+      (overrides && overrides.amenities !== undefined) ||
+      (overrides && overrides.max_price !== undefined);
 
     if (hasAdvanced) {
       if (searchMaxPrice) params.set("max_price", searchMaxPrice);
@@ -461,7 +538,8 @@ export default function PropertySearch() {
           categoryType,
           maxPrice: searchMaxPrice,
           maxArea: searchMaxArea,
-          amenities: searchAmenities.length > 0 ? searchAmenities.join(",") : "",
+          amenities:
+            searchAmenities.length > 0 ? searchAmenities.join(",") : "",
           houseType: searchHouseType,
         });
         scrollToResults();
@@ -473,7 +551,7 @@ export default function PropertySearch() {
 
   const handleTabClick = (key: string) => {
     setActiveTab(key);
-    
+
     let nextCategory = activeCategory;
     if (key !== "sell" && activeCategory === "plots") {
       nextCategory = "all";
@@ -491,7 +569,10 @@ export default function PropertySearch() {
         categoryType,
         maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
         maxArea: showAdvanced ? String(areaRange) : "",
-        amenities: showAdvanced && selectedAmenities.length > 0 ? selectedAmenities.join(",") : "",
+        amenities:
+          showAdvanced && selectedAmenities.length > 0
+            ? selectedAmenities.join(",")
+            : "",
         houseType: "",
       });
       return;
@@ -512,7 +593,7 @@ export default function PropertySearch() {
         params.set("amenities", selectedAmenities.join(","));
       }
     }
-    
+
     router.push(`${basePath}?${params.toString()}`, { scroll: false });
   };
 
@@ -530,12 +611,15 @@ export default function PropertySearch() {
         categoryType,
         maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
         maxArea: showAdvanced ? String(areaRange) : "",
-        amenities: showAdvanced && selectedAmenities.length > 0 ? selectedAmenities.join(",") : "",
+        amenities:
+          showAdvanced && selectedAmenities.length > 0
+            ? selectedAmenities.join(",")
+            : "",
         houseType: "",
       });
       return;
     }
-    
+
     const params = new URLSearchParams();
     params.set("property_purpose", activeTab);
     if (city) params.set("city", city);
@@ -551,7 +635,7 @@ export default function PropertySearch() {
         params.set("amenities", selectedAmenities.join(","));
       }
     }
-    
+
     router.push(`${basePath}?${params.toString()}`, { scroll: false });
   };
 
@@ -570,17 +654,31 @@ export default function PropertySearch() {
           </div>
 
           {/* City Dropdown */}
-          <Select value={city || "chennai"} onValueChange={(v) => setCity(v === "chennai" ? "" : v)}>
+          <Select
+            value={city || "chennai"}
+            onValueChange={(v) => setCity(v === "chennai" ? "" : v)}
+          >
             <SelectTrigger className="w-[160px] bg-white rounded-full px-6 py-3 h-12 shadow-sm border border-gray-100 text-sm text-gray-800 font-bold focus:ring-0 focus:ring-offset-0 focus:outline-none my-0 cursor-pointer justify-between border-solid select-none">
               <SelectValue placeholder="Chennai" />
             </SelectTrigger>
             <SelectContent className="bg-white border border-gray-100 rounded-2xl shadow-md duration-300 ease-out z-50">
-              <SelectItem value="chennai" className="font-bold text-gray-800 cursor-pointer">Chennai</SelectItem>
-              {citiesList.filter(o => o.value !== "chennai").map((o) => (
-                <SelectItem key={o.value} value={o.value} className="font-bold text-gray-800 cursor-pointer">
-                  {o.label}
-                </SelectItem>
-              ))}
+              <SelectItem
+                value="chennai"
+                className="font-bold text-gray-800 cursor-pointer"
+              >
+                Chennai
+              </SelectItem>
+              {citiesList
+                .filter((o) => o.value !== "chennai")
+                .map((o) => (
+                  <SelectItem
+                    key={o.value}
+                    value={o.value}
+                    className="font-bold text-gray-800 cursor-pointer"
+                  >
+                    {o.label}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -591,7 +689,10 @@ export default function PropertySearch() {
           setKeyword={setKeyword}
           placeholderText={placeholderText}
           onSearch={handleSearch}
-          onSelectLocation={setLocation}
+          onSelectLocation={(loc) => {
+            setLocation(loc);
+            setKeyword(loc);
+          }}
           setActiveCategory={setActiveCategory}
           setCity={setCity}
           setShowAdvanced={setShowAdvanced}
@@ -617,15 +718,25 @@ export default function PropertySearch() {
                 }}
                 className="flex items-center gap-1.5 bg-white/70 hover:bg-white text-gray-600 px-3.5 py-1.5 rounded-full border border-gray-200/85 transition-colors shadow-sm cursor-pointer"
               >
-                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-3.5 h-3.5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 {item.query}
               </button>
             ))}
           </div>
         )}
-        
+
         <SearchFilterModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
@@ -644,7 +755,6 @@ export default function PropertySearch() {
 
   return (
     <div className="w-full max-w-[1240px] mx-auto mb-10 relative z-20 -mt-24">
-
       {/* ── Tabs ── */}
       <div className="flex justify-center gap-2">
         {[
@@ -658,7 +768,7 @@ export default function PropertySearch() {
               "min-w-[130px] px-6 py-4 text-[15px] font-bold transition-all duration-200 backdrop-blur-lg rounded-t-xl",
               activeTab === key
                 ? "bg-white text-[#153e75] shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
-                : "bg-white/5 text-white hover:border-2 hover:border-white/50 hover:bg-white/20"
+                : "bg-white/5 text-white hover:border-2 hover:border-white/50 hover:bg-white/20",
             )}
           >
             {label}
@@ -668,10 +778,8 @@ export default function PropertySearch() {
 
       {/* ── Search Card ── */}
       <div className="bg-white rounded-2xl rounded-tr-2xl shadow-[rgb(38,57,77)_0px_20px_30px_-10px] px-5 py-6">
-
         {/* Main form row */}
         <div className="flex flex-wrap items-stretch gap-y-2">
-
           {/* City */}
           <Field label="City" className="flex-[1_1_120px]">
             <NativeSelect
@@ -705,9 +813,17 @@ export default function PropertySearch() {
           </Field>
 
           {/* Category */}
-          <Field label="Category" divider={false} className="flex-[1.2_1_140px]">
+          <Field
+            label="Category"
+            divider={false}
+            className="flex-[1.2_1_140px]"
+          >
             <NativeSelect
-              options={activeTab === "sell" ? propertyCategories : propertyCategories.filter(cat => cat.value !== "plots")}
+              options={
+                activeTab === "sell"
+                  ? propertyCategories
+                  : propertyCategories.filter((cat) => cat.value !== "plots")
+              }
               placeholder="Select Category"
               value={activeCategory === "all" ? "" : activeCategory}
               onChange={setActiveCategory}
@@ -723,7 +839,7 @@ export default function PropertySearch() {
                 "flex items-center gap-1.5 px-4 h-[42px] border rounded-lg text-sm font-medium transition-colors duration-200 whitespace-nowrap",
                 showAdvanced
                   ? "border-[#153e75] text-[#153e75] bg-[#eaf0fb]"
-                  : "border-gray-300 text-gray-600 bg-white hover:border-[#153e75] hover:text-[#153e75]"
+                  : "border-gray-300 text-gray-600 bg-white hover:border-[#153e75] hover:text-[#153e75]",
               )}
             >
               <SlidersHorizontal size={14} />
@@ -744,12 +860,14 @@ export default function PropertySearch() {
         {/* ── Advanced Filters ── */}
         {showAdvanced && (
           <div className="pt-5 mt-4 border-t border-gray-100 flex flex-col gap-6">
-            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
               {/* Price Range */}
               <div>
                 <p className="text-[13px] font-medium text-gray-500 mb-3 flex items-center gap-2">
-                  Price Range <span className="text-[#153e75] font-bold">up to ₹{priceRange} Cr</span>
+                  Price Range{" "}
+                  <span className="text-[#153e75] font-bold">
+                    up to ₹{priceRange} Cr
+                  </span>
                 </p>
                 <input
                   type="range"
@@ -769,7 +887,10 @@ export default function PropertySearch() {
               {/* Square Range */}
               <div>
                 <p className="text-[13px] font-medium text-gray-500 mb-3 flex items-center gap-2">
-                  Square Range <span className="text-[#153e75] font-bold">up to {areaRange.toLocaleString()} Sq.Ft</span>
+                  Square Range{" "}
+                  <span className="text-[#153e75] font-bold">
+                    up to {areaRange.toLocaleString()} Sq.Ft
+                  </span>
                 </p>
                 <input
                   type="range"
@@ -790,7 +911,10 @@ export default function PropertySearch() {
             {/* Amenities */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-5 gap-x-4 mt-2">
               {amenityList.map((amenity) => (
-                <label key={amenity} className="flex items-center gap-2.5 cursor-pointer group">
+                <label
+                  key={amenity}
+                  className="flex items-center gap-2.5 cursor-pointer group"
+                >
                   <input
                     type="checkbox"
                     checked={selectedAmenities.includes(amenity)}
@@ -798,37 +922,40 @@ export default function PropertySearch() {
                       setSelectedAmenities((prev) =>
                         prev.includes(amenity)
                           ? prev.filter((a) => a !== amenity)
-                          : [...prev, amenity]
+                          : [...prev, amenity],
                       );
                     }}
                     className="w-[15px] h-[15px] rounded-[3px] border-gray-300 text-[#153e75] focus:ring-[#153e75] accent-[#153e75]"
                   />
-                  <span className="text-[13px] text-gray-500 font-medium group-hover:text-gray-800 transition-colors">{amenity}</span>
+                  <span className="text-[13px] text-gray-500 font-medium group-hover:text-gray-800 transition-colors">
+                    {amenity}
+                  </span>
                 </label>
               ))}
             </div>
-
           </div>
         )}
       </div>
 
       {/* ── Category Nav ── */}
       <div className="flex justify-center gap-7 mt-9 flex-wrap">
-        {categories.filter(cat => activeTab === "sell" || cat.id !== "plots").map((cat) => (
-          <button
-            key={cat.id}
-            type="button"
-            onClick={() => handleCategoryNavClick(cat.id)}
-            className={cn(
-              "pb-1.5 text-[15px] font-medium border-b-[2.5px] transition-all duration-200 whitespace-nowrap",
-              activeCategory === cat.id
-                ? "border-[#153e75] text-[#153e75] font-semibold"
-                : "border-transparent text-gray-500 hover:text-[#153e75] hover:border-[#153e75]/30"
-            )}
-          >
-            {cat.name}
-          </button>
-        ))}
+        {categories
+          .filter((cat) => activeTab === "sell" || cat.id !== "plots")
+          .map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => handleCategoryNavClick(cat.id)}
+              className={cn(
+                "pb-1.5 text-[15px] font-medium border-b-[2.5px] transition-all duration-200 whitespace-nowrap",
+                activeCategory === cat.id
+                  ? "border-[#153e75] text-[#153e75] font-semibold"
+                  : "border-transparent text-gray-500 hover:text-[#153e75] hover:border-[#153e75]/30",
+              )}
+            >
+              {cat.name}
+            </button>
+          ))}
       </div>
 
       <SearchFilterModal
@@ -843,7 +970,6 @@ export default function PropertySearch() {
           });
         }}
       />
-
     </div>
   );
 }

@@ -189,7 +189,7 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
   ] = useFileUpload({
     multiple: true,
     maxFiles: imageLimit,
-    maxSize: 5 * 1024 * 1024, // 5 MB
+    maxSize: 10 * 1024 * 1024, // 10 MB
     accept: "image/jpeg,image/jpg,image/png,image/webp",
     initialFiles,
   });
@@ -247,7 +247,7 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
       <h4 className="text-sm font-semibold text-gray-800 border-b border-gray-50 pb-2">
         Property Images{" "}
         <span className="text-gray-400 font-normal text-xs ml-1">
-          (Max 5MB each, up to {imageLimit})
+          (Recommended: 800×600 px · Max 10MB each · up to {imageLimit})
         </span>
       </h4>
 
@@ -276,7 +276,7 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
             <div className="space-y-1">
               <p className="text-sm font-medium text-gray-700">Drag & drop images here</p>
               <p className="text-xs text-gray-400">
-                JPG, PNG, WEBP · Max 5MB each · {files.length}/{imageLimit} uploaded
+                JPG, PNG, WEBP · Recommended: 800×600 px · Max 10MB each · {files.length}/{imageLimit} uploaded
               </p>
             </div>
             <button
@@ -354,7 +354,7 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
 
       {/* Full-size preview dialog */}
       <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
-        <DialogContent className="bg-transparent border-none shadow-none p-0 sm:max-w-2xl">
+        <DialogContent className="bg-transparent border-none shadow-none p-0 sm:max-w-3xl flex items-center justify-center">
           <DialogHeader className="sr-only">
             <DialogTitle>Image Preview</DialogTitle>
           </DialogHeader>
@@ -363,7 +363,7 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
             <img
               src={selectedImage}
               alt="Preview"
-              className="rounded-xl w-full h-auto object-contain"
+              className="rounded-2xl max-h-[85vh] w-auto max-w-full object-contain shadow-2xl bg-black/40 mx-auto"
             />
           )}
         </DialogContent>
@@ -386,10 +386,20 @@ function PropertyImagesUpload({ images, imageLimit, disabled = false, onChange }
   );
 }
 
+const ValidationError = ({ show, message }: { show: boolean; message: string }) => {
+  if (!show) return null;
+  return (
+    <p className="text-red-500 text-xs font-semibold mt-1">
+      {message}
+    </p>
+  );
+};
+
 export default function Step2PropertyProfile({
   data,
   onChange,
   disabled = false,
+  showErrors = false,
   permalinkStatus = "idle",
   onPermalinkStatusChange,
 }: Props) {
@@ -519,7 +529,14 @@ export default function Step2PropertyProfile({
                 onChange({ name, permalink: slug });
               }}
               placeholder={getTitlePlaceholder()}
-              className="rounded-xl border-gray-200 focus-visible:ring-brand"
+              className={cn(
+                "rounded-xl border-gray-200 focus-visible:ring-brand",
+                showErrors && !data.name?.trim() && "border-red-500 focus-visible:ring-red-500"
+              )}
+            />
+            <ValidationError
+              show={showErrors && !data.name?.trim()}
+              message="Property title is required."
             />
             <p className="text-xs text-gray-400 text-right">{(data.name || "").length}/100</p>
           </div>
@@ -530,7 +547,10 @@ export default function Step2PropertyProfile({
             <Label className="text-gray-700 font-medium">
               Permalink
             </Label>
-            <div className="flex items-center rounded-xl border border-gray-200 overflow-hidden shadow-sm focus-within:ring-1 focus-within:ring-brand focus-within:border-brand">
+            <div className={cn(
+              "flex items-center rounded-xl border border-gray-200 overflow-hidden shadow-sm focus-within:ring-1 focus-within:ring-brand focus-within:border-brand",
+              showErrors && (!data.permalink?.trim() || permalinkStatus === "taken") && "border-red-500 focus-within:ring-red-500 focus-within:border-red-500"
+            )}>
               <span className="bg-gray-50 px-3.5 py-2 text-xs font-semibold text-gray-500 border-r border-gray-200 whitespace-nowrap select-none">
                 houselink360.com/properties/
               </span>
@@ -563,6 +583,14 @@ export default function Step2PropertyProfile({
                 </span>
               ) : null}
             </div>
+            <ValidationError
+              show={showErrors && !data.permalink?.trim()}
+              message="Permalink is required."
+            />
+            <ValidationError
+              show={showErrors && permalinkStatus === "taken"}
+              message="Permalink is already taken. Please choose another."
+            />
           </div>
         )}
 
@@ -578,7 +606,14 @@ export default function Step2PropertyProfile({
               value={data.description}
               onChange={(e) => onChange({ description: e.target.value.slice(0, 2000) })}
               placeholder="Provide a detailed description of the property, key selling points, neighborhood highlights, etc..."
-              className="resize-none rounded-xl border-gray-200 focus-visible:ring-brand"
+              className={cn(
+                "resize-none rounded-xl border-gray-200 focus-visible:ring-brand",
+                showErrors && !data.description?.trim() && "border-red-500 focus-visible:ring-red-500"
+              )}
+            />
+            <ValidationError
+              show={showErrors && !data.description?.trim()}
+              message="Property description is required."
             />
             <p className="text-xs text-gray-400 text-right">{(data.description || "").length}/2000</p>
           </div>
@@ -601,7 +636,10 @@ export default function Step2PropertyProfile({
                 value={data.house_type || ""}
                 onValueChange={(v) => onChange({ house_type: v })}
               >
-                <SelectTrigger className="rounded-xl border-gray-200">
+                <SelectTrigger className={cn(
+                  "rounded-xl border-gray-200",
+                  showErrors && !data.house_type && "border-red-500 focus:ring-red-500"
+                )}>
                   <SelectValue placeholder="Select Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -610,6 +648,10 @@ export default function Step2PropertyProfile({
                   ))}
                 </SelectContent>
               </Select>
+              <ValidationError
+                show={showErrors && !data.house_type}
+                message="Please select BHK configuration (House Type)."
+              />
             </div>
           )}
 
@@ -646,7 +688,14 @@ export default function Step2PropertyProfile({
                 value={data.bedrooms || ""}
                 onChange={(e) => handleNumberInput("bedrooms", e.target.value, 10)}
                 placeholder="e.g. 3"
-                className="rounded-xl border-gray-200 focus-visible:ring-brand"
+                className={cn(
+                  "rounded-xl border-gray-200 focus-visible:ring-brand",
+                  showErrors && !data.bedrooms && "border-red-500 focus-visible:ring-red-500"
+                )}
+              />
+              <ValidationError
+                show={showErrors && !data.bedrooms}
+                message="Please enter number of bedrooms."
               />
             </div>
           )}
@@ -664,7 +713,14 @@ export default function Step2PropertyProfile({
                 value={data.bathrooms || ""}
                 onChange={(e) => handleNumberInput("bathrooms", e.target.value, 10)}
                 placeholder="e.g. 2"
-                className="rounded-xl border-gray-200 focus-visible:ring-brand"
+                className={cn(
+                  "rounded-xl border-gray-200 focus-visible:ring-brand",
+                  showErrors && !data.bathrooms && "border-red-500 focus-visible:ring-red-500"
+                )}
+              />
+              <ValidationError
+                show={showErrors && !data.bathrooms}
+                message="Please enter number of bathrooms."
               />
             </div>
           )}
@@ -679,7 +735,10 @@ export default function Step2PropertyProfile({
                 value={data.furnishing_type || ""}
                 onValueChange={(v) => onChange({ furnishing_type: v })}
               >
-                <SelectTrigger className="rounded-xl border-gray-200">
+                <SelectTrigger className={cn(
+                  "rounded-xl border-gray-200",
+                  showErrors && ["apartment", "villa", "individual_house"].includes(subtype) && !data.furnishing_type && "border-red-500 focus:ring-red-500"
+                )}>
                   <SelectValue placeholder="Select Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -688,6 +747,10 @@ export default function Step2PropertyProfile({
                   ))}
                 </SelectContent>
               </Select>
+              <ValidationError
+                show={showErrors && ["apartment", "villa", "individual_house"].includes(subtype) && !data.furnishing_type}
+                message="Please select furnishing status."
+              />
             </div>
           )}
 
@@ -724,7 +787,10 @@ export default function Step2PropertyProfile({
                 value={data.food_preference || ""}
                 onValueChange={(v) => onChange({ food_preference: v })}
               >
-                <SelectTrigger className="rounded-xl border-gray-200">
+                <SelectTrigger className={cn(
+                  "rounded-xl border-gray-200",
+                  showErrors && !data.food_preference && "border-red-500 focus:ring-red-500"
+                )}>
                   <SelectValue placeholder="Select Preference" />
                 </SelectTrigger>
                 <SelectContent>
@@ -733,6 +799,10 @@ export default function Step2PropertyProfile({
                   ))}
                 </SelectContent>
               </Select>
+              <ValidationError
+                show={showErrors && !data.food_preference}
+                message="Please select food preference."
+              />
             </div>
           )}
 
@@ -746,7 +816,10 @@ export default function Step2PropertyProfile({
                 value={data.ownership_type || ""}
                 onValueChange={(v) => onChange({ ownership_type: v })}
               >
-                <SelectTrigger className="rounded-xl border-gray-200">
+                <SelectTrigger className={cn(
+                  "rounded-xl border-gray-200",
+                  showErrors && !data.ownership_type && "border-red-500 focus:ring-red-500"
+                )}>
                   <SelectValue placeholder="Select Ownership" />
                 </SelectTrigger>
                 <SelectContent>
@@ -755,6 +828,10 @@ export default function Step2PropertyProfile({
                   ))}
                 </SelectContent>
               </Select>
+              <ValidationError
+                show={showErrors && !data.ownership_type}
+                message="Please select ownership type."
+              />
             </div>
           )}
 
@@ -769,7 +846,14 @@ export default function Step2PropertyProfile({
                 value={data.property_suitable_for || ""}
                 onChange={(e) => onChange({ property_suitable_for: e.target.value.slice(0, 100) })}
                 placeholder="e.g. Office, Clinic, Restaurant, Gym"
-                className="rounded-xl border-gray-200 focus-visible:ring-brand"
+                className={cn(
+                  "rounded-xl border-gray-200 focus-visible:ring-brand",
+                  showErrors && (data.property_for === "rent_lease" || subtype === "office_space") && !data.property_suitable_for && "border-red-500 focus-visible:ring-red-500"
+                )}
+              />
+              <ValidationError
+                show={showErrors && (data.property_for === "rent_lease" || subtype === "office_space") && !data.property_suitable_for}
+                message="Please enter property suitable for."
               />
             </div>
           )}
@@ -919,7 +1003,10 @@ export default function Step2PropertyProfile({
                   <Label className="text-gray-700 font-medium block">
                     Loading/Unloading Facility? {data.property_for === "rent_lease" && (subtype === "godown" || subtype === "warehouse") && <span className="text-red-500">*</span>}
                   </Label>
-                  <div className="flex gap-2">
+                  <div className={cn(
+                    "flex gap-2 p-1 rounded-full w-fit",
+                    showErrors && data.property_for === "rent_lease" && (subtype === "godown" || subtype === "warehouse") && !data.loading_unloading_facility && "ring-2 ring-red-500"
+                  )}>
                     {["Yes", "No"].map((v) => (
                       <RadioPill
                         key={v}
@@ -930,6 +1017,10 @@ export default function Step2PropertyProfile({
                       />
                     ))}
                   </div>
+                  <ValidationError
+                    show={showErrors && data.property_for === "rent_lease" && (subtype === "godown" || subtype === "warehouse") && !data.loading_unloading_facility}
+                    message="Please select loading/unloading facility."
+                  />
                 </div>
               )}
 
@@ -938,7 +1029,10 @@ export default function Step2PropertyProfile({
                   <Label className="text-gray-700 font-medium block">
                     Pet Policy <span className="text-red-500">*</span>
                   </Label>
-                  <div className="flex gap-2">
+                  <div className={cn(
+                    "flex gap-2 p-1 rounded-full w-fit",
+                    showErrors && !data.pet_policy && "ring-2 ring-red-500"
+                  )}>
                     {["Allowed", "Not Allowed"].map((v) => (
                       <RadioPill
                         key={v}
@@ -949,6 +1043,10 @@ export default function Step2PropertyProfile({
                       />
                     ))}
                   </div>
+                  <ValidationError
+                    show={showErrors && !data.pet_policy}
+                    message="Please select pet policy."
+                  />
                 </div>
               )}
             </div>
@@ -959,7 +1057,10 @@ export default function Step2PropertyProfile({
                 <Label className="text-gray-700 font-medium block">
                   Tenant Preference <span className="text-red-500">*</span>
                 </Label>
-                <div className="flex gap-2 flex-wrap">
+                <div className={cn(
+                  "flex gap-2 flex-wrap p-1 rounded-xl w-fit",
+                  showErrors && (!tenantPrefs || tenantPrefs.length === 0) && "ring-2 ring-red-500"
+                )}>
                   {(["shop", "building", "godown", "warehouse", "office_space", "land"].includes(subtype)
                     ? ["Individual", "Company", "Any"]
                     : ["Family", "Bachelor", "Students", "Working Professionals", "Any"]
@@ -975,6 +1076,10 @@ export default function Step2PropertyProfile({
                     />
                   ))}
                 </div>
+                <ValidationError
+                  show={showErrors && (!tenantPrefs || tenantPrefs.length === 0)}
+                  message="Please select at least one tenant preference."
+                />
               </div>
             )}
 
@@ -985,7 +1090,10 @@ export default function Step2PropertyProfile({
                   <Label className="text-gray-700 font-medium block">
                     Parking Availability {(data.property_for === "rent_lease" || ["apartment", "villa", "individual_house"].includes(subtype) || subtype === "office_space") && <span className="text-red-500">*</span>}
                   </Label>
-                  <div className="flex gap-2">
+                  <div className={cn(
+                    "flex gap-2 p-1 rounded-full w-fit",
+                    showErrors && (data.property_for === "rent_lease" || ["apartment", "villa", "individual_house"].includes(subtype) || subtype === "office_space") && !data.parking_availability && "ring-2 ring-red-500"
+                  )}>
                     {["Yes", "No"].map((v) => (
                       <RadioPill
                         key={v}
@@ -1002,6 +1110,10 @@ export default function Step2PropertyProfile({
                       />
                     ))}
                   </div>
+                  <ValidationError
+                    show={showErrors && (data.property_for === "rent_lease" || ["apartment", "villa", "individual_house"].includes(subtype) || subtype === "office_space") && !data.parking_availability}
+                    message="Please select parking availability."
+                  />
                 </div>
 
                 {data.parking_availability === "Yes" && (
@@ -1140,7 +1252,10 @@ export default function Step2PropertyProfile({
           <Label className="text-brand font-semibold text-sm block">
             Agreement Type <span className="text-red-500">*</span>
           </Label>
-          <div className="flex gap-3">
+          <div className={cn(
+            "flex gap-3 p-1 rounded-full w-fit",
+            showErrors && !data.rent_lease_type && "ring-2 ring-red-500"
+          )}>
             {["rent", "lease"].map((v) => (
               <RadioPill
                 key={v}
@@ -1158,6 +1273,10 @@ export default function Step2PropertyProfile({
               />
             ))}
           </div>
+          <ValidationError
+            show={showErrors && !data.rent_lease_type}
+            message="Please select agreement type (Rent or Lease)."
+          />
         </div>
       )}
 
@@ -1185,7 +1304,14 @@ export default function Step2PropertyProfile({
                       handleDecimalInput("price", rawValue);
                     }}
                     placeholder="Enter amount (₹)"
-                    className="rounded-xl border-gray-200 focus-visible:ring-brand font-medium"
+                    className={cn(
+                      "rounded-xl border-gray-200 focus-visible:ring-brand font-medium",
+                      showErrors && !data.price && "border-red-500 focus-visible:ring-red-500"
+                    )}
+                  />
+                  <ValidationError
+                    show={showErrors && !data.price}
+                    message={data.rent_lease_type === "lease" ? "Lease amount is required." : "Rent amount is required."}
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -1212,7 +1338,10 @@ export default function Step2PropertyProfile({
                         value={data.lease_duration || ""}
                         onValueChange={(v) => onChange({ lease_duration: v })}
                       >
-                        <SelectTrigger className="rounded-xl border-gray-200">
+                        <SelectTrigger className={cn(
+                          "rounded-xl border-gray-200",
+                          showErrors && !data.lease_duration && "border-red-500 focus:ring-red-500"
+                        )}>
                           <SelectValue placeholder="Select Duration" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1221,6 +1350,10 @@ export default function Step2PropertyProfile({
                           ))}
                         </SelectContent>
                       </Select>
+                      <ValidationError
+                        show={showErrors && !data.lease_duration}
+                        message="Please select lease duration."
+                      />
                     </div>
                   )}
 
@@ -1234,7 +1367,10 @@ export default function Step2PropertyProfile({
                         value={data.maintenance_responsibility || ""}
                         onValueChange={(v) => onChange({ maintenance_responsibility: v })}
                       >
-                        <SelectTrigger className="rounded-xl border-gray-200">
+                        <SelectTrigger className={cn(
+                          "rounded-xl border-gray-200",
+                          showErrors && !data.maintenance_responsibility && "border-red-500 focus:ring-red-500"
+                        )}>
                           <SelectValue placeholder="Select Party" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1243,6 +1379,10 @@ export default function Step2PropertyProfile({
                           ))}
                         </SelectContent>
                       </Select>
+                      <ValidationError
+                        show={showErrors && !data.maintenance_responsibility}
+                        message="Please select maintenance responsibility."
+                      />
                     </div>
                   )}
                 </div>
@@ -1264,7 +1404,14 @@ export default function Step2PropertyProfile({
                           handleDecimalInput("security_deposit", rawValue);
                         }}
                         placeholder="Enter deposit (₹)"
-                        className="rounded-xl border-gray-200 focus-visible:ring-brand font-medium"
+                        className={cn(
+                          "rounded-xl border-gray-200 focus-visible:ring-brand font-medium",
+                          showErrors && !data.security_deposit && "border-red-500 focus-visible:ring-red-500"
+                        )}
+                      />
+                      <ValidationError
+                        show={showErrors && !data.security_deposit}
+                        message="Security deposit is required."
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -1301,7 +1448,10 @@ export default function Step2PropertyProfile({
                     <Label className="text-gray-700 font-medium block">
                       Maintenance Charge <span className="text-red-500">*</span>
                     </Label>
-                    <div className="flex gap-2">
+                    <div className={cn(
+                      "flex gap-2 p-1 rounded-full w-fit",
+                      showErrors && !data.maintenance_charge_status && "ring-2 ring-red-500"
+                    )}>
                       {["Yes", "No"].map((v) => (
                         <RadioPill
                           key={v}
@@ -1317,6 +1467,10 @@ export default function Step2PropertyProfile({
                         />
                       ))}
                     </div>
+                    <ValidationError
+                      show={showErrors && !data.maintenance_charge_status}
+                      message="Please select whether maintenance charges apply."
+                    />
                   </div>
 
                   {data.maintenance_charge_status === "Yes" && allowedFields.maintenance_charge_amount && (
@@ -1379,7 +1533,10 @@ export default function Step2PropertyProfile({
                       value={data.availability_status || "Ready to Occupy"}
                       onValueChange={(v) => onChange({ availability_status: v })}
                     >
-                      <SelectTrigger className="rounded-xl border-gray-200">
+                      <SelectTrigger className={cn(
+                        "rounded-xl border-gray-200",
+                        showErrors && !data.availability_status && "border-red-500 focus:ring-red-500"
+                      )}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1387,14 +1544,27 @@ export default function Step2PropertyProfile({
                         <SelectItem value="Available From">Available From</SelectItem>
                       </SelectContent>
                     </Select>
+                    <ValidationError
+                      show={showErrors && !data.availability_status}
+                      message="Please select availability status."
+                    />
                     {data.availability_status === "Available From" && allowedFields.availability_date && (
-                      <Input
-                        type="date"
-                        disabled={disabled}
-                        className="rounded-xl border-gray-200 mt-2 focus-visible:ring-brand"
-                        value={data.availability_date || ""}
-                        onChange={(e) => onChange({ availability_date: e.target.value })}
-                      />
+                      <>
+                        <Input
+                          type="date"
+                          disabled={disabled}
+                          className={cn(
+                            "rounded-xl border-gray-200 mt-2 focus-visible:ring-brand",
+                            showErrors && !data.availability_date && "border-red-500 focus-visible:ring-red-500"
+                          )}
+                          value={data.availability_date || ""}
+                          onChange={(e) => onChange({ availability_date: e.target.value })}
+                        />
+                        <ValidationError
+                          show={showErrors && !data.availability_date}
+                          message="Please select available from date."
+                        />
+                      </>
                     )}
                   </div>
                 )}
@@ -1416,7 +1586,14 @@ export default function Step2PropertyProfile({
                       handleDecimalInput("price", rawValue);
                     }}
                     placeholder="Enter amount (₹)"
-                    className="rounded-xl border-gray-200 focus-visible:ring-brand font-medium"
+                    className={cn(
+                      "rounded-xl border-gray-200 focus-visible:ring-brand font-medium",
+                      showErrors && !data.price && "border-red-500 focus-visible:ring-red-500"
+                    )}
+                  />
+                  <ValidationError
+                    show={showErrors && !data.price}
+                    message="Selling price is required."
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -1442,7 +1619,10 @@ export default function Step2PropertyProfile({
                       value={data.availability_status || "Ready to Occupy"}
                       onValueChange={(v) => onChange({ availability_status: v })}
                     >
-                      <SelectTrigger className="rounded-xl border-gray-200">
+                      <SelectTrigger className={cn(
+                        "rounded-xl border-gray-200",
+                        showErrors && !data.availability_status && "border-red-500 focus:ring-red-500"
+                      )}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1450,14 +1630,27 @@ export default function Step2PropertyProfile({
                         <SelectItem value="Available From">Available From</SelectItem>
                       </SelectContent>
                     </Select>
+                    <ValidationError
+                      show={showErrors && !data.availability_status}
+                      message="Please select availability status."
+                    />
                     {data.availability_status === "Available From" && allowedFields.availability_date && (
-                      <Input
-                        type="date"
-                        disabled={disabled}
-                        className="rounded-xl border-gray-200 mt-2 focus-visible:ring-brand"
-                        value={data.availability_date || ""}
-                        onChange={(e) => onChange({ availability_date: e.target.value })}
-                      />
+                      <>
+                        <Input
+                          type="date"
+                          disabled={disabled}
+                          className={cn(
+                            "rounded-xl border-gray-200 mt-2 focus-visible:ring-brand",
+                            showErrors && !data.availability_date && "border-red-500 focus-visible:ring-red-500"
+                          )}
+                          value={data.availability_date || ""}
+                          onChange={(e) => onChange({ availability_date: e.target.value })}
+                        />
+                        <ValidationError
+                          show={showErrors && !data.availability_date}
+                          message="Please select available from date."
+                        />
+                      </>
                     )}
                   </div>
                 )}

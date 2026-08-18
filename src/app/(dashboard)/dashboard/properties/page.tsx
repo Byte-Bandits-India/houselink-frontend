@@ -19,17 +19,18 @@ import type { DashboardProperty as Property } from "@/types/dashboard";
 export default function PropertiesPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-
-
-  const loadProperties = async (showLoadingState: boolean | React.MouseEvent<any> = true) => {
+  const loadProperties = async (
+    showLoadingState: boolean | React.MouseEvent<any> = true,
+  ) => {
     if (!user) return;
-    const shouldShow = showLoadingState === true || typeof showLoadingState !== "boolean";
+    const shouldShow =
+      showLoadingState === true || typeof showLoadingState !== "boolean";
     if (shouldShow) {
       setIsLoading(true);
       setError(null);
@@ -39,10 +40,12 @@ export default function PropertiesPage() {
       if (res.success && Array.isArray(res.data)) {
         const mapped: Property[] = res.data.map((p: any) => {
           // purpose: Map backend propertyFor ('sell', 'rent', 'lease') to Purpose ('sell', 'rent_lease')
-          const purposeVal: Purpose = p.propertyFor === "sell" ? "sell" : "rent_lease";
-          
+          const purposeVal: Purpose =
+            p.propertyFor === "sell" ? "sell" : "rent_lease";
+
           // ownerType: Map backend propertyOwnership ('owner', 'builder', 'consultant')
-          const ownerTypeVal: OwnerType = (p.propertyOwnership?.toLowerCase() ?? "owner") as OwnerType;
+          const ownerTypeVal: OwnerType = (p.propertyOwnership?.toLowerCase() ??
+            "owner") as OwnerType;
 
           // state
           const stateName = p.state?.name || p.state || "N/A";
@@ -51,7 +54,9 @@ export default function PropertiesPage() {
           let expiredAt = "N/A";
           if (p.expiredAt) {
             try {
-              expiredAt = new Date(p.expiredAt).toLocaleDateString("en-GB").replace(/\//g, "-");
+              expiredAt = new Date(p.expiredAt)
+                .toLocaleDateString("en-GB")
+                .replace(/\//g, "-");
             } catch {
               expiredAt = "N/A";
             }
@@ -61,14 +66,21 @@ export default function PropertiesPage() {
           let createdAt = "N/A";
           if (p.createdAt) {
             try {
-              createdAt = new Date(p.createdAt).toLocaleDateString("en-GB").replace(/\//g, "-");
+              createdAt = new Date(p.createdAt)
+                .toLocaleDateString("en-GB")
+                .replace(/\//g, "-");
             } catch {
               createdAt = "N/A";
             }
           }
 
           // status
-          const status = p.propertyFor === "sell" ? "Selling" : p.propertyFor === "rent" ? "Renting" : "Leasing";
+          const status =
+            p.propertyFor === "sell"
+              ? "Selling"
+              : p.propertyFor === "rent"
+                ? "Renting"
+                : "Leasing";
 
           return {
             id: p.id,
@@ -103,7 +115,10 @@ export default function PropertiesPage() {
     } catch (err: any) {
       console.error("Error fetching properties:", err);
       if (shouldShow) {
-        setError(err?.message || "An unexpected error occurred while fetching properties.");
+        setError(
+          err?.message ||
+            "An unexpected error occurred while fetching properties.",
+        );
       }
     } finally {
       if (shouldShow) {
@@ -116,12 +131,6 @@ export default function PropertiesPage() {
     if (!authLoading) {
       if (user) {
         loadProperties(true);
-
-        const interval = setInterval(() => {
-          loadProperties(false);
-        }, 5000);
-
-        return () => clearInterval(interval);
       } else {
         setIsLoading(false);
         setProperties([]);
@@ -139,17 +148,20 @@ export default function PropertiesPage() {
       }
     } catch (err: any) {
       console.error("Error deleting property:", err);
-      alert(err?.message || "An unexpected error occurred while deleting the property.");
+      alert(
+        err?.message ||
+          "An unexpected error occurred while deleting the property.",
+      );
     }
   };
-
-
 
   if (authLoading || isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <Loader2 className="w-10 h-10 text-brand animate-spin" />
-        <p className="text-sm font-semibold text-ink-muted animate-pulse">Loading properties...</p>
+        <p className="text-sm font-semibold text-ink-muted animate-pulse">
+          Loading properties...
+        </p>
       </div>
     );
   }
@@ -160,7 +172,9 @@ export default function PropertiesPage() {
         <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <h3 className="text-lg font-bold text-ink mb-2">Failed to load properties</h3>
+        <h3 className="text-lg font-bold text-ink mb-2">
+          Failed to load properties
+        </h3>
         <p className="text-sm text-ink-muted mb-6">{error}</p>
         <Button
           onClick={loadProperties}
@@ -178,11 +192,16 @@ export default function PropertiesPage() {
       {/* Title */}
       <h1 className="text-2xl font-bold text-ink">Property</h1>
 
-      <PropertyCharts properties={properties.filter((p) => p.moderationStatus !== "archived")} />
+      <PropertyCharts
+        properties={properties.filter((p) => p.moderationStatus !== "archived")}
+      />
 
       {/* Extracted table and filters component */}
-      <PropertiesTable properties={properties} leads={leads} onDelete={handleDelete} />
+      <PropertiesTable
+        properties={properties}
+        leads={leads}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }
-

@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { getCustomerInvoices, type UserInvoice } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import PurposeToggle from "@/components/shared/PurposeToggle";
+import type { CreditEntry } from "@/types/packages";
 
 type Filter = "sell" | "rent";
 
@@ -34,9 +36,6 @@ function EnquiryIcon() {
     <img className="w-24 h-24 mx-auto" src="/icon/accountant.png" alt="accountant" />
   );
 }
-
-/* ── Credit card data ──────────────────────────────────── */
-import type { CreditEntry } from "@/types/packages";
 
 function CreditCard({ entry }: { entry: CreditEntry }) {
   const isActive = entry.credits > 0;
@@ -125,12 +124,23 @@ function CreditCard({ entry }: { entry: CreditEntry }) {
   );
 }
 
-/* ── Page ─────────────────────────────────────────────── */
-export default function PackageDetailsPage() {
+function PackageDetailsContent() {
   const { user, refreshUser } = useAuth();
-  const [filter, setFilter] = useState<Filter>("sell");
+  const searchParams = useSearchParams();
+  const typeParam = searchParams.get("type") || searchParams.get("filter");
+  const returnUrl = searchParams.get("returnUrl") || searchParams.get("redirect") || "";
+
+  const [filter, setFilter] = useState<Filter>(typeParam === "rent" || typeParam === "rent_lease" ? "rent" : "sell");
   const [invoices, setInvoices] = useState<UserInvoice[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (typeParam === "rent" || typeParam === "rent_lease") {
+      setFilter("rent");
+    } else if (typeParam === "sell") {
+      setFilter("sell");
+    }
+  }, [typeParam]);
 
   useEffect(() => {
     async function loadData() {
@@ -149,6 +159,12 @@ export default function PackageDetailsPage() {
     loadData();
   }, [user?.id, refreshUser]);
 
+  const getBuyHref = (baseHref: string) => {
+    if (!returnUrl) return baseHref;
+    const sep = baseHref.includes("?") ? "&" : "?";
+    return `${baseHref}${sep}returnUrl=${encodeURIComponent(returnUrl)}`;
+  };
+
   // Expiry calculation helper
   function getPackageExpiryDate(userType: string, isRent: boolean): string | null {
     const matching = invoices.filter((inv) => {
@@ -166,12 +182,10 @@ export default function PackageDetailsPage() {
 
     let date: Date;
     if (matching.length === 0) {
-      // Fallback: If no matching paid invoices, default to 30 days from user registration (or today)
       const refDate = user?.createdAt ? new Date(user.createdAt) : new Date();
       date = new Date(refDate);
       date.setDate(date.getDate() + 30);
     } else {
-      // Find the latest paid invoice
       const latest = matching.reduce((latest, current) => {
         return new Date(current.created_at).getTime() > new Date(latest.created_at).getTime() ? current : latest;
       }, matching[0]);
@@ -181,7 +195,6 @@ export default function PackageDetailsPage() {
       date.setDate(date.getDate() + daysLimit);
     }
 
-    // Format as DD-MM-YYYY
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
@@ -193,6 +206,7 @@ export default function PackageDetailsPage() {
   let ownerCreditsLeft = user?.creditPointsOwner ?? 0;
   let builderCreditsLeft = user?.creditPointsBuilder ?? 0;
   let consultantCreditsLeft = user?.creditPointsConsultant ?? 0;
+  let rentCredits = 0;
 
   // 2. Sort invoices by created_at desc (most recent first) to allocate points properly
   const sortedInvoices = [...invoices].sort(
@@ -202,7 +216,6 @@ export default function PackageDetailsPage() {
   let ownerSellCredits = 0;
   let builderSellCredits = 0;
   let consultantSellCredits = 0;
-  let rentCredits = 0;
 
   sortedInvoices.forEach((inv) => {
     const type: "sell" | "rent" = inv.package_type === "rent" ? "rent" : "sell";
@@ -235,19 +248,18 @@ export default function PackageDetailsPage() {
     }
   });
 
-  // Add any leftover credits (e.g. from manual admin adjustments)
   ownerSellCredits += ownerCreditsLeft;
   builderSellCredits += builderCreditsLeft;
   consultantSellCredits += consultantCreditsLeft;
 
   const sellCards: CreditEntry[] = [
-    { title: "Owner Credit Points", credits: ownerSellCredits, expiry: getPackageExpiryDate("Owner", false), buyHref: "/dashboard/credits?tab=owners", Icon: OwnerIcon },
-    { title: "Builder Credit Points", credits: builderSellCredits, expiry: getPackageExpiryDate("Builder", false), buyHref: "/dashboard/credits?tab=builders", Icon: BuilderIcon },
-    { title: "Consultant Credit Points", credits: consultantSellCredits, expiry: getPackageExpiryDate("Consultant", false), buyHref: "/dashboard/credits?tab=consultants", Icon: ConsultantIcon },
+    { title: "Owner Credit Points", credits: ownerSellCredits, expiry: getPackageExpiryDate("Owner", false), buyHref: getBuyHref("/dashboard/credits?tab=owners"), Icon: OwnerIcon },
+    { title: "Builder Credit Points", credits: builderSellCredits, expiry: getPackageExpiryDate("Builder", false), buyHref: getBuyHref("/dashboard/credits?tab=builders"), Icon: BuilderIcon },
+    { title: "Consultant Credit Points", credits: consultantSellCredits, expiry: getPackageExpiryDate("Consultant", false), buyHref: getBuyHref("/dashboard/credits?tab=consultants"), Icon: ConsultantIcon },
   ];
 
   const rentCards: CreditEntry[] = [
-    { title: "Rent/Lease Credit Points", credits: rentCredits, expiry: getPackageExpiryDate("Owner", true), buyHref: "/dashboard/credits?filter=rent", Icon: EnquiryIcon },
+    { title: "Rent/Lease Credit Points", credits: rentCredits, expiry: getPackageExpiryDate("Owner", true), buyHref: getBuyHref("/dashboard/credits?filter=rent"), Icon: EnquiryIcon },
   ];
 
   const cards = filter === "sell" ? sellCards : rentCards;
@@ -288,5 +300,24 @@ export default function PackageDetailsPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function PackageDetailsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6">
+          <h1 className="text-2xl font-bold text-brand">Dashboard</h1>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <div key={idx} className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col items-center min-h-[260px] animate-pulse" />
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <PackageDetailsContent />
+    </Suspense>
   );
 }

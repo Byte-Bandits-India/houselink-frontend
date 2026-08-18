@@ -13,6 +13,7 @@ export type Step2Props = {
   data: PropertyFormData;
   onChange: (patch: Partial<PropertyFormData>) => void;
   disabled?: boolean;
+  showErrors?: boolean;
   permalinkStatus?: "idle" | "checking" | "available" | "taken" | "error";
   onPermalinkStatusChange?: (status: "idle" | "checking" | "available" | "taken" | "error") => void;
 };

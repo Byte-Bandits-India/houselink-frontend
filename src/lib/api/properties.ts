@@ -645,7 +645,7 @@ export async function uploadFiles(files: File[], type?: 'property' | 'seo' | 'vi
  * Fetch all properties for a specific customer from the backend
  */
 export async function getUserProperties(customerId: number): Promise<{ success: boolean; data: any[] }> {
-  return apiClient.get<{ success: boolean; data: any[] }>(`/properties?customer_id=${customerId}`);
+  return apiClient.get<{ success: boolean; data: any[] }>(`/properties?customer_id=${customerId}&page_size=1000`);
 }
 
 /**

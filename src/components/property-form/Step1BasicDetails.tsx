@@ -241,7 +241,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false, sh
             <span className="font-medium">No active package is found.</span>
           </div>
           <Link
-            href="/dashboard/credits?type=sell"
+            href="/dashboard/credits?type=sell&returnUrl=/dashboard/properties/new"
             className="font-bold text-brand hover:underline shrink-0 bg-white px-3 py-1.5 rounded-lg border border-amber-300 shadow-xs transition-colors"
           >
             Click here to post a property

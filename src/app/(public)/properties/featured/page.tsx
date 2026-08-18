@@ -3,8 +3,169 @@
 import { Suspense, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import PropertiesListingLayout from "@/components/shared/PropertiesListingLayout";
-import { getProperties, mapApiPropertyToCardProps, getCityIdByName, getPopularRegions, getPropertyCategories, getFeatures, getFacilities } from "@/lib/api";
-import { PageFilterProvider, usePageFilter, PRICE_RANGES } from "@/contexts/HomeFilterContext";
+import {
+  getProperties,
+  mapApiPropertyToCardProps,
+  getCityIdByName,
+  getPopularRegions,
+  getPropertyCategories,
+  getFeatures,
+  getFacilities,
+} from "@/lib/api";
+import {
+  PageFilterProvider,
+  usePageFilter,
+  PRICE_RANGES,
+  PageFilterValues,
+  defaultFilterValues,
+} from "@/contexts/HomeFilterContext";
+
+function parseUrlParams(
+  searchParams: ReturnType<typeof useSearchParams>,
+  dbCategories: any[] = [],
+  popularRegionsList: string[] = [],
+  dbFeatures: any[] = [],
+  dbFacilities: any[] = []
+): PageFilterValues {
+  if (!searchParams) return defaultFilterValues;
+
+  let activeTab = (searchParams.get("property_purpose") as "sell" | "rent") || "sell";
+  let activeCategory = searchParams.get("category") || "all";
+  const city = searchParams.get("city") || "";
+  const keyword = searchParams.get("keyword") || "";
+  let location = searchParams.get("location") || "";
+  const categoryType = searchParams.get("category_type") || "";
+  const maxPrice = searchParams.get("max_price") || "";
+  const maxArea = searchParams.get("max_area") || "";
+  let amenities = searchParams.get("amenities") || "";
+  let houseType = searchParams.get("house_type") || "";
+
+  if (keyword) {
+    const lower = keyword.toLowerCase();
+
+    // Purpose
+    if (
+      lower.includes("rent") ||
+      lower.includes("lease") ||
+      lower.includes("rental") ||
+      lower.includes("renting")
+    ) {
+      activeTab = "rent";
+    } else if (
+      lower.includes("sale") ||
+      lower.includes("sell") ||
+      lower.includes("selling") ||
+      lower.includes("buy") ||
+      lower.includes("purchase")
+    ) {
+      activeTab = "sell";
+    }
+
+    // Category
+    for (const cat of dbCategories) {
+      const name = cat.name.toLowerCase();
+      let isMatched = false;
+      let val = name;
+
+      if (name.includes("apartment") && (lower.includes("apartment") || lower.includes("flat"))) {
+        isMatched = true;
+        val = "apartments";
+      } else if (name.includes("villa") && lower.includes("villa")) {
+        isMatched = true;
+        val = "villas";
+      } else if (name.includes("house") && (lower.includes("house") || lower.includes("home"))) {
+        isMatched = true;
+        val = "house";
+      } else if (
+        (name.includes("plot") || name.includes("land")) &&
+        (lower.includes("plot") || lower.includes("land"))
+      ) {
+        isMatched = true;
+        val = "plots";
+      } else if (
+        name.includes("commercial") &&
+        (lower.includes("commercial") ||
+          lower.includes("shop") ||
+          lower.includes("office") ||
+          lower.includes("warehouse") ||
+          lower.includes("godown"))
+      ) {
+        isMatched = true;
+        val = "commercial";
+      } else if (lower.includes(name)) {
+        isMatched = true;
+        if (name === "individual house") val = "house";
+      }
+
+      if (isMatched) {
+        activeCategory = val;
+        break;
+      }
+    }
+
+    // House Type
+    if (lower.includes("1 bhk") || lower.includes("1bhk")) houseType = "1 BHK";
+    else if (lower.includes("2 bhk") || lower.includes("2bhk")) houseType = "2 BHK";
+    else if (lower.includes("3 bhk") || lower.includes("3bhk")) houseType = "3 BHK";
+    else if (lower.includes("4 bhk") || lower.includes("4bhk")) houseType = "4 BHK";
+    else if (
+      lower.includes("5 bhk") ||
+      lower.includes("5bhk") ||
+      lower.includes("5+ bhk") ||
+      lower.includes("5+bhk")
+    )
+      houseType = "5+ BHK";
+    else if (lower.includes("1 rk") || lower.includes("1rk")) houseType = "1 RK";
+
+    // Location / Region
+    for (const reg of popularRegionsList) {
+      const regLower = reg.toLowerCase();
+      if (lower.includes(regLower)) {
+        location = reg;
+        break;
+      }
+    }
+
+    // Amenities
+    const activeAmenitiesList = amenities ? amenities.split(",") : [];
+    const updatedAmenities = [...activeAmenitiesList];
+    const allDbAmenities = [...dbFeatures, ...dbFacilities];
+
+    for (const item of allDbAmenities) {
+      const nameLower = item.name.toLowerCase();
+      const isMatched =
+        lower.includes(nameLower) ||
+        (nameLower.includes("swimming pool") &&
+          (lower.includes("pool") || lower.includes("swim"))) ||
+        (nameLower.includes("internet") && lower.includes("wifi")) ||
+        (nameLower.includes("ac") && lower.includes("air cond")) ||
+        (nameLower.includes("security") && lower.includes("guard"));
+
+      if (isMatched) {
+        if (!updatedAmenities.includes(nameLower)) {
+          updatedAmenities.push(nameLower);
+        }
+      }
+    }
+
+    if (updatedAmenities.length > activeAmenitiesList.length) {
+      amenities = updatedAmenities.join(",");
+    }
+  }
+
+  return {
+    activeTab,
+    activeCategory,
+    city,
+    keyword,
+    location,
+    categoryType,
+    maxPrice,
+    maxArea,
+    amenities,
+    houseType,
+  };
+}
 
 function FeaturedPropertiesListContent() {
   const { filters, setFilters } = usePageFilter();
@@ -12,147 +173,54 @@ function FeaturedPropertiesListContent() {
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const hasLoadedInitially = useRef(false);
+
   const [popularRegionsList, setPopularRegionsList] = useState<string[]>([]);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [dbFeatures, setDbFeatures] = useState<any[]>([]);
   const [dbFacilities, setDbFacilities] = useState<any[]>([]);
 
-  // Load backend filter metadata dynamically on mount
+  // 1. Load backend filter metadata once on mount
   useEffect(() => {
     Promise.all([
       getPopularRegions().catch(() => []),
-      getPropertyCategories().then(res => res?.success ? res.data : []).catch(() => []),
-      getFeatures().then(res => res?.success ? res.data : []).catch(() => []),
-      getFacilities().then(res => res?.success ? res.data : []).catch(() => []),
+      getPropertyCategories()
+        .then((res) => (res?.success ? res.data : []))
+        .catch(() => []),
+      getFeatures()
+        .then((res) => (res?.success ? res.data : []))
+        .catch(() => []),
+      getFacilities()
+        .then((res) => (res?.success ? res.data : []))
+        .catch(() => []),
     ]).then(([regions, categories, features, facilities]) => {
-      if (Array.isArray(regions)) setPopularRegionsList(regions.map(r => r.name));
+      if (Array.isArray(regions)) setPopularRegionsList(regions.map((r) => r.name));
       setDbCategories(categories || []);
       setDbFeatures(features || []);
       setDbFacilities(facilities || []);
     });
   }, []);
 
+  // 2. Synchronize URL searchParams with Filter Context
   useEffect(() => {
-    if (searchParams) {
-      let activeTab = searchParams.get("property_purpose") as "sell" | "rent" || "sell";
-      let activeCategory = searchParams.get("category") || "all";
-      const city = searchParams.get("city") || "";
-      const keyword = searchParams.get("keyword") || "";
-      let location = searchParams.get("location") || "";
-      const categoryType = searchParams.get("category_type") || "";
-      const maxPrice = searchParams.get("max_price") || "";
-      const maxArea = searchParams.get("max_area") || "";
-      let amenities = searchParams.get("amenities") || "";
-      let houseType = searchParams.get("house_type") || "";
+    if (!searchParams) return;
+    const parsed = parseUrlParams(
+      searchParams,
+      dbCategories,
+      popularRegionsList,
+      dbFeatures,
+      dbFacilities
+    );
 
-      if (keyword) {
-        const lower = keyword.toLowerCase();
-        
-        // Purpose
-        if (lower.includes("rent") || lower.includes("lease") || lower.includes("rental") || lower.includes("renting")) {
-          activeTab = "rent";
-        } else if (lower.includes("sale") || lower.includes("sell") || lower.includes("selling") || lower.includes("buy") || lower.includes("purchase")) {
-          activeTab = "sell";
-        }
+    setFilters(parsed);
+  }, [searchParams, dbCategories, popularRegionsList, dbFeatures, dbFacilities]);
 
-        // Category (dynamic from API categories)
-        for (const cat of dbCategories) {
-          const name = cat.name.toLowerCase();
-          let isMatched = false;
-          let val = name;
-
-          if (name.includes("apartment") && (lower.includes("apartment") || lower.includes("flat"))) {
-            isMatched = true;
-            val = "apartments";
-          } else if (name.includes("villa") && lower.includes("villa")) {
-            isMatched = true;
-            val = "villas";
-          } else if (name.includes("house") && (lower.includes("house") || lower.includes("home"))) {
-            isMatched = true;
-            val = "house";
-          } else if ((name.includes("plot") || name.includes("land")) && (lower.includes("plot") || lower.includes("land"))) {
-            isMatched = true;
-            val = "plots";
-          } else if (name.includes("commercial") && (lower.includes("commercial") || lower.includes("shop") || lower.includes("office") || lower.includes("warehouse") || lower.includes("godown"))) {
-            isMatched = true;
-            val = "commercial";
-          } else if (lower.includes(name)) {
-            isMatched = true;
-            if (name === "individual house") val = "house";
-          }
-
-          if (isMatched) {
-            activeCategory = val;
-            break;
-          }
-        }
-
-        // House Type
-        if (lower.includes("1 bhk") || lower.includes("1bhk")) houseType = "1 BHK";
-        else if (lower.includes("2 bhk") || lower.includes("2bhk")) houseType = "2 BHK";
-        else if (lower.includes("3 bhk") || lower.includes("3bhk")) houseType = "3 BHK";
-        else if (lower.includes("4 bhk") || lower.includes("4bhk")) houseType = "4 BHK";
-        else if (lower.includes("5 bhk") || lower.includes("5bhk") || lower.includes("5+ bhk") || lower.includes("5+bhk")) houseType = "5+ BHK";
-        else if (lower.includes("1 rk") || lower.includes("1rk")) houseType = "1 RK";
-
-        // Location / Region (dynamic from API regions)
-        for (const reg of popularRegionsList) {
-          const regLower = reg.toLowerCase();
-          if (lower.includes(regLower)) {
-            location = reg;
-            break;
-          }
-        }
-
-        // Amenities (dynamic features & facilities from API)
-        const activeAmenitiesList = amenities ? amenities.split(",") : [];
-        let updatedAmenities = [...activeAmenitiesList];
-        const allDbAmenities = [...dbFeatures, ...dbFacilities];
-
-        for (const item of allDbAmenities) {
-          const nameLower = item.name.toLowerCase();
-          const isMatched = lower.includes(nameLower) ||
-            (nameLower.includes("swimming pool") && (lower.includes("pool") || lower.includes("swim"))) ||
-            (nameLower.includes("internet") && lower.includes("wifi")) ||
-            (nameLower.includes("ac") && lower.includes("air cond")) ||
-            (nameLower.includes("security") && lower.includes("guard"));
-
-          if (isMatched) {
-            if (!updatedAmenities.includes(nameLower)) {
-              updatedAmenities.push(nameLower);
-            }
-          }
-        }
-
-        if (updatedAmenities.length > activeAmenitiesList.length) {
-          amenities = updatedAmenities.join(",");
-        }
-      }
-
-      setFilters({
-        activeTab,
-        activeCategory,
-        city,
-        keyword,
-        location,
-        categoryType,
-        maxPrice,
-        maxArea,
-        amenities,
-        houseType,
-      });
-    }
-  }, [searchParams, popularRegionsList, dbCategories, dbFeatures, dbFacilities]);
-
-  const { activeTab: propertyPurpose, city, keyword, location, categoryType, activeCategory: category, minPrice, maxPrice, priceRanges, maxArea, amenities, houseType } = filters;
-
+  // 3. Fetch & Filter Featured Properties
   useEffect(() => {
+    let isCurrent = true;
+    setIsLoading(true);
+    setError(null);
+
     async function fetchFilteredProperties() {
-      if (!hasLoadedInitially.current) {
-        setIsLoading(true);
-      }
-      setError(null);
       try {
         const fetchParams: any = {
           is_active: "true",
@@ -161,68 +229,96 @@ function FeaturedPropertiesListContent() {
           page_size: "100",
         };
 
-        if (propertyPurpose === "sell" && !keyword) fetchParams.property_for = "sell";
+        if (filters.activeTab === "sell" && !filters.keyword) {
+          fetchParams.property_for = "sell";
+        }
 
-        if (city) {
-          const cityId = await getCityIdByName(city);
+        if (filters.city) {
+          const cityId = await getCityIdByName(filters.city);
           if (cityId) fetchParams.city_id = String(cityId);
         }
 
-        if (maxPrice) fetchParams.max_price = maxPrice;
+        if (filters.maxPrice) fetchParams.max_price = filters.maxPrice;
 
-        if (keyword) {
-          fetchParams.search = keyword;
-        } else if (location) {
-          fetchParams.search = location;
+        const locationTags = filters.location
+          ? filters.location
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter(Boolean)
+          : [];
+
+        if (filters.keyword) {
+          fetchParams.search = filters.keyword;
+        } else if (locationTags.length === 1) {
+          fetchParams.search = locationTags[0];
         }
 
-        const selectedCategories = category && category !== "all" ? category.split(",").filter(Boolean) : [];
+        const selectedCategories =
+          filters.activeCategory && filters.activeCategory !== "all"
+            ? filters.activeCategory.split(",").filter(Boolean)
+            : [];
+
         if (selectedCategories.length === 1) {
           const cat = selectedCategories[0];
           if (cat === "apartments") fetchParams.categories_id = 1;
           else if (cat === "villas") fetchParams.categories_id = 2;
           else if (cat === "house") fetchParams.categories_id = 4;
-          else if (cat === "plots") fetchParams.categories_id = propertyPurpose === "sell" ? 3 : 5;
+          else if (cat === "plots")
+            fetchParams.categories_id = filters.activeTab === "sell" ? 3 : 5;
         }
 
         const res = await getProperties(fetchParams);
+        if (!isCurrent) return;
+
         let data = res.data || [];
 
         // Only featured
         data = data.filter((p) => p.isFeatured === true);
 
-        // 1. Property Purpose
-        if (keyword) {
-          data = data.filter((p) => p.propertyFor === "sell" || p.propertyFor === "rent" || p.propertyFor === "lease");
-        } else if (propertyPurpose === "sell") {
+        // 1. Property Purpose Filter
+        if (filters.activeTab === "sell") {
           data = data.filter((p) => p.propertyFor === "sell");
-        } else if (propertyPurpose === "rent") {
+        } else if (filters.activeTab === "rent") {
           data = data.filter((p) => p.propertyFor === "rent" || p.propertyFor === "lease");
         }
 
         // 2. Keyword Filter
-        if (keyword) {
-          const q = keyword.toLowerCase();
-          data = data.filter((p) =>
-            (p.name && p.name.toLowerCase().includes(q)) ||
-            (p.description && p.description.toLowerCase().includes(q)) ||
-            (p.location && p.location.toLowerCase().includes(q))
+        if (filters.keyword) {
+          const q = filters.keyword.toLowerCase().trim();
+          data = data.filter(
+            (p) =>
+              (p.name && p.name.toLowerCase().includes(q)) ||
+              (p.permalink && p.permalink.toLowerCase().includes(q)) ||
+              (p.description && p.description.toLowerCase().includes(q)) ||
+              (p.location && p.location.toLowerCase().includes(q)) ||
+              (p.category?.name && p.category.name.toLowerCase().includes(q)) ||
+              (p.city?.name && p.city.name.toLowerCase().includes(q)) ||
+              (p.state?.name && p.state.name.toLowerCase().includes(q))
           );
         }
 
         // 3. Location Filter
-        if (location) {
-          const q = location.toLowerCase();
-          data = data.filter((p) => p.location && p.location.toLowerCase().includes(q));
+        if (locationTags.length > 0) {
+          const tags = locationTags.map((tag) => tag.toLowerCase().trim()).filter(Boolean);
+          data = data.filter((p) =>
+            tags.some(
+              (tag) =>
+                (p.location && p.location.toLowerCase().includes(tag)) ||
+                (p.name && p.name.toLowerCase().includes(tag)) ||
+                (p.city?.name && p.city.name.toLowerCase().includes(tag))
+            )
+          );
         }
 
         // 4. Category Type
-        if (categoryType) {
-          const type = categoryType.toLowerCase();
-          data = data.filter((p) => p.category?.type && p.category.type.toLowerCase() === type);
+        if (filters.categoryType) {
+          const type = filters.categoryType.toLowerCase();
+          data = data.filter(
+            (p) => p.category?.type && p.category.type.toLowerCase() === type
+          );
         }
 
-        // 5. Subcategory Filter (matches any of the selected categories)
+        // 5. Subcategory Filter
         if (selectedCategories.length > 0) {
           data = data.filter((p) => {
             const catName = (p.category?.name || "").toLowerCase().replace(/_/g, " ");
@@ -230,90 +326,137 @@ function FeaturedPropertiesListContent() {
               if (cat === "plots") return catName.includes("plot") || catName.includes("land");
               if (cat === "apartments") return catName.includes("apartment");
               if (cat === "villas") return catName.includes("villa");
-              if (cat === "house") return catName.includes("individual house") || catName.includes("house");
-              if (cat === "commercial") return catName.includes("commercial") || catName.includes("shop") || catName.includes("building") || catName.includes("godown") || catName.includes("warehouse") || catName.includes("office");
+              if (cat === "house")
+                return catName.includes("individual house") || catName.includes("house");
+              if (cat === "commercial")
+                return (
+                  catName.includes("commercial") ||
+                  catName.includes("shop") ||
+                  catName.includes("building") ||
+                  catName.includes("godown") ||
+                  catName.includes("warehouse") ||
+                  catName.includes("office")
+                );
               return true;
             });
           });
         }
 
-        // 6. Price Filter (handles multi-select price ranges and min/max limits)
-        if (priceRanges) {
-          const selectedRangeIds = priceRanges.split(",").filter(Boolean);
+        // 6. Price Filter
+        if (filters.priceRanges) {
+          const selectedRangeIds = filters.priceRanges.split(",").filter(Boolean);
           if (selectedRangeIds.length > 0) {
             const selectedDefs = PRICE_RANGES.filter((r) => selectedRangeIds.includes(r.id));
             data = data.filter((p) => {
               const priceNum = Number(p.price || 0);
-              return selectedDefs.some((r) => priceNum >= r.min && (r.max === Infinity ? true : priceNum <= r.max));
+              return selectedDefs.some(
+                (r) => priceNum >= r.min && (r.max === Infinity ? true : priceNum <= r.max)
+              );
             });
           }
         } else {
-          if (minPrice) {
-            const minLimit = Number(minPrice);
+          if (filters.minPrice) {
+            const minLimit = Number(filters.minPrice);
             if (!isNaN(minLimit)) data = data.filter((p) => Number(p.price || 0) >= minLimit);
           }
-          if (maxPrice) {
-            const priceLimit = Number(maxPrice);
+          if (filters.maxPrice) {
+            const priceLimit = Number(filters.maxPrice);
             if (!isNaN(priceLimit)) data = data.filter((p) => Number(p.price || 0) <= priceLimit);
           }
         }
 
         // 7. Max Area Filter
-        if (maxArea) {
-          const areaLimit = Number(maxArea);
-          if (!isNaN(areaLimit)) data = data.filter((p) => Number(p.builtUpArea || p.plotLandArea || 0) <= areaLimit);
+        if (filters.maxArea) {
+          const areaLimit = Number(filters.maxArea);
+          if (!isNaN(areaLimit)) {
+            data = data.filter(
+              (p) => Number(p.builtUpArea || p.plotLandArea || 0) <= areaLimit
+            );
+          }
         }
 
-        // 9. House Type Filter (matches any of the selected configurations)
-        if (houseType) {
-          const mappedTypes = houseType.split(",").filter(Boolean).map((t) => {
-            const rawType = t.replace(/\s+/g, "").toUpperCase();
-            if (rawType.startsWith("5")) return "five_bhk";
-            return rawType === "1RK" ? "one_bk" :
-                   rawType === "1BHK" ? "one_bhk" :
-                   rawType === "2BHK" ? "two_bhk" :
-                   rawType === "3BHK" ? "three_bhk" :
-                   rawType === "4BHK" ? "four_bhk" : "";
-          }).filter(Boolean);
+        // 8. House Type Filter
+        if (filters.houseType) {
+          const mappedTypes = filters.houseType
+            .split(",")
+            .filter(Boolean)
+            .map((t) => {
+              const rawType = t.replace(/\s+/g, "").toUpperCase();
+              if (rawType.startsWith("5")) return "five_bhk";
+              return rawType === "1RK"
+                ? "one_bk"
+                : rawType === "1BHK"
+                ? "one_bhk"
+                : rawType === "2BHK"
+                ? "two_bhk"
+                : rawType === "3BHK"
+                ? "three_bhk"
+                : rawType === "4BHK"
+                ? "four_bhk"
+                : "";
+            })
+            .filter(Boolean);
+
           if (mappedTypes.length > 0) {
             data = data.filter((p) => mappedTypes.includes(p.houseType));
           }
         }
 
-        // 8. Amenities Filter
-        // 8. Amenities & Facilities Filter
-        if (amenities) {
-          const requested = amenities.split(",");
+        // 9. Amenities & Facilities Filter
+        if (filters.amenities) {
+          const requested = filters.amenities.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
           data = data.filter((p) => {
             const featuresAndFacilities: string[] = [
-              ...(p.propertyFeatures || []).map((pf: any) => (pf.feature?.name || "").toLowerCase()),
-              ...(p.propertyFacilities || []).map((pf: any) => (pf.facility?.name || "").toLowerCase()),
+              ...(p.propertyFeatures || []).map((pf: any) =>
+                (pf.feature?.name || "").toLowerCase()
+              ),
+              ...(p.propertyFacilities || []).map((pf: any) =>
+                (pf.facility?.name || "").toLowerCase()
+              ),
             ];
             return requested.every((req) =>
-              featuresAndFacilities.some((pa) => pa.includes(req.toLowerCase()) || req.toLowerCase().includes(pa))
+              featuresAndFacilities.some(
+                (pa) => pa.includes(req) || req.includes(pa)
+              )
             );
           });
         }
 
-        // Sort: lastly added/renewed featured first
+        // Sort: newest first
         data.sort((a, b) => {
-          const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
-          const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
-          if (bTime !== aTime) return bTime - aTime;
-          return b.id - a.id;
+          const aTime = a.updatedAt
+            ? new Date(a.updatedAt).getTime()
+            : a.createdAt
+            ? new Date(a.createdAt).getTime()
+            : 0;
+          const bTime = b.updatedAt
+            ? new Date(b.updatedAt).getTime()
+            : b.createdAt
+            ? new Date(b.createdAt).getTime()
+            : 0;
+          return bTime - aTime;
         });
 
-        setProperties(data.map(mapApiPropertyToCardProps));
-        hasLoadedInitially.current = true;
+        if (isCurrent) {
+          setProperties(data.map(mapApiPropertyToCardProps));
+        }
       } catch (err: any) {
-        console.error("Error loading featured properties list:", err);
-        setError("Failed to search featured properties. Please try again.");
+        if (isCurrent) {
+          console.error("Error loading featured properties list:", err);
+          setError("Failed to search featured properties. Please try again.");
+        }
       } finally {
-        setIsLoading(false);
+        if (isCurrent) {
+          setIsLoading(false);
+        }
       }
     }
 
     fetchFilteredProperties();
+
+    return () => {
+      isCurrent = false;
+    };
   }, [filters]);
 
   return (
@@ -321,7 +464,7 @@ function FeaturedPropertiesListContent() {
       properties={properties}
       isLoading={isLoading}
       error={error}
-      title="Chennai Featured Properties"
+      title="Featured Properties in Chennai"
       breadcrumbLabel="Featured Properties"
     />
   );

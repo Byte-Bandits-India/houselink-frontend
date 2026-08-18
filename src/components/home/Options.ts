@@ -174,6 +174,6 @@ export const upcomingProperties: UpcomingProperty[] = [
 
 export const introVideoConfig: IntroVideoConfig = {
     posterImage: "/assets/images/intro-video/intro-video-bg.png",
-    youtubeEmbedUrl: "https://www.youtube.com/embed/Y-x0efG1seA?autoplay=1",
+    youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/EehVfDnkkGg?autoplay=1&mute=1&controls=0&loop=1&playlist=EehVfDnkkGg&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&enablejsapi=1",
     youtubeTitle: "Houselink Intro Video",
 };

@@ -25,13 +25,16 @@ function loadRazorpayScript() {
 function CreditsPageContent() {
   const { user, refreshUser } = useAuth();
   const searchParams = useSearchParams();
-  const typeParam = searchParams.get("type");
+  const typeParam = searchParams.get("type") || searchParams.get("filter");
+  const tabParam = searchParams.get("tab");
 
   const [packages, setPackages] = useState<Package[]>([]);
   const [invoices, setInvoices] = useState<UserInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>(typeParam === "rent" || typeParam === "rent_lease" ? "rent" : "sell");
-  const [userTab, setUserTab] = useState<UserTab>("owners");
+  const [userTab, setUserTab] = useState<UserTab>(
+    tabParam === "builders" ? "builders" : tabParam === "consultants" ? "consultants" : "owners"
+  );
   const [buyingId, setBuyingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -40,7 +43,10 @@ function CreditsPageContent() {
     } else if (typeParam === "sell") {
       setFilter("sell");
     }
-  }, [typeParam]);
+    if (tabParam === "builders" || tabParam === "consultants" || tabParam === "owners") {
+      setUserTab(tabParam as UserTab);
+    }
+  }, [typeParam, tabParam]);
 
   const loadPackages = async () => {
     try {
@@ -181,7 +187,12 @@ function CreditsPageContent() {
 
             if (verifyRes.success) {
               message.success(`Payment successful! ${pkg.noOfCredit} credits have been added to your account.`);
-              window.location.href = "/dashboard/packages";
+              const targetReturn = searchParams.get("returnUrl") || searchParams.get("redirect");
+              if (targetReturn) {
+                window.location.href = targetReturn;
+              } else {
+                window.location.href = "/dashboard/packages";
+              }
             } else {
               message.error("Payment verification failed. Please contact support.");
             }
