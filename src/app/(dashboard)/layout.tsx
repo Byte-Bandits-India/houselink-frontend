@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import DashboardSidebar from "@/components/global/DashboardSidebar";
 import DashboardHero from "@/components/global/DashboardHero";
+import { useAuth } from "@/context/AuthContext";
+import { Loader2 } from "lucide-react";
 
 const routeLabels: Record<string, string> = {
   dashboard: "Dashboard",
@@ -23,28 +26,59 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { isLoggedIn, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !isLoggedIn) {
+      const redirectParam = encodeURIComponent(pathname);
+      router.replace(`/login?redirect=${redirectParam}`);
+    }
+  }, [isLoading, isLoggedIn, router, pathname]);
+
   const pathSegments = pathname.split("/").filter(Boolean);
 
   const breadcrumbs = [
     { label: "Home", href: "/" },
     ...pathSegments.map((segment, index) => {
       const href = "/" + pathSegments.slice(0, index + 1).join("/");
-      const label = routeLabels[segment.toLowerCase()] || 
-        segment.replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const label =
+        routeLabels[segment.toLowerCase()] ||
+        segment.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
       return { label, href };
-    })
+    }),
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
+        <Loader2 className="w-10 h-10 text-[#163d75] animate-spin" />
+        <p className="text-sm font-semibold text-slate-500 animate-pulse">
+          Authenticating session...
+        </p>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
+        <Loader2 className="w-10 h-10 text-[#163d75] animate-spin" />
+        <p className="text-sm font-semibold text-slate-500">
+          Redirecting to sign in...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
-
       {/* ── Hero Banner ────────────────────────────────────────── */}
       <DashboardHero />
 
       {/* ── Two-Column Content Area ─────────────────────────────── */}
       <div className="flex-1 py-6 md:py-8">
         <div className="container mx-auto px-4 md:px-6">
-          
           {/* Breadcrumbs */}
           <nav className="mb-6" aria-label="Breadcrumb">
             <ol className="flex items-center flex-wrap gap-2 text-xs md:text-sm font-medium text-ink-muted">
@@ -62,7 +96,9 @@ export default function DashboardLayout({
                         href={crumb.href}
                         className="hover:text-primary transition-colors flex items-center gap-1.5"
                       >
-                        {idx === 0 && <i className="fi fi-rr-home text-xs leading-none"></i>}
+                        {idx === 0 && (
+                          <i className="fi fi-rr-home text-xs leading-none"></i>
+                        )}
                         <span>{crumb.label}</span>
                       </Link>
                     )}

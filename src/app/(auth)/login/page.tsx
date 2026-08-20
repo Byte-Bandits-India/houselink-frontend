@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { sendOtp, retryOtp, verifyOtpLogin, ApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-
 import { PhoneInput } from "@/components/reui/phone-input";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setAuthUser } = useAuth();
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -99,7 +100,10 @@ export default function LoginPage() {
       const res = await verifyOtpLogin({ phone: get10DigitPhone(phone), otp: otpValue });
       // Tokens auto-saved; instantly update the auth context
       setAuthUser(res.customer);
-      router.push("/");
+
+      const redirectParam = searchParams.get("redirect");
+      const targetDestination = redirectParam ? decodeURIComponent(redirectParam) : "/dashboard";
+      router.push(targetDestination);
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
         setOtpError("Invalid or expired OTP. Please try again.");
@@ -254,5 +258,19 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 text-[#163d75] animate-spin" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
