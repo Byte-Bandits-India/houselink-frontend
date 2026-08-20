@@ -59,7 +59,7 @@ export type HistoryPkg = {
   price: string;
   userType: string;
   type: "sell" | "rent";
-  status: "live" | "expired";
+  status: "live" | "expired" | "failed";
   remainingPoints?: number;
   totalPoints?: number;
   rawInvoice: UserInvoice;

@@ -88,7 +88,7 @@ export const whatWeDoItems: WhatWeDoItem[] = [
         description:
             "Discover verified rental properties, that offer comfort, convenience and great value.",
         linkText: "Explore Rentals",
-        href: "/properties?property_purpose=rent",
+        href: "/properties",
         image: "/assets/home/Rent.png",
     },
     {

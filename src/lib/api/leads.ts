@@ -49,7 +49,7 @@ export async function checkEnquiryStatus(
 }
 
 /**
- * Directly unlock contact info for a Rent / Lease property (consumes 1 point or checks 45-day cache).
+ * Directly unlock contact info for a Rent / Lease property (consumes 1 point or checks 30-day cache).
  */
 export async function unlockPropertyContact(propertyId: number): Promise<LeadResponse> {
   return apiClient.post<LeadResponse>(`/leads/unlock/${propertyId}`);

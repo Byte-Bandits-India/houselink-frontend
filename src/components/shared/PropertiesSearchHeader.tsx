@@ -1,30 +1,48 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Search, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import { usePageFilter } from "@/contexts/HomeFilterContext";
-import { getStates, getCities, getPopularRegions, getPropertyCategories, getFeatures, getFacilities } from "@/lib/api";
+import {
+  getStates,
+  getCities,
+  getPopularRegions,
+  getPropertyCategories,
+  getFeatures,
+  getFacilities,
+} from "@/lib/api";
 import TypewriterTitle from "@/components/ui/TypewriterTitle";
 import { AnimatePresence, motion } from "framer-motion";
 import SearchSuggestions from "@/components/shared/SearchSuggestions";
 import SearchFilterModal from "@/components/shared/SearchFilterModal";
 
 function parseKeywordToFilters(
-  keyword: string, 
-  currentFilters: any, 
-  knownRegions: string[], 
-  categories: any[], 
-  features: any[], 
-  facilities: any[]
+  keyword: string,
+  currentFilters: any,
+  knownRegions: string[],
+  categories: any[],
+  features: any[],
+  facilities: any[],
 ) {
   const updates: any = {};
   if (!keyword) return updates;
   const lower = keyword.toLowerCase();
 
   // 1. Purpose
-  if (lower.includes("rent") || lower.includes("lease") || lower.includes("rental") || lower.includes("renting")) {
+  if (
+    lower.includes("rent") ||
+    lower.includes("lease") ||
+    lower.includes("rental") ||
+    lower.includes("renting")
+  ) {
     updates.activeTab = "rent";
-  } else if (lower.includes("sale") || lower.includes("sell") || lower.includes("selling") || lower.includes("buy") || lower.includes("purchase")) {
+  } else if (
+    lower.includes("sale") ||
+    lower.includes("sell") ||
+    lower.includes("selling") ||
+    lower.includes("buy") ||
+    lower.includes("purchase")
+  ) {
     updates.activeTab = "sell";
   }
 
@@ -34,19 +52,35 @@ function parseKeywordToFilters(
     let isMatched = false;
     let val = name;
 
-    if (name.includes("apartment") && (lower.includes("apartment") || lower.includes("flat"))) {
+    if (
+      name.includes("apartment") &&
+      (lower.includes("apartment") || lower.includes("flat"))
+    ) {
       isMatched = true;
       val = "apartments";
     } else if (name.includes("villa") && lower.includes("villa")) {
       isMatched = true;
       val = "villas";
-    } else if (name.includes("house") && (lower.includes("house") || lower.includes("home"))) {
+    } else if (
+      name.includes("house") &&
+      (lower.includes("house") || lower.includes("home"))
+    ) {
       isMatched = true;
       val = "house";
-    } else if ((name.includes("plot") || name.includes("land")) && (lower.includes("plot") || lower.includes("land"))) {
+    } else if (
+      (name.includes("plot") || name.includes("land")) &&
+      (lower.includes("plot") || lower.includes("land"))
+    ) {
       isMatched = true;
       val = "plots";
-    } else if (name.includes("commercial") && (lower.includes("commercial") || lower.includes("shop") || lower.includes("office") || lower.includes("warehouse") || lower.includes("godown"))) {
+    } else if (
+      name.includes("commercial") &&
+      (lower.includes("commercial") ||
+        lower.includes("shop") ||
+        lower.includes("office") ||
+        lower.includes("warehouse") ||
+        lower.includes("godown"))
+    ) {
       isMatched = true;
       val = "commercial";
     } else if (lower.includes(name)) {
@@ -61,12 +95,23 @@ function parseKeywordToFilters(
   }
 
   // 3. House Type
-  if (lower.includes("1 bhk") || lower.includes("1bhk")) updates.houseType = "1 BHK";
-  else if (lower.includes("2 bhk") || lower.includes("2bhk")) updates.houseType = "2 BHK";
-  else if (lower.includes("3 bhk") || lower.includes("3bhk")) updates.houseType = "3 BHK";
-  else if (lower.includes("4 bhk") || lower.includes("4bhk")) updates.houseType = "4 BHK";
-  else if (lower.includes("5 bhk") || lower.includes("5bhk") || lower.includes("5+ bhk") || lower.includes("5+bhk")) updates.houseType = "5+ BHK";
-  else if (lower.includes("1 rk") || lower.includes("1rk")) updates.houseType = "1 RK";
+  if (lower.includes("1 bhk") || lower.includes("1bhk"))
+    updates.houseType = "1 BHK";
+  else if (lower.includes("2 bhk") || lower.includes("2bhk"))
+    updates.houseType = "2 BHK";
+  else if (lower.includes("3 bhk") || lower.includes("3bhk"))
+    updates.houseType = "3 BHK";
+  else if (lower.includes("4 bhk") || lower.includes("4bhk"))
+    updates.houseType = "4 BHK";
+  else if (
+    lower.includes("5 bhk") ||
+    lower.includes("5bhk") ||
+    lower.includes("5+ bhk") ||
+    lower.includes("5+bhk")
+  )
+    updates.houseType = "5+ BHK";
+  else if (lower.includes("1 rk") || lower.includes("1rk"))
+    updates.houseType = "1 RK";
 
   // 4. Location / Region (dynamic from API)
   for (const reg of knownRegions) {
@@ -78,14 +123,18 @@ function parseKeywordToFilters(
   }
 
   // 5. Amenities (dynamic features & facilities from API)
-  const activeAmenitiesList = currentFilters.amenities ? currentFilters.amenities.split(",") : [];
+  const activeAmenitiesList = currentFilters.amenities
+    ? currentFilters.amenities.split(",")
+    : [];
   let updatedAmenities = [...activeAmenitiesList];
   const allDbAmenities = [...features, ...facilities];
 
   for (const item of allDbAmenities) {
     const nameLower = item.name.toLowerCase();
-    const isMatched = lower.includes(nameLower) ||
-      (nameLower.includes("swimming pool") && (lower.includes("pool") || lower.includes("swim"))) ||
+    const isMatched =
+      lower.includes(nameLower) ||
+      (nameLower.includes("swimming pool") &&
+        (lower.includes("pool") || lower.includes("swim"))) ||
       (nameLower.includes("internet") && lower.includes("wifi")) ||
       (nameLower.includes("ac") && lower.includes("air cond")) ||
       (nameLower.includes("security") && lower.includes("guard"));
@@ -110,7 +159,9 @@ export default function PropertiesSearchHeader() {
   const [localCity, setLocalCity] = useState(filters.city);
   const [localKeyword, setLocalKeyword] = useState(filters.keyword);
   const [localActiveTab, setLocalActiveTab] = useState(filters.activeTab);
-  const [citiesList, setCitiesList] = useState<{ value: string; label: string }[]>([]);
+  const [citiesList, setCitiesList] = useState<
+    { value: string; label: string }[]
+  >([]);
   const [popularRegionsList, setPopularRegionsList] = useState<string[]>([]);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [dbFeatures, setDbFeatures] = useState<any[]>([]);
@@ -125,11 +176,18 @@ export default function PropertiesSearchHeader() {
       try {
         Promise.all([
           getPopularRegions().catch(() => []),
-          getPropertyCategories().then(res => res?.success ? res.data : []).catch(() => []),
-          getFeatures().then(res => res?.success ? res.data : []).catch(() => []),
-          getFacilities().then(res => res?.success ? res.data : []).catch(() => []),
+          getPropertyCategories()
+            .then((res) => (res?.success ? res.data : []))
+            .catch(() => []),
+          getFeatures()
+            .then((res) => (res?.success ? res.data : []))
+            .catch(() => []),
+          getFacilities()
+            .then((res) => (res?.success ? res.data : []))
+            .catch(() => []),
         ]).then(([regions, categories, features, facilities]) => {
-          if (Array.isArray(regions)) setPopularRegionsList(regions.map(r => r.name));
+          if (Array.isArray(regions))
+            setPopularRegionsList(regions.map((r) => r.name));
           setDbCategories(categories || []);
           setDbFeatures(features || []);
           setDbFacilities(facilities || []);
@@ -137,14 +195,16 @@ export default function PropertiesSearchHeader() {
 
         const statesRes = await getStates();
         if (statesRes.success && statesRes.data) {
-          const tamilNadu = statesRes.data.find(s => s.name.toLowerCase().includes("tamil nadu"));
+          const tamilNadu = statesRes.data.find((s) =>
+            s.name.toLowerCase().includes("tamil nadu"),
+          );
           const tnId = tamilNadu?.id;
           if (tnId) {
             const citiesRes = await getCities(tnId);
             if (citiesRes.success && citiesRes.data) {
-              const list = citiesRes.data.map(c => ({
+              const list = citiesRes.data.map((c) => ({
                 value: c.name.toLowerCase(),
-                label: c.name
+                label: c.name,
               }));
               if (list.length > 0) {
                 setCitiesList(list);
@@ -162,7 +222,10 @@ export default function PropertiesSearchHeader() {
   // Close dropdown on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsInputFocused(false);
       }
     }
@@ -179,12 +242,12 @@ export default function PropertiesSearchHeader() {
 
   const handleSearchCommit = () => {
     const parsed = parseKeywordToFilters(
-      localKeyword, 
-      filters, 
-      popularRegionsList, 
-      dbCategories, 
-      dbFeatures, 
-      dbFacilities
+      localKeyword,
+      filters,
+      popularRegionsList,
+      dbCategories,
+      dbFeatures,
+      dbFacilities,
     );
     setFilters({
       ...filters,
@@ -195,6 +258,16 @@ export default function PropertiesSearchHeader() {
       ...parsed,
     });
     setIsInputFocused(false);
+  };
+
+  const handleClearKeyword = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLocalKeyword("");
+    setFilters({
+      ...filters,
+      keyword: "",
+      location: "",
+    });
   };
 
   const handleToggleTab = (tab: "sell" | "rent") => {
@@ -258,13 +331,12 @@ export default function PropertiesSearchHeader() {
   return (
     <div className="w-full bg-gradient-to-r from-primary to-secondary py-5 px-4 md:px-8 shadow-md">
       <div className="container mx-auto flex flex-col lg:flex-row items-stretch px-6 lg:items-end justify-between gap-4 md:gap-6">
-        
         {/* City Select Column */}
         <div className="flex flex-col w-full lg:w-auto min-w-[160px] text-left">
           <label className="text-[11px] uppercase font-bold text-white/70 mb-1.5 tracking-wider">
             City
           </label>
-          <div className="relative bg-white rounded-full h-11 px-4 flex items-center shadow-sm border border-transparent focus-within:border-white/20">
+          <div className="relative bg-white rounded-full h-12 px-4 flex items-center shadow-sm border border-transparent focus-within:border-white/20">
             <select
               value={localCity}
               onChange={(e) => {
@@ -278,11 +350,13 @@ export default function PropertiesSearchHeader() {
               className="w-full appearance-none bg-transparent border-none outline-none text-sm text-gray-800 font-bold pr-6 cursor-pointer text-ellipsis overflow-hidden whitespace-nowrap"
             >
               <option value="">Chennai</option>
-              {citiesList.filter(o => o.value !== "chennai").map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
+              {citiesList
+                .filter((o) => o.value !== "chennai")
+                .map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
             </select>
             <ChevronDown
               size={15}
@@ -292,13 +366,16 @@ export default function PropertiesSearchHeader() {
         </div>
 
         {/* Keyword Search Column */}
-        <div ref={containerRef} className="flex flex-col w-full lg:flex-1 text-left relative z-20">
+        <div
+          ref={containerRef}
+          className="flex flex-col w-full lg:flex-1 text-left relative z-20"
+        >
           <label className="text-[11px] uppercase font-bold text-white/70 mb-1.5 tracking-wider">
             Keyword, Location, Property Name
           </label>
-          <div className="relative bg-white rounded-full h-11 px-4 sm:px-5 flex items-center shadow-sm w-full">
+          <div className="relative bg-white rounded-full h-12 pl-4 sm:pl-5 pr-0 flex items-center shadow-sm w-full overflow-hidden">
             <Search size={16} className="text-gray-400 mr-2.5 flex-shrink-0" />
-            <div className="relative flex-1 h-full flex items-center">
+            <div className="relative flex-1 h-full flex items-center min-w-0">
               <input
                 type="text"
                 value={localKeyword}
@@ -309,13 +386,19 @@ export default function PropertiesSearchHeader() {
                 }}
                 className="w-full bg-transparent border-none outline-none text-sm text-gray-800 font-medium py-2 z-10"
               />
-              
+
               {!isInputFocused && !localKeyword && (
                 <div className="absolute inset-0 pointer-events-none flex items-center text-left">
                   <TypewriterTitle
                     sequences={[
-                      { text: "Premium 4 BHK Luxury Apartments in Manapakkam...", deleteAfter: true },
-                      { text: "2 BHK Independent House in Adyar...", deleteAfter: true },
+                      {
+                        text: "Premium 4 BHK Luxury Apartments in Manapakkam...",
+                        deleteAfter: true,
+                      },
+                      {
+                        text: "2 BHK Independent House in Adyar...",
+                        deleteAfter: true,
+                      },
                       { text: "Plots in Porur for sale...", deleteAfter: true },
                       { text: "Villas in ECR for rent...", deleteAfter: true },
                     ]}
@@ -332,6 +415,19 @@ export default function PropertiesSearchHeader() {
               )}
             </div>
 
+            {/* Clear Search Button */}
+            {localKeyword && (
+              <button
+                type="button"
+                onClick={handleClearKeyword}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer mr-1 z-10 flex-shrink-0"
+                title="Clear search"
+                aria-label="Clear search"
+              >
+                <X size={15} className="stroke-[2.5px]" />
+              </button>
+            )}
+
             {/* Filter Modal Trigger Button */}
             <button
               type="button"
@@ -340,11 +436,23 @@ export default function PropertiesSearchHeader() {
                 setIsInputFocused(false);
                 setIsFilterModalOpen(true);
               }}
-              className="p-1.5 sm:px-3 sm:py-1 rounded-full border border-gray-200 text-gray-600 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ml-2 z-10"
+              className="h-8 px-3 rounded-full border border-gray-200 text-gray-700 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer mr-2 z-10"
               title="Open Advanced Filters"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-              <span className="hidden sm:inline text-xs font-bold text-gray-700">Filter</span>
+              <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
+              <span className="hidden sm:inline text-xs font-bold text-gray-700">
+                Filter
+              </span>
+            </button>
+
+            {/* Search Property Gradient Button Flush to End */}
+            <button
+              type="button"
+              onClick={handleSearchCommit}
+              className="h-full px-5 sm:px-6 bg-gradient-to-r from-primary to-secondary hover:brightness-105 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap z-10 flex-shrink-0"
+            >
+              <Search size={14} className="stroke-[2.5px] hidden sm:inline" />
+              <span>Search Property</span>
             </button>
           </div>
 
@@ -363,12 +471,12 @@ export default function PropertiesSearchHeader() {
                   onSelectKeyword={(kw) => {
                     setLocalKeyword(kw);
                     const parsed = parseKeywordToFilters(
-                      kw, 
-                      filters, 
-                      popularRegionsList, 
-                      dbCategories, 
-                      dbFeatures, 
-                      dbFacilities
+                      kw,
+                      filters,
+                      popularRegionsList,
+                      dbCategories,
+                      dbFeatures,
+                      dbFacilities,
                     );
                     setFilters({
                       ...filters,
@@ -386,27 +494,49 @@ export default function PropertiesSearchHeader() {
                     });
                   }}
                   onSelectCategory={(cat) => {
+                    const catObj =
+                      dbCategories.find(
+                        (c) => c.name.toLowerCase() === cat.toLowerCase(),
+                      ) ||
+                      dbCategories.find((c) =>
+                        c.name.toLowerCase().includes(cat.toLowerCase()),
+                      );
+                    const catLabel = catObj
+                      ? catObj.name
+                      : cat.charAt(0).toUpperCase() + cat.slice(1);
+                    setLocalKeyword(catLabel);
                     setFilters({
                       ...filters,
                       activeCategory: cat,
+                      keyword: catLabel,
                     });
                   }}
                   onSelectCity={(cityVal) => {
                     setLocalCity(cityVal.toLowerCase());
+                    setLocalKeyword(cityVal);
                     setFilters({
                       ...filters,
                       city: cityVal.toLowerCase(),
+                      keyword: cityVal,
                     });
                   }}
                   onSelectAmenity={(amenityVal) => {
-                    const current = filters.amenities ? filters.amenities.split(",") : [];
-                    const updated = current.includes(amenityVal.toLowerCase()) ? current : [...current, amenityVal.toLowerCase()];
+                    const current = filters.amenities
+                      ? filters.amenities.split(",")
+                      : [];
+                    const updated = current.includes(amenityVal.toLowerCase())
+                      ? current
+                      : [...current, amenityVal.toLowerCase()];
+                    setLocalKeyword(amenityVal);
                     setFilters({
                       ...filters,
                       amenities: updated.join(","),
+                      keyword: amenityVal,
                     });
                   }}
-                  selectedAmenities={filters.amenities ? filters.amenities.split(",") : []}
+                  selectedAmenities={
+                    filters.amenities ? filters.amenities.split(",") : []
+                  }
                   onSearch={(overrides) => {
                     const nextFilters = { ...filters };
                     if (overrides) {
@@ -415,12 +545,12 @@ export default function PropertiesSearchHeader() {
                         setLocalKeyword(overrides.keyword);
                         if (overrides.keyword) {
                           const parsed = parseKeywordToFilters(
-                            overrides.keyword, 
-                            nextFilters, 
-                            popularRegionsList, 
-                            dbCategories, 
-                            dbFeatures, 
-                            dbFacilities
+                            overrides.keyword,
+                            nextFilters,
+                            popularRegionsList,
+                            dbCategories,
+                            dbFeatures,
+                            dbFacilities,
                           );
                           Object.assign(nextFilters, parsed);
                         }
@@ -465,51 +595,36 @@ export default function PropertiesSearchHeader() {
           </AnimatePresence>
         </div>
 
-        {/* Row Container for Property Type Toggle & Search Button */}
-        <div className="flex flex-row items-end gap-3 w-full lg:w-auto">
-          {/* Property Type Toggle Column */}
-          <div className="flex flex-col flex-1 text-left min-w-0">
-            <label className="text-[11px] uppercase font-bold text-white/70 mb-1.5 tracking-wider truncate">
-              Choose the Property Type
-            </label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => handleToggleTab("sell")}
-                className={`rounded-full h-11 px-8 text-sm font-extrabold transition-all duration-200 cursor-pointer ${
-                  localActiveTab === "sell"
-                    ? "bg-[#DCE5F1] text-primary border border-primary"
-                    : "bg-white text-black border border-transparent hover:bg-white/95"
-                }`}
-              >
-                Buy
-              </button>
-              <button
-                type="button"
-                onClick={() => handleToggleTab("rent")}
-                className={`rounded-full h-11 px-8 text-sm font-extrabold transition-all duration-200 cursor-pointer ${
-                  localActiveTab === "rent"
-                    ? "bg-[#DCE5F1] text-primary border border-primary"
-                    : "bg-white text-black border border-transparent hover:bg-white/95"
-                }`}
-              >
-                Rent / Lease
-              </button>
-            </div>
-          </div>
-
-          {/* Search Action Column */}
-          <div className="flex-shrink-0">
+        {/* Property Type Toggle Column */}
+        <div className="flex flex-col w-full lg:w-auto text-left min-w-0">
+          <label className="text-[11px] uppercase font-bold text-white/70 mb-1.5 tracking-wider truncate">
+            Choose the Property Type
+          </label>
+          <div className="flex gap-2">
             <button
               type="button"
-              onClick={handleSearchCommit}
-              className="bg-white hover:bg-white/95 text-primary font-extrabold text-xs sm:text-sm rounded-full h-11 px-4 sm:px-6 shadow-[0_4px_12px_rgba(255,255,255,0.15)] transition-all duration-200 active:scale-[0.98] cursor-pointer whitespace-nowrap"
+              onClick={() => handleToggleTab("sell")}
+              className={`rounded-full h-12 px-6 sm:px-8 text-sm font-extrabold transition-all duration-200 cursor-pointer ${
+                localActiveTab === "sell"
+                  ? "bg-[#DCE5F1] text-primary border border-primary"
+                  : "bg-white text-black border border-transparent hover:bg-white/95"
+              }`}
             >
-              Search Property
+              Buy
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleTab("rent")}
+              className={`rounded-full h-12 px-6 sm:px-8 text-sm font-extrabold transition-all duration-200 cursor-pointer ${
+                localActiveTab === "rent"
+                  ? "bg-[#DCE5F1] text-primary border border-primary"
+                  : "bg-white text-black border border-transparent hover:bg-white/95"
+              }`}
+            >
+              Rent / Lease
             </button>
           </div>
         </div>
-
       </div>
 
       {/* Advanced Filter Modal */}

@@ -200,9 +200,15 @@ function FeaturedPropertiesListContent() {
     });
   }, []);
 
-  // 2. Synchronize URL searchParams with Filter Context
+  // 2. Synchronize URL searchParams with Filter Context only once if explicit query params are present on mount
+  const hasInitializedFromUrl = useRef(false);
+
   useEffect(() => {
-    if (!searchParams) return;
+    if (hasInitializedFromUrl.current) return;
+    if (!searchParams || searchParams.toString().length === 0) {
+      hasInitializedFromUrl.current = true;
+      return;
+    }
     const parsed = parseUrlParams(
       searchParams,
       dbCategories,
@@ -212,6 +218,7 @@ function FeaturedPropertiesListContent() {
     );
 
     setFilters(parsed);
+    hasInitializedFromUrl.current = true;
   }, [searchParams, dbCategories, popularRegionsList, dbFeatures, dbFacilities]);
 
   // 3. Fetch & Filter Featured Properties
@@ -472,12 +479,10 @@ function FeaturedPropertiesListContent() {
 
 export default function FeaturedPropertiesPage() {
   return (
-    <PageFilterProvider>
-      <div className="w-full">
-        <Suspense fallback={null}>
-          <FeaturedPropertiesListContent />
-        </Suspense>
-      </div>
-    </PageFilterProvider>
+    <div className="w-full">
+      <Suspense fallback={null}>
+        <FeaturedPropertiesListContent />
+      </Suspense>
+    </div>
   );
 }

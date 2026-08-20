@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { getPackagesList, createCheckoutOrder, verifyCheckoutPayment, getCustomerInvoices, type Package, type UserInvoice } from "@/lib/api";
+import { getPackagesList, createCheckoutOrder, verifyCheckoutPayment, reportFailedPayment, getCustomerInvoices, type Package, type UserInvoice } from "@/lib/api";
 import { message } from "antd";
 import PurposeToggle from "@/components/shared/PurposeToggle";
 
@@ -218,6 +218,17 @@ function CreditsPageContent() {
       };
 
       const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", async (failResponse: any) => {
+        try {
+          await reportFailedPayment({
+            razorpay_order_id: failResponse.error?.metadata?.order_id || orderData.orderId,
+            reason: failResponse.error?.reason || failResponse.error?.description,
+            error_description: failResponse.error?.description,
+          });
+        } catch (e) {
+          console.error("Failed to log failed payment", e);
+        }
+      });
       rzp.open();
     } catch (err: any) {
       message.error(err.message || "Something went wrong while initiating payment");
@@ -470,7 +481,7 @@ function CreditsPageContent() {
                     <i className="fa-regular fa-circle-check text-sm opacity-80" />
                     <span>
                       {isRent
-                        ? "45-Day Active Validity per Contact Unlock"
+                        ? "30-Day Active Validity per Contact Unlock"
                         : `Valid up-to ${pkg.totalDaysLimit ? `${Math.round(pkg.totalDaysLimit / 30)} month${Math.round(pkg.totalDaysLimit / 30) > 1 ? 's' : ''}` : "1 month"}`}
                     </span>
                   </li>

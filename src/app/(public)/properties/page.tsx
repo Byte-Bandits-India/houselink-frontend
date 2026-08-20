@@ -215,9 +215,15 @@ function PropertiesListContent() {
     });
   }, []);
 
-  // 2. Synchronize URL searchParams with Filter Context
+  // 2. Synchronize URL searchParams with Filter Context only once if explicit query params are present on mount
+  const hasInitializedFromUrl = useRef(false);
+
   useEffect(() => {
-    if (!searchParams) return;
+    if (hasInitializedFromUrl.current) return;
+    if (!searchParams || searchParams.toString().length === 0) {
+      hasInitializedFromUrl.current = true;
+      return;
+    }
     const parsed = parseUrlParams(
       searchParams,
       dbCategories,
@@ -227,6 +233,7 @@ function PropertiesListContent() {
     );
 
     setFilters(parsed);
+    hasInitializedFromUrl.current = true;
   }, [
     searchParams,
     dbCategories,
@@ -513,12 +520,10 @@ function PropertiesListContent() {
 
 export default function PropertiesPage() {
   return (
-    <PageFilterProvider>
-      <div className="w-full">
-        <Suspense fallback={null}>
-          <PropertiesListContent />
-        </Suspense>
-      </div>
-    </PageFilterProvider>
+    <div className="w-full">
+      <Suspense fallback={null}>
+        <PropertiesListContent />
+      </Suspense>
+    </div>
   );
 }

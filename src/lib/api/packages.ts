@@ -33,6 +33,18 @@ export async function verifyCheckoutPayment(payload: {
 
 
 
+/** POST /checkout/fail-payment */
+export async function reportFailedPayment(payload: {
+  razorpay_order_id: string;
+  reason?: string;
+  error_description?: string;
+}): Promise<{ success: boolean; message: string }> {
+  return apiClient.post<{ success: boolean; message: string }>(
+    "/checkout/fail-payment",
+    payload
+  );
+}
+
 /** GET /customers/:id */
 export async function getCustomerInvoices(customerId: number): Promise<UserInvoice[]> {
   const res = await apiClient.get<{ success: boolean; data: CustomerProfile }>(

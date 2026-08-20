@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { X, Search } from "lucide-react";
+import { X, Search, RotateCcw } from "lucide-react";
 import PropertiesSearchHeader from "./PropertiesSearchHeader";
 import PropertiesFilterSidebar from "./PropertiesFilterSidebar";
 import PropertyHorizontalCard from "./PropertyHorizontalCard";
 import PropertyEnquirySidebar from "./PropertyEnquirySidebar";
-import Breadcrumb from "./Breadcrumb";
-import { usePageFilter } from "@/contexts/HomeFilterContext";
+import {
+  usePageFilter,
+  defaultFilterValues,
+} from "@/contexts/HomeFilterContext";
 
 import type { PropertiesListingLayoutProps } from "@/types/components";
 
@@ -32,21 +34,26 @@ export default function PropertiesListingLayout({
   breadcrumbLabel,
 }: PropertiesListingLayoutProps) {
   const [enquiryProperty, setEnquiryProperty] = useState<any | null>(null);
-  const { filters } = usePageFilter();
+  const { filters, setFilters } = usePageFilter();
 
-  const categoryLabel = filters.activeCategory && filters.activeCategory !== "all"
-    ? filters.activeCategory
-        .split(",")
-        .filter(Boolean)
-        .map((cat) => CATEGORY_SUMMARY_LABELS[cat] || "Properties")
-        .join(", ")
-    : "Properties";
+  const handleResetFilters = () => {
+    setFilters(defaultFilterValues);
+  };
+
+  const categoryLabel =
+    filters.activeCategory && filters.activeCategory !== "all"
+      ? filters.activeCategory
+          .split(",")
+          .filter(Boolean)
+          .map((cat) => CATEGORY_SUMMARY_LABELS[cat] || "Properties")
+          .join(", ")
+      : "Properties";
   const purposeLabel = filters.activeTab === "rent" ? "Rent" : "Sale";
   const locationLabel = filters.location
     ? filters.location.split(",")[0].trim()
     : filters.city
-    ? capitalizeWords(filters.city)
-    : "Chennai";
+      ? capitalizeWords(filters.city)
+      : "Chennai";
   const resultsSummary = `${properties.length} ${categoryLabel} for ${purposeLabel} in ${locationLabel}`;
 
   return (
@@ -56,7 +63,6 @@ export default function PropertiesListingLayout({
 
       {/* 2. PAGE CONTENT AREA */}
       <div className="container mx-auto px-4 md:px-6">
-        
         {/* Title Block */}
         <div className="flex flex-col text-left py-6 border-b border-gray-100 mb-6">
           <h1 className="text-2xl font-black text-gray-900 mb-2">{title}</h1>
@@ -64,7 +70,7 @@ export default function PropertiesListingLayout({
             <ol className="flex items-center flex-wrap gap-2 text-xs md:text-sm font-medium text-ink-muted">
               {[
                 { label: "Home", href: "/" },
-                { label: breadcrumbLabel, href: "/properties" }
+                { label: breadcrumbLabel, href: "/properties" },
               ].map((crumb, idx, arr) => {
                 const isLast = idx === arr.length - 1;
                 return (
@@ -73,13 +79,17 @@ export default function PropertiesListingLayout({
                       <i className="fi fi-rr-angle-small-right text-gray-400 text-sm leading-none shrink-0"></i>
                     )}
                     {isLast ? (
-                      <span className="text-ink font-semibold">{crumb.label}</span>
+                      <span className="text-ink font-semibold">
+                        {crumb.label}
+                      </span>
                     ) : (
                       <Link
                         href={crumb.href}
                         className="hover:text-primary transition-colors flex items-center gap-1.5"
                       >
-                        {idx === 0 && <i className="fi fi-rr-home text-xs leading-none"></i>}
+                        {idx === 0 && (
+                          <i className="fi fi-rr-home text-xs leading-none"></i>
+                        )}
                         <span>{crumb.label}</span>
                       </Link>
                     )}
@@ -92,7 +102,6 @@ export default function PropertiesListingLayout({
 
         {/* Two-Column Layout */}
         <div className="flex flex-col lg:flex-row gap-6 items-start justify-between">
-          
           {/* Left Column: Filter Sidebar */}
           <div className="w-full lg:w-[318px] lg:flex-shrink-0 lg:sticky lg:top-6">
             <PropertiesFilterSidebar />
@@ -108,7 +117,10 @@ export default function PropertiesListingLayout({
             {isLoading ? (
               <div className="flex flex-col gap-5">
                 {[1, 2, 3].map((n) => (
-                  <div key={n} className="w-full h-[220px] bg-white border border-gray-200 rounded-2xl animate-pulse flex flex-col md:flex-row overflow-hidden">
+                  <div
+                    key={n}
+                    className="w-full h-[220px] bg-white border border-gray-200 rounded-2xl animate-pulse flex flex-col md:flex-row overflow-hidden"
+                  >
                     <div className="w-full md:w-[280px] h-[200px] md:h-full bg-gray-200" />
                     <div className="flex-1 p-5 flex flex-col justify-between">
                       <div className="h-4 bg-gray-200 rounded w-1/3" />
@@ -138,14 +150,24 @@ export default function PropertiesListingLayout({
                 <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 select-none">
                   <Search size={32} className="text-primary" />
                 </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-2">No properties found</h4>
+                <h4 className="text-xl font-bold text-gray-900 mb-2">
+                  No properties found
+                </h4>
                 <p className="text-gray-500 text-sm max-w-sm">
-                  We couldn't find any properties matching your current filters. Try resetting or adjusting your search parameters.
+                  We couldn't find any properties matching your current filters.
+                  Try resetting or adjusting your search parameters.
                 </p>
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="mt-5 inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-primary to-secondary text-white font-bold text-xs md:text-sm shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Reset to All Properties</span>
+                </button>
               </div>
             )}
           </div>
-
         </div>
       </div>
 
@@ -161,21 +183,29 @@ export default function PropertiesListingLayout({
             >
               <X size={20} className="stroke-[2.5px]" />
             </button>
-            
+
             {/* Property details mini heading */}
             <div className="mb-4 text-left pr-8 select-none">
-              <h3 className="text-lg font-black text-gray-900 leading-tight">Enquire Property</h3>
-              <p className="text-xs text-gray-500 font-bold truncate mt-0.5">{enquiryProperty.name}</p>
+              <h3 className="text-lg font-black text-gray-900 leading-tight">
+                Enquire Property
+              </h3>
+              <p className="text-xs text-gray-500 font-bold truncate mt-0.5">
+                {enquiryProperty.name}
+              </p>
             </div>
-            
+
             {/* Form scrollable container */}
             <div className="max-h-[70vh] overflow-y-auto pr-1">
-              <PropertyEnquirySidebar property={{ ...enquiryProperty, id: Number(enquiryProperty.id) }} />
+              <PropertyEnquirySidebar
+                property={{
+                  ...enquiryProperty,
+                  id: Number(enquiryProperty.id),
+                }}
+              />
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

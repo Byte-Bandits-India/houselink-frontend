@@ -134,13 +134,14 @@ export default function SearchSuggestions({
   };
 
   const handleAmenityClick = (amenityVal: string) => {
+    onSelectKeyword(amenityVal);
     if (onSelectAmenity) {
       onSelectAmenity(amenityVal);
     }
     const nextAmenities = selectedAmenities
       ? (selectedAmenities.includes(amenityVal) ? selectedAmenities : [...selectedAmenities, amenityVal])
       : [amenityVal];
-    onSearch({ amenities: nextAmenities });
+    onSearch({ amenities: nextAmenities, keyword: amenityVal });
     onClose();
   };
 

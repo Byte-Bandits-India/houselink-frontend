@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown, ChevronUp, RotateCcw, SlidersHorizontal } from "lucide-react";
-import { usePageFilter, PRICE_RANGES, type PageFilterValues } from "@/contexts/HomeFilterContext";
+import { usePageFilter, PRICE_RANGES, defaultFilterValues, type PageFilterValues } from "@/contexts/HomeFilterContext";
 import PropertyTypeSwitch from "./PropertyTypeSwitch";
 import { getFeatures, getFacilities } from "@/lib/api";
 
@@ -75,13 +75,8 @@ export default function PropertiesFilterSidebar() {
       debounceTimerRef.current = null;
     }
     const resetFilters: PageFilterValues = {
-      ...localFilters,
-      activeCategory: "all",
-      priceRanges: "",
-      minPrice: "",
-      maxPrice: "",
-      houseType: "",
-      amenities: "",
+      ...defaultFilterValues,
+      activeTab: localFilters.activeTab,
     };
     setLocalFilters(resetFilters);
     setFilters(resetFilters);
@@ -93,7 +88,11 @@ export default function PropertiesFilterSidebar() {
     localFilters.houseType ||
     localFilters.amenities ||
     localFilters.maxPrice ||
-    localFilters.minPrice
+    localFilters.minPrice ||
+    localFilters.keyword ||
+    localFilters.location ||
+    localFilters.maxArea ||
+    localFilters.city
   );
 
   // ── Price Range Selection (Checkboxes) ──

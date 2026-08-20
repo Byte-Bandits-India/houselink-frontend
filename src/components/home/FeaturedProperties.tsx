@@ -24,16 +24,15 @@ function FeaturedPropertiesContent() {
 
   const isHomePage = pathname === "/";
 
-  // On homepage read from context (no URL pollution); on other pages read from URL
-  const activeTab = (isHomePage ? homeFilters.activeTab : (searchParams.get("property_purpose") || "sell")) as "sell" | "rent";
-  const activeCategory = isHomePage ? homeFilters.activeCategory : (searchParams.get("category") || "all");
-  const city = isHomePage ? homeFilters.city || null : searchParams.get("city");
-  const keyword = isHomePage ? homeFilters.keyword || null : searchParams.get("keyword");
-  const location = isHomePage ? homeFilters.location || null : searchParams.get("location");
-  const categoryType = isHomePage ? homeFilters.categoryType || null : searchParams.get("category_type");
-  const maxPrice = isHomePage ? homeFilters.maxPrice || null : searchParams.get("max_price");
-  const maxArea = isHomePage ? homeFilters.maxArea || null : searchParams.get("max_area");
-  const amenities = isHomePage ? homeFilters.amenities || null : searchParams.get("amenities");
+  const activeTab = homeFilters.activeTab || "sell";
+  const activeCategory = homeFilters.activeCategory || "all";
+  const city = homeFilters.city || null;
+  const keyword = homeFilters.keyword || null;
+  const location = homeFilters.location || null;
+  const categoryType = homeFilters.categoryType || null;
+  const maxPrice = homeFilters.maxPrice || null;
+  const maxArea = homeFilters.maxArea || null;
+  const amenities = homeFilters.amenities || null;
 
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,26 +41,15 @@ function FeaturedPropertiesContent() {
   const scrollContainer = useRef<HTMLDivElement>(null);
 
   const handleTabChange = (newTab: "sell" | "rent") => {
-    if (isHomePage) {
-      setFilters({
-        ...homeFilters,
-        activeTab: newTab,
-        activeCategory: newTab !== "sell" && homeFilters.activeCategory === "plots" ? "all" : homeFilters.activeCategory,
-      });
-      return;
-    }
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("property_purpose", newTab);
-    if (newTab !== "sell" && activeCategory === "plots") {
-      params.delete("category");
-    }
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    setFilters({
+      ...homeFilters,
+      activeTab: newTab,
+      activeCategory: newTab !== "sell" && homeFilters.activeCategory === "plots" ? "all" : homeFilters.activeCategory,
+    });
   };
 
   const getViewAllLink = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("property_purpose", activeTab);
-    return `/properties?${params.toString()}`;
+    return "/properties";
   };
 
   useEffect(() => {

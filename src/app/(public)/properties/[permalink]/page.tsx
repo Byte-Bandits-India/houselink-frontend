@@ -96,6 +96,27 @@ const getFacilityConfig = (name: string) => {
   };
 };
 
+const formatFacilityDistance = (val: string | null | undefined): string => {
+  if (!val) return "";
+  const trimmed = val.trim();
+  if (!trimmed) return "";
+  // If it's a pure number / decimal (e.g. "500", "250.5"), append " Meters"
+  if (/^\d+(\.\d+)?$/.test(trimmed)) {
+    return `${trimmed} Meters`;
+  }
+  // If it's a number ending with 'm' (e.g. "500m", "500 m")
+  if (/^\d+(\.\d+)?\s*m$/i.test(trimmed)) {
+    const num = trimmed.replace(/\s*m$/i, "");
+    return `${num} Meters`;
+  }
+  // If it's already "500 meters" / "500 meter"
+  if (/^\d+(\.\d+)?\s*meters?$/i.test(trimmed)) {
+    const num = trimmed.replace(/\s*meters?$/i, "");
+    return `${num} Meters`;
+  }
+  return trimmed;
+};
+
 export default async function PropertyDetailPage({
   params,
 }: {
@@ -601,7 +622,7 @@ export default async function PropertyDetailPage({
                           </div>
                           {item.facilityValue && (
                             <span className="px-2.5 py-1 bg-white border border-gray-200 text-gray-500 rounded-full text-xs font-semibold shrink-0">
-                              {item.facilityValue}
+                              {formatFacilityDistance(item.facilityValue)}
                             </span>
                           )}
                         </div>

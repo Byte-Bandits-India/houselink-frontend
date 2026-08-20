@@ -4,17 +4,31 @@ import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useHomeFilter } from "@/contexts/HomeFilterContext";
 import { getPopularRegions, getImageUrl, type PopularRegionApiItem } from "@/lib/api";
 import { smoothScrollBy } from "@/lib/smoothScroll";
 import type { CityCardProps } from "@/types/home";
 
 function CityCard({ image, name, propertiesCount, growthRate, locations }: CityCardProps & { locations?: string[] | null }) {
+  const router = useRouter();
+  const { filters, setFilters } = useHomeFilter();
   const filterTags = locations && locations.length > 0 ? locations : [name];
-  const href = `/properties?location=${encodeURIComponent(filterTags.join(","))}`;
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const locTag = filterTags.join(",");
+    setFilters({
+      ...filters,
+      location: locTag,
+      keyword: locTag,
+    });
+    router.push("/properties");
+  };
 
   return (
-    <Link
-      href={href}
+    <div
+      onClick={handleClick}
       className="flex flex-col bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 overflow-hidden w-full max-w-[280px] sm:max-w-none cursor-pointer"
     >
       {/* Image Container */}
@@ -51,7 +65,7 @@ function CityCard({ image, name, propertiesCount, growthRate, locations }: CityC
           {growthRate} Growth
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

@@ -200,9 +200,15 @@ function OwnerPropertiesListContent() {
     });
   }, []);
 
-  // 2. Synchronize URL searchParams with Filter Context
+  // 2. Synchronize URL searchParams with Filter Context only once if explicit query params are present on mount
+  const hasInitializedFromUrl = useRef(false);
+
   useEffect(() => {
-    if (!searchParams) return;
+    if (hasInitializedFromUrl.current) return;
+    if (!searchParams || searchParams.toString().length === 0) {
+      hasInitializedFromUrl.current = true;
+      return;
+    }
     const parsed = parseUrlParams(
       searchParams,
       dbCategories,
@@ -212,6 +218,7 @@ function OwnerPropertiesListContent() {
     );
 
     setFilters(parsed);
+    hasInitializedFromUrl.current = true;
   }, [searchParams, dbCategories, popularRegionsList, dbFeatures, dbFacilities]);
 
   // 3. Fetch & Filter Owner Properties
@@ -472,12 +479,10 @@ function OwnerPropertiesListContent() {
 
 export default function OwnerPropertiesPage() {
   return (
-    <PageFilterProvider>
-      <div className="w-full">
-        <Suspense fallback={null}>
-          <OwnerPropertiesListContent />
-        </Suspense>
-      </div>
-    </PageFilterProvider>
+    <div className="w-full">
+      <Suspense fallback={null}>
+        <OwnerPropertiesListContent />
+      </Suspense>
+    </div>
   );
 }

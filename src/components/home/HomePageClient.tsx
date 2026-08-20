@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, Fragment } from "react";
-import { HomeFilterProvider } from "@/contexts/HomeFilterContext";
 import PropertySearch from "@/components/shared/PropertySearch";
 import FeaturedProperties from "@/components/home/FeaturedProperties";
 import TopTrendingCities from "@/components/home/TopTrendingcities";
@@ -74,7 +73,7 @@ export default function HomePageClient() {
 
 
   return (
-    <HomeFilterProvider>
+    <>
       {/* ── Hero Section ── */}
       <section 
         className="relative h-[100dvh] lg:h-[90dvh] pt-10 md:pt-16 lg:pt-24 w-full flex items-start justify-center overflow-visible bg-cover bg-center bg-no-repeat z-30"
@@ -191,6 +190,6 @@ export default function HomePageClient() {
 
       {/* ── How We Work ──────────────────────────────────────────────── */}
       <HowWeWork />
-    </HomeFilterProvider>
+    </>
   );
 }

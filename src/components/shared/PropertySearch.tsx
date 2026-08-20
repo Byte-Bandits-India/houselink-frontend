@@ -442,8 +442,6 @@ export default function PropertySearch() {
         : "";
 
     const q = searchKeyword.trim().toLowerCase();
-    const isSearching = q.length > 0;
-    const fromModal = overrides && overrides.fromModal;
 
     const hasLocationFilter = overrides && overrides.location !== undefined;
     const hasCategoryFilter = overrides && overrides.category !== undefined;
@@ -499,53 +497,29 @@ export default function PropertySearch() {
       });
     }
 
-    const params = new URLSearchParams();
-    params.set("property_purpose", searchPurpose);
-    if (searchCity) params.set("city", searchCity);
-    if (searchKeyword) params.set("keyword", searchKeyword);
-    if (searchLocation) params.set("location", searchLocation);
-    if (categoryType) params.set("category_type", categoryType);
-    if (searchCategory !== "all") params.set("category", searchCategory);
+    const nextFilters = {
+      activeTab: searchPurpose as "sell" | "rent",
+      activeCategory: searchCategory,
+      city: searchCity,
+      keyword: searchKeyword,
+      location: searchLocation,
+      categoryType,
+      maxPrice: searchMaxPrice,
+      maxArea: searchMaxArea,
+      amenities: searchAmenities.length > 0 ? searchAmenities.join(",") : "",
+      houseType: searchHouseType,
+    };
 
-    const hasAdvanced =
-      showAdvanced ||
-      (overrides && overrides.amenities !== undefined) ||
-      (overrides && overrides.max_price !== undefined);
-
-    if (hasAdvanced) {
-      if (searchMaxPrice) params.set("max_price", searchMaxPrice);
-      if (searchMaxArea) params.set("max_area", searchMaxArea);
-      if (searchAmenities.length > 0) {
-        params.set("amenities", searchAmenities.join(","));
-      }
-    }
-
-    if (searchHouseType) {
-      params.set("house_type", searchHouseType);
-    }
+    setFilters(nextFilters);
 
     if (isListingPage) {
       if (isHomePage) {
-        router.push(`/properties?${params.toString()}`, { scroll: false });
+        router.push("/properties", { scroll: false });
       } else {
-        // On all listing pages: update context, keep URL clean
-        setFilters({
-          activeTab: searchPurpose as "sell" | "rent",
-          activeCategory: searchCategory,
-          city: searchCity,
-          keyword: searchKeyword,
-          location: searchLocation,
-          categoryType,
-          maxPrice: searchMaxPrice,
-          maxArea: searchMaxArea,
-          amenities:
-            searchAmenities.length > 0 ? searchAmenities.join(",") : "",
-          houseType: searchHouseType,
-        });
         scrollToResults();
       }
     } else {
-      router.push(`${basePath}?${params.toString()}`, { scroll: false });
+      router.push(basePath, { scroll: false });
     }
   };
 
@@ -558,85 +532,41 @@ export default function PropertySearch() {
       setActiveCategory("all");
     }
 
-    if (isListingPage) {
-      // On all listing pages: update context only, keep URL clean
-      setFilters({
-        activeTab: key as "sell" | "rent",
-        activeCategory: nextCategory,
-        city,
-        keyword,
-        location,
-        categoryType,
-        maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
-        maxArea: showAdvanced ? String(areaRange) : "",
-        amenities:
-          showAdvanced && selectedAmenities.length > 0
-            ? selectedAmenities.join(",")
-            : "",
-        houseType: "",
-      });
-      return;
-    }
-
-    const params = new URLSearchParams();
-    params.set("property_purpose", key);
-    if (city) params.set("city", city);
-    if (keyword) params.set("keyword", keyword);
-    if (location) params.set("location", location);
-    if (categoryType) params.set("category_type", categoryType);
-    if (nextCategory !== "all") params.set("category", nextCategory);
-
-    if (showAdvanced) {
-      params.set("max_price", String(priceRange * 10000000));
-      params.set("max_area", String(areaRange));
-      if (selectedAmenities.length > 0) {
-        params.set("amenities", selectedAmenities.join(","));
-      }
-    }
-
-    router.push(`${basePath}?${params.toString()}`, { scroll: false });
+    setFilters({
+      activeTab: key as "sell" | "rent",
+      activeCategory: nextCategory,
+      city,
+      keyword,
+      location,
+      categoryType,
+      maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
+      maxArea: showAdvanced ? String(areaRange) : "",
+      amenities:
+        showAdvanced && selectedAmenities.length > 0
+          ? selectedAmenities.join(",")
+          : "",
+      houseType: "",
+    });
   };
 
   const handleCategoryNavClick = (catId: string) => {
     setActiveCategory(catId);
 
-    if (isListingPage) {
-      // On all listing pages: update context only, keep URL clean
-      setFilters({
-        activeTab: activeTab as "sell" | "rent",
-        activeCategory: catId,
-        city,
-        keyword,
-        location,
-        categoryType,
-        maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
-        maxArea: showAdvanced ? String(areaRange) : "",
-        amenities:
-          showAdvanced && selectedAmenities.length > 0
-            ? selectedAmenities.join(",")
-            : "",
-        houseType: "",
-      });
-      return;
-    }
-
-    const params = new URLSearchParams();
-    params.set("property_purpose", activeTab);
-    if (city) params.set("city", city);
-    if (keyword) params.set("keyword", keyword);
-    if (location) params.set("location", location);
-    if (categoryType) params.set("category_type", categoryType);
-    if (catId !== "all") params.set("category", catId);
-
-    if (showAdvanced) {
-      params.set("max_price", String(priceRange * 10000000));
-      params.set("max_area", String(areaRange));
-      if (selectedAmenities.length > 0) {
-        params.set("amenities", selectedAmenities.join(","));
-      }
-    }
-
-    router.push(`${basePath}?${params.toString()}`, { scroll: false });
+    setFilters({
+      activeTab: activeTab as "sell" | "rent",
+      activeCategory: catId,
+      city,
+      keyword,
+      location,
+      categoryType,
+      maxPrice: showAdvanced ? String(priceRange * 10000000) : "",
+      maxArea: showAdvanced ? String(areaRange) : "",
+      amenities:
+        showAdvanced && selectedAmenities.length > 0
+          ? selectedAmenities.join(",")
+          : "",
+      houseType: "",
+    });
   };
 
   if (isHomePage) {

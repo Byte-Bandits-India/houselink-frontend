@@ -531,10 +531,22 @@ export function mapFormDataToApiPayload(
   }
 
   if (formData.facilities && formData.facilities.length > 0) {
-    payload.facilities = formData.facilities.map((fac) => ({
-      facilityId: Number(fac.facilityId),
-      facilityValue: fac.facilityValue,
-    }));
+    const validFacilities = formData.facilities
+      .filter((fac) => {
+        const id = Number(fac.facilityId);
+        return !isNaN(id) && id > 0 && typeof fac.facilityValue === "string" && fac.facilityValue.trim().length > 0;
+      })
+      .map((fac) => ({
+        facilityId: Number(fac.facilityId),
+        facilityValue: fac.facilityValue!.trim(),
+      }));
+
+    const seen = new Set<number>();
+    payload.facilities = validFacilities.filter((fac) => {
+      if (seen.has(fac.facilityId)) return false;
+      seen.add(fac.facilityId);
+      return true;
+    });
   } else {
     payload.facilities = [];
   }

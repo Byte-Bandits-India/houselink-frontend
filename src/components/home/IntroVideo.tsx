@@ -1,24 +1,75 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { introVideoConfig } from "./Options";
+import { getIntroVideoConfig } from "@/lib/api";
+
+function resolveMediaUrl(path: string | null | undefined): string {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("/assets/")) return path;
+  const baseUrl = process.env.NEXT_PUBLIC_WEB_API_URL || "http://localhost:4000";
+  return `${baseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+}
 
 export default function IntroVideo() {
-  const videoId = "EehVfDnkkGg";
-  const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&showinfo=0&autohide=1`;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoSrc, setVideoSrc] = useState<string>("/assets/videos/homePage.mp4");
+  const [posterSrc, setPosterSrc] = useState<string>(introVideoConfig.posterImage);
+  const [enabled, setEnabled] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const res = await getIntroVideoConfig();
+        if (res.success && res.data) {
+          if (res.data.enabled === false) {
+            setEnabled(false);
+            return;
+          }
+          if (res.data.videoUrl) {
+            setVideoSrc(resolveMediaUrl(res.data.videoUrl));
+          }
+          if (res.data.posterUrl) {
+            setPosterSrc(resolveMediaUrl(res.data.posterUrl));
+          }
+        }
+      } catch (err) {
+        // Fallback to default asset
+        console.debug("Intro video config fallback:", err);
+      }
+    }
+    loadConfig();
+  }, []);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {
+        // Autoplay handled silently
+      });
+    }
+  }, [videoSrc]);
+
+  if (!enabled) return null;
 
   return (
     <section
       className="bg-whiteBG w-full overflow-hidden"
       id="intro-video-section"
     >
-      {/* 80dvh full-width background video container with controls cropped out */}
-      <div className="relative w-full h-[90dvh] overflow-hidden bg-black">
-        <iframe
-          src={embedUrl}
-          title={introVideoConfig.youtubeTitle || "Houselink Intro Video"}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40vw] h-[56.25vw] min-h-[80dvh] min-w-[calc(80dvh*16/9)] scale-[1.3] pointer-events-none border-0 select-none"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          tabIndex={-1}
+      <div className="relative w-full h-[60vh] sm:h-[75vh] md:h-[90dvh] overflow-hidden bg-black select-none">
+        <video
+          ref={videoRef}
+          key={videoSrc}
+          src={videoSrc}
+          poster={posterSrc}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="w-full h-full object-cover pointer-events-none"
         />
       </div>
     </section>

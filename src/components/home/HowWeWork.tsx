@@ -1,13 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { fadeUp, stagger } from "@/lib/animations";
 import { ArrowUpRight } from "lucide-react";
 import { whatWeDoItems } from "@/components/home/Options";
+import { useHomeFilter } from "@/contexts/HomeFilterContext";
 
-const CustomHomeIcon = ({ size = 22, className = "" }: { size?: number; className?: string }) => (
+const CustomHomeIcon = ({
+  size = 22,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) => (
   <svg
     viewBox="0 0 24 24"
     width={size}
@@ -35,6 +42,24 @@ const CustomHomeIcon = ({ size = 22, className = "" }: { size?: number; classNam
 );
 
 export default function WhatWeDo() {
+  const router = useRouter();
+  const { filters, setFilters } = useHomeFilter();
+
+  const handleActionClick = (item: (typeof whatWeDoItems)[0]) => {
+    if (item.id === "wwd1" || item.href.startsWith("/properties")) {
+      setFilters({
+        ...filters,
+        activeTab: "rent",
+        keyword: "",
+        location: "",
+        activeCategory: "all",
+      });
+      router.push("/properties");
+    } else {
+      router.push(item.href);
+    }
+  };
+
   return (
     <section className="py-20 bg-white" id="what-we-do">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1440px]">
@@ -56,7 +81,8 @@ export default function WhatWeDo() {
             variants={fadeUp}
             className="text-gray-500 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto font-medium"
           >
-            Houselink360 simplifies buying premium residential and commercial properties.
+            Houselink360 simplifies buying premium residential and commercial
+            properties.
           </motion.p>
         </motion.div>
 
@@ -111,22 +137,23 @@ export default function WhatWeDo() {
                     <h3 className="font-extrabold text-[18px] md:text-[20px] text-primary tracking-tight leading-tight">
                       {item.title}
                     </h3>
-                    
+
                     <p className="text-gray-500 text-[13px] font-medium leading-relaxed max-w-[90%]">
                       {item.description}
                     </p>
                   </div>
 
                   {/* Action Link centered at the bottom */}
-                  <Link
-                    href={item.href}
+                  <button
+                    type="button"
+                    onClick={() => handleActionClick(item)}
                     className="inline-flex items-center gap-3 text-primary font-black text-sm hover:underline cursor-pointer mb-2"
                   >
-                    {item.linkText}
+                    <span>{item.linkText}</span>
                     <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center shadow-sm">
                       <ArrowUpRight size={14} className="stroke-[3px]" />
                     </div>
-                  </Link>
+                  </button>
                 </div>
               </div>
             </motion.div>

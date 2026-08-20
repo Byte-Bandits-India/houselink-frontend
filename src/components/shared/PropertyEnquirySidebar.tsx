@@ -28,14 +28,7 @@ import {
 import { Button } from "../ui/button";
 import { PhoneInput } from "@/components/reui/phone-input";
 import { message } from "antd";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import BuyPackagesModal from "./BuyPackagesModal";
 
 import type { PropertyEnquirySidebarProps } from "@/types/components";
 
@@ -56,9 +49,20 @@ function formatCooldown(seconds: number, propertyFor: string): string {
     }
     return `${secs}s`;
   }
-  // rent / lease
-  const days = Math.ceil(seconds / 86400);
-  return `${days} day${days !== 1 ? "s" : ""}`;
+  // rent / lease (30-day cooldown / unlock window)
+  const days = Math.floor(seconds / 86400);
+  const remainingAfterDays = seconds % 86400;
+  const hours = Math.floor(remainingAfterDays / 3600);
+  if (days > 0) {
+    return hours > 0
+      ? `${days} day${days !== 1 ? "s" : ""}, ${hours} hr${hours !== 1 ? "s" : ""}`
+      : `${days} day${days !== 1 ? "s" : ""}`;
+  }
+  const mins = Math.floor(seconds / 60);
+  if (hours > 0) {
+    return `${hours} hr${hours !== 1 ? "s" : ""}, ${mins % 60} min`;
+  }
+  return `${mins} min`;
 }
 
 /** Badge for property_for type */
@@ -117,6 +121,7 @@ export default function PropertyEnquirySidebar({
   // Sync remaining seconds into live state whenever enquiryStatus updates
   useEffect(() => {
     if (
+      enquiryStatus?.already_enquired &&
       enquiryStatus?.remaining_seconds &&
       enquiryStatus.remaining_seconds > 0
     ) {
@@ -308,7 +313,7 @@ export default function PropertyEnquirySidebar({
     try {
       const res = await unlockPropertyContact(property.id);
       if (res.success) {
-        message.success("Contact details unlocked successfully for 45 days!");
+        message.success("Contact details unlocked successfully for 30 days!");
         await fetchStatus();
         await refreshUser();
       }
@@ -479,8 +484,7 @@ export default function PropertyEnquirySidebar({
       user?.rentPoints ??
       0;
     const cooldownActive =
-      !isRentOrLease &&
-      ((enquiryStatus && !enquiryStatus.can_enquire) || cooldownSeconds > 0);
+      Boolean(enquiryStatus?.already_enquired || cooldownSeconds > 0);
 
     return (
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
@@ -490,15 +494,15 @@ export default function PropertyEnquirySidebar({
           <PropertyForBadge propertyFor={propertyFor} />
         </div>
 
-        {/* ── RENT / LEASE CONTACT UNLOCKED CARD ────────────────────────────── */}
-        {isRentOrLease && isUnlocked && (
+        {/* ── RENT / LEASE CONTACT UNLOCKED CARD (When enquiry not yet submitted) ──────────────── */}
+        {isRentOrLease && isUnlocked && !cooldownActive && (
           <div className="mb-5 bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3">
             <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
               <span>Contact Details Unlocked</span>
             </div>
             <p className="text-xs text-emerald-700">
-              Valid for 45 days. You can contact the owner directly or send an
+              Valid for 30 days. You can contact the owner directly or send an
               enquiry below for free.
             </p>
             {enquiryStatus?.owner_phone && (
@@ -530,10 +534,10 @@ export default function PropertyEnquirySidebar({
           </div>
         )}
 
-        {/* ── BUY / SELL COOLDOWN & OWNER DETAILS BLOCK ────────────────── */}
+        {/* ── COOLDOWN & OWNER DETAILS BLOCK (SELL / RENT / LEASE) ────────────────── */}
         {cooldownActive ? (
           <div className="space-y-4">
-            {/* Show Owner Contact Details for Buy/Sell when already enquired */}
+            {/* Show Owner Contact Details when already enquired */}
             {enquiryStatus?.owner_phone &&
               enquiryStatus.owner_phone !== "-" && (
                 <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl p-4 space-y-2.5 text-left">
@@ -573,7 +577,7 @@ export default function PropertyEnquirySidebar({
                 </div>
               )}
 
-            {/* Live Minutes & Seconds Countdown Card */}
+            {/* Live Minutes / Days Countdown Card */}
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col items-center text-center gap-3">
               <div className="bg-amber-100 w-11 h-11 rounded-full flex items-center justify-center">
                 <Clock size={22} className="text-amber-600" />
@@ -583,20 +587,36 @@ export default function PropertyEnquirySidebar({
                   Enquiry Submitted
                 </p>
                 <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                  You have already enquired about this property. You can send
-                  another enquiry once the cooldown timer expires.
+                  {isRentOrLease
+                    ? "You have already enquired about this property. 30-day cooldown is active before you can send another enquiry."
+                    : "You have already enquired about this property. You can send another enquiry once the cooldown timer expires."}
                 </p>
               </div>
               <div className="bg-white border border-amber-200/80 rounded-xl px-4 py-2.5 w-full shadow-xs">
                 <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider mb-0.5">
-                  Next Enquiry In (Minutes : Seconds)
+                  {isRentOrLease
+                    ? "Cooldown Active (30 Days Validity)"
+                    : "Next Enquiry In (Minutes : Seconds)"}
                 </p>
-                <p className="text-2xl font-black text-amber-800 tracking-wider font-mono">
-                  {formatMinutesSeconds(cooldownSeconds)}
-                </p>
-                <p className="text-[11px] text-amber-600 mt-0.5 font-medium">
-                  {formatCooldown(cooldownSeconds, "sell")} remaining
-                </p>
+                {isRentOrLease ? (
+                  <p className="text-xl font-black text-amber-800 tracking-wider">
+                    {formatCooldown(cooldownSeconds, propertyFor)} remaining
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-2xl font-black text-amber-800 tracking-wider font-mono">
+                      {formatMinutesSeconds(cooldownSeconds)}
+                    </p>
+                    <p className="text-[11px] text-amber-600 mt-0.5 font-medium">
+                      {formatCooldown(cooldownSeconds, "sell")} remaining
+                    </p>
+                  </>
+                )}
+                {enquiryStatus?.owner_details_expires_at && (
+                  <p className="text-[11px] text-amber-600 mt-1 font-medium border-t border-amber-200/60 pt-1.5">
+                    Expires on {new Date(enquiryStatus.owner_details_expires_at).toLocaleDateString()}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -711,39 +731,6 @@ export default function PropertyEnquirySidebar({
               </p>
             )}
 
-            {/* Rent Points Requirement Pill */}
-            {isRentOrLease && !isUnlocked && (
-              <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-                <div className="flex items-center gap-1.5 text-slate-600 font-medium">
-                  <Coins className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Cost: 1 Rent Point</span>
-                </div>
-                <span
-                  className={`font-bold ${availablePoints > 0 ? "text-emerald-600" : "text-red-500"}`}
-                >
-                  {availablePoints} point{availablePoints !== 1 ? "s" : ""}{" "}
-                  available
-                </span>
-              </div>
-            )}
-
-            {/* Direct Unlock button for Rent / Lease with points */}
-            {isRentOrLease && !isUnlocked && availablePoints > 0 && (
-              <button
-                type="button"
-                onClick={handleDirectUnlock}
-                disabled={isUnlocking}
-                className="w-full flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold py-2.5 shadow-sm transition-all text-center cursor-pointer"
-              >
-                <Unlock className="w-3.5 h-3.5" />
-                <span>
-                  {isUnlocking
-                    ? "Unlocking Contact..."
-                    : "Unlock Contact (1 Point)"}
-                </span>
-              </button>
-            )}
-
             {/* Submit Button */}
             <Button
               type="submit"
@@ -756,35 +743,20 @@ export default function PropertyEnquirySidebar({
           </form>
         )}
 
-        {/* ── RENT POINT REQUIRED MODAL POPUP ──────────────────────────── */}
-        <Dialog open={showPointModal} onOpenChange={setShowPointModal}>
-          <DialogContent className="max-w-sm p-6 rounded-2xl bg-white border border-slate-100 shadow-2xl">
-            <DialogHeader className="flex flex-col items-center text-center space-y-3">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-amber-50 text-amber-600 border border-amber-100 shadow-inner">
-                <Sparkles className="w-7 h-7" />
-              </div>
-              <DialogTitle className="text-lg font-bold text-slate-900">
-                Rent Points Required
-              </DialogTitle>
-              <DialogDescription className="text-xs text-slate-500 leading-relaxed text-center">
-                You need 1 Rent Unlock Point to unlock this landlord&apos;s
-                contact details and send an enquiry. Please purchase a rent plan
-                to proceed.
-              </DialogDescription>
-            </DialogHeader>
-
-            <DialogFooter className="mt-4">
-              <Link
-                href={`/dashboard/credits?type=rent&returnUrl=${encodeURIComponent(returnUrl)}`}
-                onClick={() => setShowPointModal(false)}
-                className="w-full flex items-center justify-center gap-1.5 bg-brand hover:bg-brand/90 text-white rounded-xl text-xs font-bold py-2.5 shadow-sm transition-all text-center"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Buy Rent Plan</span>
-              </Link>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* ── IN-PAGE BUY PACKAGES MODAL ──────────────────────────────────── */}
+        <BuyPackagesModal
+          open={showPointModal}
+          onOpenChange={setShowPointModal}
+          propertyId={property.id}
+          propertyName={property.name}
+          onSuccess={async () => {
+            await refreshUser();
+            await fetchStatus();
+            if (isRentOrLease) {
+              await handleDirectUnlock();
+            }
+          }}
+        />
       </div>
     );
   }

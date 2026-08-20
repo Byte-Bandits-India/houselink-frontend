@@ -182,12 +182,15 @@ export default function ActionSearchBar({
               onSelectKeyword={(kw) => setKeyword(kw)}
               onSelectLocation={(loc) => onSelectLocation(loc)}
               onSelectCategory={(cat) => {
+                setKeyword(cat.charAt(0).toUpperCase() + cat.slice(1));
                 if (setActiveCategory) setActiveCategory(cat);
               }}
               onSelectCity={(cityVal) => {
+                setKeyword(cityVal);
                 if (setCity) setCity(cityVal);
               }}
               onSelectAmenity={(amenityVal) => {
+                setKeyword(amenityVal);
                 if (setShowAdvanced) setShowAdvanced(true);
                 if (setSelectedAmenities) {
                   setSelectedAmenities((prev) =>

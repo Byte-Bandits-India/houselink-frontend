@@ -66,6 +66,7 @@ export {
   getPackagesList,
   createCheckoutOrder,
   verifyCheckoutPayment,
+  reportFailedPayment,
   getCustomerInvoices,
 } from "./packages";
 export type { Package, CheckoutResponse, UserInvoice } from "./packages";
@@ -133,8 +134,13 @@ export type { HeroConfig, HeroConfigResponse } from "./hero";
 export { getUpcomingConfig } from "./upcoming";
 export type { UpcomingConfig, UpcomingConfigResponse } from "./upcoming";
 
+// Intro Video Config API
+export { getIntroVideoConfig } from "./introVideo";
+export type { IntroVideoConfigData, IntroVideoConfigResponse } from "./introVideo";
+
 // CMS API
 export { getCmsPages, getCmsPageBySlug } from "./cms";
+
 
 
 

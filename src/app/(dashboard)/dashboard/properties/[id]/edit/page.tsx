@@ -88,11 +88,17 @@ export default function EditPropertyPage({
     setErrorMsg(null);
 
     try {
-      const blobToFile = async (blobUrl: string, defaultName: string): Promise<File> => {
-        const response = await fetch(blobUrl);
+      const isLocalMediaUrl = (url?: string | null): boolean => {
+        if (!url || typeof url !== "string") return false;
+        return url.startsWith("blob:") || url.startsWith("data:");
+      };
+
+      const localMediaToFile = async (mediaUrl: string, defaultName: string): Promise<File> => {
+        const response = await fetch(mediaUrl);
         const blob = await response.blob();
-        const extension = blob.type.split("/")[1] || "jpg";
-        return new File([blob], `${defaultName}.${extension}`, { type: blob.type });
+        let extension = blob.type.split("/")[1] || "jpg";
+        if (extension === "jpeg") extension = "jpg";
+        return new File([blob], `${defaultName}.${extension}`, { type: blob.type || "image/jpeg" });
       };
 
       // 1. Process property images
@@ -101,15 +107,15 @@ export default function EditPropertyPage({
         const files: File[] = [];
         for (let i = 0; i < data.images.length; i++) {
           const img = data.images[i];
-          if (img.startsWith("blob:")) {
+          if (isLocalMediaUrl(img)) {
             try {
-              const f = await blobToFile(img, `property-image-${i}`);
+              const f = await localMediaToFile(img, `property-image-${i}`);
               files.push(f);
             } catch (err: any) {
-              console.error("Error converting image blob", err);
+              console.error("Error converting image media", err);
               throw new Error(`Failed to process property image at index ${i + 1}. If the preview is broken, please re-upload.`);
             }
-          } else {
+          } else if (typeof img === "string" && img.trim().length > 0) {
             finalImages.push(img);
           }
         }
@@ -121,9 +127,9 @@ export default function EditPropertyPage({
 
       // 2. Process SEO image
       let finalSeoImg = data.seo_img;
-      if (data.seo_img && data.seo_img.startsWith("blob:")) {
+      if (isLocalMediaUrl(data.seo_img)) {
         try {
-          const f = await blobToFile(data.seo_img, "seo-image");
+          const f = await localMediaToFile(data.seo_img!, "seo-image");
           const uploaded = await uploadFiles([f], "seo");
           if (uploaded.length > 0) {
             finalSeoImg = uploaded[0];
@@ -131,16 +137,16 @@ export default function EditPropertyPage({
             throw new Error("No URL returned from server.");
           }
         } catch (err: any) {
-          console.error("Error converting SEO image blob", err);
+          console.error("Error converting SEO image", err);
           throw new Error(`SEO Cover Image upload failed: ${err.message || err}. If the preview is broken, please re-upload the file.`);
         }
       }
 
       // 3. Process video thumbnail
       let finalVideoThumbnail = data.video_thumbnail;
-      if (data.video_thumbnail && data.video_thumbnail.startsWith("blob:")) {
+      if (isLocalMediaUrl(data.video_thumbnail)) {
         try {
-          const f = await blobToFile(data.video_thumbnail, "video-thumbnail");
+          const f = await localMediaToFile(data.video_thumbnail!, "video-thumbnail");
           const uploaded = await uploadFiles([f], "video");
           if (uploaded.length > 0) {
             finalVideoThumbnail = uploaded[0];
@@ -148,7 +154,7 @@ export default function EditPropertyPage({
             throw new Error("No URL returned from server.");
           }
         } catch (err: any) {
-          console.error("Error converting video thumbnail blob", err);
+          console.error("Error converting video thumbnail", err);
           throw new Error(`Video Thumbnail upload failed: ${err.message || err}. If the preview is broken, please re-upload the file.`);
         }
       }
