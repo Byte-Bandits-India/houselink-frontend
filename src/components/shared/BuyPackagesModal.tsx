@@ -193,6 +193,8 @@ export default function BuyPackagesModal({
         modal: {
           ondismiss: () => {
             setBuyingId(null);
+            // Reopen packages modal if dismissed without completing payment
+            onOpenChange(true);
           },
         },
       };
@@ -210,6 +212,9 @@ export default function BuyPackagesModal({
           console.error("Failed to log failed payment", e);
         }
       });
+
+      // Temporarily close Dialog so Radix focus-trap and overlay don't block clicks on Razorpay's iframe
+      onOpenChange(false);
       rzp.open();
     } catch (err: any) {
       message.error(
