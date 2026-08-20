@@ -379,59 +379,68 @@ export default function PropertyFormWizard({
   return (
     <div ref={topRef} className="space-y-6 scroll-mt-6">
       {/* ── Steps Indicator ── */}
-      <div className="flex items-center justify-between relative">
-        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2 z-0" />
-        {STEPS.map((s, i) => {
-          const isDone = i < step;
-          const isCurrent = i === step;
-          const allowed = canNavigateToStep(i);
+      <div className="relative mb-6">
+        {/* Background Track Line (centered vertically through the 36px/w-9 circles, inset from centers) */}
+        <div className="absolute top-[18px] left-[10%] right-[10%] h-[2px] bg-slate-200 -translate-y-1/2 z-0" />
+        {/* Active Progress Fill Line */}
+        <div
+          className="absolute top-[18px] left-[10%] h-[2px] bg-brand -translate-y-1/2 z-0 transition-all duration-300 ease-in-out"
+          style={{ width: `${(step / (STEPS.length - 1)) * 80}%` }}
+        />
 
-          return (
-            <button
-              key={s.label}
-              type="button"
-              disabled={!allowed || disabled}
-              onClick={() => {
-                if (allowed) {
-                  setShowErrors(false);
-                  setStep(i);
-                  scrollToTop();
-                }
-              }}
-              className={cn(
-                "relative z-10 flex flex-col items-center gap-1.5 group transition-all",
-                allowed && !disabled
-                  ? "cursor-pointer"
-                  : "cursor-not-allowed opacity-50",
-              )}
-            >
-              <div
+        <div className="flex items-start justify-between relative z-10">
+          {STEPS.map((s, i) => {
+            const isDone = i < step;
+            const isCurrent = i === step;
+            const allowed = canNavigateToStep(i);
+
+            return (
+              <button
+                key={s.label}
+                type="button"
+                disabled={!allowed || disabled}
+                onClick={() => {
+                  if (allowed) {
+                    setShowErrors(false);
+                    setStep(i);
+                    scrollToTop();
+                  }
+                }}
                 className={cn(
-                  "w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200",
-                  isDone
-                    ? "bg-brand-600 text-white shadow-sm"
-                    : isCurrent
-                      ? "bg-brand text-white ring-4 ring-brand/20 shadow-md"
-                      : "bg-gray-100 text-gray-400 border border-gray-200 group-hover:border-gray-300",
+                  "flex flex-col items-center gap-2 group transition-all text-center flex-1 focus:outline-none",
+                  allowed && !disabled
+                    ? "cursor-pointer"
+                    : "cursor-not-allowed opacity-60",
                 )}
               >
-                {isDone ? "✓" : i + 1}
-              </div>
-              <span
-                className={cn(
-                  "text-xs font-semibold whitespace-nowrap hidden sm:block",
-                  isCurrent
-                    ? "text-brand"
-                    : isDone
-                      ? "text-brand-700"
-                      : "text-gray-400",
-                )}
-              >
-                {s.label}
-              </span>
-            </button>
-          );
-        })}
+                <div
+                  className={cn(
+                    "w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 bg-white",
+                    isDone
+                      ? "bg-brand text-white shadow-sm ring-4 ring-brand/10 border-2 border-brand"
+                      : isCurrent
+                        ? "bg-brand text-white ring-4 ring-brand/20 shadow-md border-2 border-brand"
+                        : "bg-white text-gray-400 border-2 border-gray-200 group-hover:border-gray-300",
+                  )}
+                >
+                  {isDone ? "✓" : i + 1}
+                </div>
+                <span
+                  className={cn(
+                    "text-xs font-semibold whitespace-nowrap hidden sm:block transition-colors",
+                    isCurrent
+                      ? "text-brand"
+                      : isDone
+                        ? "text-brand-700"
+                        : "text-gray-400",
+                  )}
+                >
+                  {s.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Step Content ── */}

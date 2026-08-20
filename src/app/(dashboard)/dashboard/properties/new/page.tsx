@@ -12,7 +12,7 @@ import { message } from "antd";
 export default function AddPropertyPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -22,23 +22,26 @@ export default function AddPropertyPage() {
       return;
     }
 
-
-
     setIsSubmitting(true);
     setErrorMsg(null);
-    
+
     try {
       const isLocalMediaUrl = (url?: string | null): boolean => {
         if (!url || typeof url !== "string") return false;
         return url.startsWith("blob:") || url.startsWith("data:");
       };
 
-      const localMediaToFile = async (mediaUrl: string, defaultName: string): Promise<File> => {
+      const localMediaToFile = async (
+        mediaUrl: string,
+        defaultName: string,
+      ): Promise<File> => {
         const response = await fetch(mediaUrl);
         const blob = await response.blob();
         let extension = blob.type.split("/")[1] || "jpg";
         if (extension === "jpeg") extension = "jpg";
-        return new File([blob], `${defaultName}.${extension}`, { type: blob.type || "image/jpeg" });
+        return new File([blob], `${defaultName}.${extension}`, {
+          type: blob.type || "image/jpeg",
+        });
       };
 
       // 1. Process property images
@@ -53,7 +56,9 @@ export default function AddPropertyPage() {
               files.push(f);
             } catch (err: any) {
               console.error("Error converting image media", err);
-              throw new Error(`Failed to process property image at index ${i + 1}. If the preview is broken, please re-upload.`);
+              throw new Error(
+                `Failed to process property image at index ${i + 1}. If the preview is broken, please re-upload.`,
+              );
             }
           } else if (typeof img === "string" && img.trim().length > 0) {
             finalImages.push(img);
@@ -78,7 +83,9 @@ export default function AddPropertyPage() {
           }
         } catch (err: any) {
           console.error("Error converting SEO image", err);
-          throw new Error(`SEO Cover Image upload failed: ${err.message || err}. If the preview is broken, please re-upload the file.`);
+          throw new Error(
+            `SEO Cover Image upload failed: ${err.message || err}. If the preview is broken, please re-upload the file.`,
+          );
         }
       }
 
@@ -86,7 +93,10 @@ export default function AddPropertyPage() {
       let finalVideoThumbnail = data.video_thumbnail;
       if (isLocalMediaUrl(data.video_thumbnail)) {
         try {
-          const f = await localMediaToFile(data.video_thumbnail!, "video-thumbnail");
+          const f = await localMediaToFile(
+            data.video_thumbnail!,
+            "video-thumbnail",
+          );
           const uploaded = await uploadFiles([f], "video");
           if (uploaded.length > 0) {
             finalVideoThumbnail = uploaded[0];
@@ -95,7 +105,9 @@ export default function AddPropertyPage() {
           }
         } catch (err: any) {
           console.error("Error converting video thumbnail", err);
-          throw new Error(`Video Thumbnail upload failed: ${err.message || err}. If the preview is broken, please re-upload the file.`);
+          throw new Error(
+            `Video Thumbnail upload failed: ${err.message || err}. If the preview is broken, please re-upload the file.`,
+          );
         }
       }
 
@@ -111,19 +123,23 @@ export default function AddPropertyPage() {
       console.log("Property created successfully:", result);
 
       message.success("Property listing created successfully!");
-      
+
       router.refresh();
       router.push("/dashboard/properties");
     } catch (err: any) {
       console.error("Submission failed:", err);
       setIsSubmitting(false);
-      
+
       if (err instanceof ApiError) {
-        let msg = err.message || "Backend rejected property data. Please verify your fields.";
+        let msg =
+          err.message ||
+          "Backend rejected property data. Please verify your fields.";
         const details = err.data as any;
         if (details?.errors?.fieldErrors) {
           const fieldMsgs = Object.entries(details.errors.fieldErrors)
-            .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`)
+            .map(
+              ([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`,
+            )
             .join(" | ");
           msg = `${msg} Details: [ ${fieldMsgs} ]`;
         } else if (details?.message) {
@@ -131,7 +147,10 @@ export default function AddPropertyPage() {
         }
         setErrorMsg(msg);
       } else {
-        setErrorMsg(err.message || "An unexpected error occurred during submission. Please try again.");
+        setErrorMsg(
+          err.message ||
+            "An unexpected error occurred during submission. Please try again.",
+        );
       }
     }
   };
@@ -141,7 +160,9 @@ export default function AddPropertyPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <Loader2 className="w-8 h-8 text-brand animate-spin" />
-        <p className="text-sm text-gray-500 font-medium animate-pulse">Hydrating your secure session...</p>
+        <p className="text-sm text-gray-500 font-medium animate-pulse">
+          Hydrating your secure session...
+        </p>
       </div>
     );
   }
@@ -161,9 +182,6 @@ export default function AddPropertyPage() {
             <span>Add Property</span>
             <Sparkles className="w-5 h-5 text-brand" />
           </h1>
-          <p className="text-sm text-gray-500 dark:text-slate-400">
-            Fill in the details below to list your property on Houselink360.
-          </p>
         </div>
       </div>
 
@@ -183,4 +201,3 @@ export default function AddPropertyPage() {
     </div>
   );
 }
-

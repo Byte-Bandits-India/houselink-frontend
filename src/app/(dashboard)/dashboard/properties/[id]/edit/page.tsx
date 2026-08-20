@@ -6,7 +6,13 @@ import { ArrowLeft, Loader2, AlertCircle, Sparkles } from "lucide-react";
 import PropertyFormWizard from "@/components/property-form/PropertyFormWizard";
 import { PropertyFormData } from "@/types/property";
 import { useAuth } from "@/context/AuthContext";
-import { getProperty, updateProperty, mapApiPayloadToFormData, uploadFiles, ApiError } from "@/lib/api";
+import {
+  getProperty,
+  updateProperty,
+  mapApiPayloadToFormData,
+  uploadFiles,
+  ApiError,
+} from "@/lib/api";
 import { message } from "antd";
 
 export default function EditPropertyPage({
@@ -37,7 +43,9 @@ export default function EditPropertyPage({
         const res = await getProperty(propertyId);
         if (res.success && res.data) {
           if (res.data.moderationStatus === "pending") {
-            setErrorMsg("This listing is under moderation review and cannot be edited.");
+            setErrorMsg(
+              "This listing is under moderation review and cannot be edited.",
+            );
             setTimeout(() => {
               router.push(`/dashboard/properties/${propertyId}`);
             }, 2500);
@@ -50,7 +58,10 @@ export default function EditPropertyPage({
         }
       } catch (err: any) {
         console.error("Error loading property:", err);
-        setErrorMsg(err?.message || "An unexpected error occurred while loading property details.");
+        setErrorMsg(
+          err?.message ||
+            "An unexpected error occurred while loading property details.",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -79,7 +90,9 @@ export default function EditPropertyPage({
       }
 
       if (credits <= 0) {
-        setErrorMsg(`You do not have active credit points to update listing as a "${data.owner_type}". Please purchase a package first.`);
+        setErrorMsg(
+          `You do not have active credit points to update listing as a "${data.owner_type}". Please purchase a package first.`,
+        );
         return;
       }
     }
@@ -93,12 +106,17 @@ export default function EditPropertyPage({
         return url.startsWith("blob:") || url.startsWith("data:");
       };
 
-      const localMediaToFile = async (mediaUrl: string, defaultName: string): Promise<File> => {
+      const localMediaToFile = async (
+        mediaUrl: string,
+        defaultName: string,
+      ): Promise<File> => {
         const response = await fetch(mediaUrl);
         const blob = await response.blob();
         let extension = blob.type.split("/")[1] || "jpg";
         if (extension === "jpeg") extension = "jpg";
-        return new File([blob], `${defaultName}.${extension}`, { type: blob.type || "image/jpeg" });
+        return new File([blob], `${defaultName}.${extension}`, {
+          type: blob.type || "image/jpeg",
+        });
       };
 
       // 1. Process property images
@@ -113,7 +131,9 @@ export default function EditPropertyPage({
               files.push(f);
             } catch (err: any) {
               console.error("Error converting image media", err);
-              throw new Error(`Failed to process property image at index ${i + 1}. If the preview is broken, please re-upload.`);
+              throw new Error(
+                `Failed to process property image at index ${i + 1}. If the preview is broken, please re-upload.`,
+              );
             }
           } else if (typeof img === "string" && img.trim().length > 0) {
             finalImages.push(img);
@@ -138,7 +158,9 @@ export default function EditPropertyPage({
           }
         } catch (err: any) {
           console.error("Error converting SEO image", err);
-          throw new Error(`SEO Cover Image upload failed: ${err.message || err}. If the preview is broken, please re-upload the file.`);
+          throw new Error(
+            `SEO Cover Image upload failed: ${err.message || err}. If the preview is broken, please re-upload the file.`,
+          );
         }
       }
 
@@ -146,7 +168,10 @@ export default function EditPropertyPage({
       let finalVideoThumbnail = data.video_thumbnail;
       if (isLocalMediaUrl(data.video_thumbnail)) {
         try {
-          const f = await localMediaToFile(data.video_thumbnail!, "video-thumbnail");
+          const f = await localMediaToFile(
+            data.video_thumbnail!,
+            "video-thumbnail",
+          );
           const uploaded = await uploadFiles([f], "video");
           if (uploaded.length > 0) {
             finalVideoThumbnail = uploaded[0];
@@ -155,7 +180,9 @@ export default function EditPropertyPage({
           }
         } catch (err: any) {
           console.error("Error converting video thumbnail", err);
-          throw new Error(`Video Thumbnail upload failed: ${err.message || err}. If the preview is broken, please re-upload the file.`);
+          throw new Error(
+            `Video Thumbnail upload failed: ${err.message || err}. If the preview is broken, please re-upload the file.`,
+          );
         }
       }
 
@@ -179,11 +206,15 @@ export default function EditPropertyPage({
       setIsSubmitting(false);
 
       if (err instanceof ApiError) {
-        let msg = err.message || "Backend rejected property update. Please verify your fields.";
+        let msg =
+          err.message ||
+          "Backend rejected property update. Please verify your fields.";
         const details = err.data as any;
         if (details?.errors?.fieldErrors) {
           const fieldMsgs = Object.entries(details.errors.fieldErrors)
-            .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`)
+            .map(
+              ([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`,
+            )
             .join(" | ");
           msg = `${msg} Details: [ ${fieldMsgs} ]`;
         } else if (details?.message) {
@@ -191,7 +222,10 @@ export default function EditPropertyPage({
         }
         setErrorMsg(msg);
       } else {
-        setErrorMsg(err.message || "An unexpected error occurred during submission. Please try again.");
+        setErrorMsg(
+          err.message ||
+            "An unexpected error occurred during submission. Please try again.",
+        );
       }
     }
   };
@@ -201,7 +235,9 @@ export default function EditPropertyPage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <Loader2 className="w-8 h-8 text-brand animate-spin" />
-        <p className="text-sm text-gray-500 font-medium animate-pulse">Hydrating your secure session...</p>
+        <p className="text-sm text-gray-500 font-medium animate-pulse">
+          Hydrating your secure session...
+        </p>
       </div>
     );
   }
@@ -210,7 +246,9 @@ export default function EditPropertyPage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <Loader2 className="w-10 h-10 text-brand animate-spin" />
-        <p className="text-sm font-semibold text-ink-muted animate-pulse">Loading property details...</p>
+        <p className="text-sm font-semibold text-ink-muted animate-pulse">
+          Loading property details...
+        </p>
       </div>
     );
   }
@@ -230,9 +268,6 @@ export default function EditPropertyPage({
             <span>Edit Property</span>
             <Sparkles className="w-5 h-5 text-brand" />
           </h1>
-          <p className="text-sm text-gray-500 dark:text-slate-400">
-            Modify any fields below and save to update your active listing.
-          </p>
         </div>
       </div>
 
