@@ -3,6 +3,45 @@ import type { SearchApiItem, SearchApiResponse } from "@/types/searches";
 
 export type { SearchApiItem, SearchApiResponse };
 
+export interface SuggestionProperty {
+  id: number;
+  name: string;
+  permalink: string;
+  location: string;
+  price: number | null;
+  propertyFor: string;
+  categoryName: string;
+  image: string | null;
+}
+
+export interface SuggestionLocation {
+  name: string;
+  type: "locality" | "region" | "city";
+}
+
+export interface SuggestionCategory {
+  id: number;
+  name: string;
+  type?: string;
+}
+
+export interface SuggestionFeature {
+  id: number;
+  name: string;
+}
+
+export interface SearchSuggestionsData {
+  properties: SuggestionProperty[];
+  locations: SuggestionLocation[];
+  categories: SuggestionCategory[];
+  features: SuggestionFeature[];
+}
+
+export interface SearchSuggestionsResponse {
+  success: boolean;
+  data: SearchSuggestionsData;
+}
+
 /**
  * GET /api/v1/searches
  * If authenticated: returns the customer's recent searches.
@@ -11,9 +50,28 @@ export type { SearchApiItem, SearchApiResponse };
 export async function getSearches(): Promise<SearchApiResponse> {
   const res = await apiClient.get<SearchApiResponse>(
     "/searches",
-    { skipAuth: false } // We want it to send Authorization header if token exists in tokenStore, but not fail if token is missing/expired. Since our client skips auth by default when token is not present if we tell it to, let's verify if skipAuth should be true or false.
+    { skipAuth: false }
   );
   return res;
+}
+
+/**
+ * GET /api/v1/searches/suggestions?q=...&city=...&type=...
+ * Dynamic multi-entity search suggestions for properties, locations, categories, and amenities
+ */
+export async function getSearchSuggestions(params: {
+  q: string;
+  city?: string;
+  type?: string;
+}): Promise<SearchSuggestionsData> {
+  const queryParts: string[] = [];
+  if (params.q) queryParts.push(`q=${encodeURIComponent(params.q)}`);
+  if (params.city) queryParts.push(`city=${encodeURIComponent(params.city)}`);
+  if (params.type) queryParts.push(`type=${encodeURIComponent(params.type)}`);
+
+  const qs = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+  const res = await apiClient.get<SearchSuggestionsResponse>(`/searches/suggestions${qs}`);
+  return res.data || { properties: [], locations: [], categories: [], features: [] };
 }
 
 /**

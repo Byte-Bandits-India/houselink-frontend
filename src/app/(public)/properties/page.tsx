@@ -311,16 +311,41 @@ function PropertiesListContent() {
         // 2. Keyword Filter (comprehensive search over name, permalink, description, location, category, city)
         if (filters.keyword) {
           const q = filters.keyword.toLowerCase().trim();
-          data = data.filter(
-            (p) =>
+          const words = q
+            .split(/\s+/)
+            .filter(
+              (w) =>
+                w.length > 1 &&
+                !["in", "for", "the", "at", "and", "a", "an", "to", "of"].includes(w),
+            );
+
+          data = data.filter((p) => {
+            const fullMatch =
               (p.name && p.name.toLowerCase().includes(q)) ||
               (p.permalink && p.permalink.toLowerCase().includes(q)) ||
               (p.description && p.description.toLowerCase().includes(q)) ||
               (p.location && p.location.toLowerCase().includes(q)) ||
               (p.category?.name && p.category.name.toLowerCase().includes(q)) ||
               (p.city?.name && p.city.name.toLowerCase().includes(q)) ||
-              (p.state?.name && p.state.name.toLowerCase().includes(q)),
-          );
+              (p.state?.name && p.state.name.toLowerCase().includes(q));
+
+            if (fullMatch) return true;
+
+            if (words.length > 0) {
+              return words.every(
+                (w) =>
+                  (p.name && p.name.toLowerCase().includes(w)) ||
+                  (p.permalink && p.permalink.toLowerCase().includes(w)) ||
+                  (p.description && p.description.toLowerCase().includes(w)) ||
+                  (p.location && p.location.toLowerCase().includes(w)) ||
+                  (p.category?.name && p.category.name.toLowerCase().includes(w)) ||
+                  (p.city?.name && p.city.name.toLowerCase().includes(w)) ||
+                  (p.state?.name && p.state.name.toLowerCase().includes(w)),
+              );
+            }
+
+            return false;
+          });
         }
 
         // 3. Location Filter (matches any of the comma-separated location tags)
@@ -467,23 +492,61 @@ function PropertiesListContent() {
           });
         }
 
-        // Sort: featured first, then newest
-        data.sort((a, b) => {
-          const aF = a.isFeatured ? 1 : 0;
-          const bF = b.isFeatured ? 1 : 0;
-          if (bF !== aF) return bF - aF;
-          const aTime = a.updatedAt
-            ? new Date(a.updatedAt).getTime()
-            : a.createdAt
-              ? new Date(a.createdAt).getTime()
-              : 0;
-          const bTime = b.updatedAt
-            ? new Date(b.updatedAt).getTime()
-            : b.createdAt
-              ? new Date(b.createdAt).getTime()
-              : 0;
-          return bTime - aTime;
-        });
+        // Sort: search relevance if keyword searched, otherwise featured first, then newest
+        if (filters.keyword) {
+          const q = filters.keyword.toLowerCase().trim();
+          data.sort((a, b) => {
+            const nameA = (a.name || "").toLowerCase();
+            const nameB = (b.name || "").toLowerCase();
+            const locA = (a.location || "").toLowerCase();
+            const locB = (b.location || "").toLowerCase();
+
+            // 1. Exact name match
+            if (nameA === q && nameB !== q) return -1;
+            if (nameB === q && nameA !== q) return 1;
+
+            // 2. Name starts with keyword
+            if (nameA.startsWith(q) && !nameB.startsWith(q)) return -1;
+            if (nameB.startsWith(q) && !nameA.startsWith(q)) return 1;
+
+            // 3. Name contains keyword
+            const aNameInc = nameA.includes(q);
+            const bNameInc = nameB.includes(q);
+            if (aNameInc && !bNameInc) return -1;
+            if (!aNameInc && bNameInc) return 1;
+
+            // 4. Location contains keyword
+            const aLocInc = locA.includes(q);
+            const bLocInc = locB.includes(q);
+            if (aLocInc && !bLocInc) return -1;
+            if (!aLocInc && bLocInc) return 1;
+
+            // 5. Featured first
+            const aF = a.isFeatured ? 1 : 0;
+            const bF = b.isFeatured ? 1 : 0;
+            if (bF !== aF) return bF - aF;
+
+            return 0;
+          });
+        } else {
+          // Sort: featured first, then newest
+          data.sort((a, b) => {
+            const aF = a.isFeatured ? 1 : 0;
+            const bF = b.isFeatured ? 1 : 0;
+            if (bF !== aF) return bF - aF;
+            const aTime = a.updatedAt
+              ? new Date(a.updatedAt).getTime()
+              : a.createdAt
+                ? new Date(a.createdAt).getTime()
+                : 0;
+            const bTime = b.updatedAt
+              ? new Date(b.updatedAt).getTime()
+              : b.createdAt
+                ? new Date(b.createdAt).getTime()
+                : 0;
+            return bTime - aTime;
+          });
+        }
 
         if (isCurrent) {
           setProperties(data.map(mapApiPropertyToCardProps));

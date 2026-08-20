@@ -121,10 +121,19 @@ export {
 // Searches API
 export {
   getSearches,
+  getSearchSuggestions,
   recordSearch,
   deleteSearchHistory,
 } from "./searches";
-export type { SearchApiItem, SearchApiResponse } from "./searches";
+export type {
+  SearchApiItem,
+  SearchApiResponse,
+  SearchSuggestionsData,
+  SuggestionProperty,
+  SuggestionLocation,
+  SuggestionCategory,
+  SuggestionFeature,
+} from "./searches";
 
 // Hero Config API
 export { getHeroConfig } from "./hero";

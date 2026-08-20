@@ -1,14 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Clock, MapPin, Building, X, Home, Flame, Tag, CheckSquare } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Clock, MapPin, Building, X, Home, Flame, Loader2 } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { getPopularProperties, getPopularRegions, getSearches, deleteSearchHistory, tokenStore } from "@/lib/api";
-import type { PopularPropertyApiItem, PopularRegionApiItem, SearchApiItem } from "@/lib/api";
-
+import {
+  getPopularProperties,
+  getPopularRegions,
+  getSearches,
+  deleteSearchHistory,
+  getSearchSuggestions,
+} from "@/lib/api";
+import type {
+  PopularPropertyApiItem,
+  PopularRegionApiItem,
+  SearchApiItem,
+  SearchSuggestionsData,
+  SuggestionProperty,
+  SuggestionLocation,
+} from "@/lib/api";
 import type { SearchSuggestionsProps } from "@/types/components";
-
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 12 },
@@ -24,12 +35,7 @@ const itemVariants: Variants = {
   },
 };
 
-const DEFAULT_TOP_SEARCHES = [
-  { id: -1, query: "2 BHK apartment in Adyar", count: 1 },
-  { id: -2, query: "Flats in porur", count: 1 },
-  { id: -3, query: "Lands in Kundrathur", count: 1 },
-  { id: -4, query: "3 BHK Villas in ECR", count: 1 },
-];
+const STATIC_CITIES = ["Chennai", "Bangalore", "Mumbai", "Hyderabad"];
 
 export default function SearchSuggestions({
   query = "",
@@ -44,40 +50,101 @@ export default function SearchSuggestions({
 }: SearchSuggestionsProps) {
   const router = useRouter();
   const [recentSearches, setRecentSearches] = useState<SearchApiItem[]>([]);
-  const [popularProperties, setPopularProperties] = useState<PopularPropertyApiItem[]>([]);
-  const [popularRegions, setPopularRegions] = useState<PopularRegionApiItem[]>([]);
+  const [popularProperties, setPopularProperties] = useState<
+    PopularPropertyApiItem[]
+  >([]);
+  const [popularRegions, setPopularRegions] = useState<PopularRegionApiItem[]>(
+    [],
+  );
+
+  // Dynamic server suggestions when user types
+  const [serverSuggestions, setServerSuggestions] =
+    useState<SearchSuggestionsData>({
+      properties: [],
+      locations: [],
+      categories: [],
+      features: [],
+    });
+  const [isFetching, setIsFetching] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Load popular properties and regions from API
-    getPopularProperties().then(setPopularProperties).catch(err => console.error("Error loading popular properties:", err));
-    getPopularRegions().then(setPopularRegions).catch(err => console.error("Error loading popular regions:", err));
+    // Load popular properties from API
+    getPopularProperties()
+      .then((res) => {
+        if (res && Array.isArray(res)) setPopularProperties(res);
+      })
+      .catch((err) => console.error("Error loading popular properties:", err));
 
+    // Load popular regions from API
+    getPopularRegions()
+      .then((res) => {
+        if (res && Array.isArray(res)) setPopularRegions(res);
+      })
+      .catch((err) => console.error("Error loading popular regions:", err));
+
+    // Load search history
     getSearches()
       .then((res) => {
-        console.log("SearchSuggestions: getSearches response:", res);
-        if (res.success && res.data) {
-          if (res.data.length > 0) {
-            const sorted = [...res.data].sort((a, b) => {
-              const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-              const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-              if (timeA !== timeB) return timeB - timeA;
-              return b.id - a.id;
-            });
-            setRecentSearches(sorted);
-          } else {
-            setRecentSearches(DEFAULT_TOP_SEARCHES);
-          }
-        } else {
-          setRecentSearches(DEFAULT_TOP_SEARCHES);
+        if (res.success && res.data && Array.isArray(res.data)) {
+          const sorted = [...res.data].sort((a, b) => {
+            const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+            const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+            if (timeA !== timeB) return timeB - timeA;
+            return b.id - a.id;
+          });
+          setRecentSearches(sorted);
         }
       })
       .catch((err) => {
         console.error("Error fetching searches:", err);
-        setRecentSearches(DEFAULT_TOP_SEARCHES);
       });
   }, []);
 
-  const handleRemoveItem = async (indexToRemove: number, e: React.MouseEvent) => {
+  const cleanQ = query.trim();
+  const isSearching = cleanQ.length > 0;
+  const qLower = cleanQ.toLowerCase();
+
+  // Debounced fetch for dynamic suggestions when typing
+  useEffect(() => {
+    if (!isSearching) {
+      setServerSuggestions({
+        properties: [],
+        locations: [],
+        categories: [],
+        features: [],
+      });
+      setIsFetching(false);
+      return;
+    }
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    setIsFetching(true);
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const data = await getSearchSuggestions({ q: cleanQ });
+        setServerSuggestions(data);
+      } catch (err) {
+        console.error("Error fetching dynamic suggestions:", err);
+      } finally {
+        setIsFetching(false);
+      }
+    }, 180);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [cleanQ, isSearching]);
+
+  const handleRemoveItem = async (
+    indexToRemove: number,
+    e: React.MouseEvent,
+  ) => {
     e.stopPropagation();
     const item = recentSearches[indexToRemove];
     if (item && item.id && item.id > 0) {
@@ -98,6 +165,23 @@ export default function SearchSuggestions({
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
       router.push(`/#${targetId}`);
+    }
+  };
+
+  const handlePropertyClick = (
+    property: SuggestionProperty | PopularPropertyApiItem,
+  ) => {
+    const permalink =
+      (property as any).permalink || (property as any).property?.permalink;
+    const name = (property as any).name || (property as any).title;
+
+    if (permalink) {
+      onClose();
+      router.push(`/properties/${permalink}`);
+    } else {
+      onSelectKeyword(name);
+      onSearch({ keyword: name });
+      onClose();
     }
   };
 
@@ -139,131 +223,94 @@ export default function SearchSuggestions({
       onSelectAmenity(amenityVal);
     }
     const nextAmenities = selectedAmenities
-      ? (selectedAmenities.includes(amenityVal) ? selectedAmenities : [...selectedAmenities, amenityVal])
+      ? selectedAmenities.includes(amenityVal)
+        ? selectedAmenities
+        : [...selectedAmenities, amenityVal]
       : [amenityVal];
     onSearch({ amenities: nextAmenities, keyword: amenityVal });
     onClose();
   };
 
-  const q = query.trim().toLowerCase();
-  const isSearching = q.length > 0;
-
-  // 1. High Demand Properties containing the query
-  const defaultProperties = [
-    { title: "Skyline Apartments" },
-    { title: "Grand Plaza Office" },
-    { title: "Oceanic Luxury Villa" },
-    { title: "Signature Residencies" },
-  ];
-
-  const propertiesSource = popularProperties.length > 0
-    ? popularProperties
-    : defaultProperties;
-
+  // 1. Properties: when searching -> dynamic server suggestions; when idle -> popular properties from API
   const filteredProperties = isSearching
-    ? propertiesSource.filter((p) => p.title.toLowerCase().includes(q))
-    : propertiesSource;
+    ? serverSuggestions.properties || []
+    : popularProperties;
 
-  // 2. High Demand Regions / Cities containing the query
-  const defaultRegions = [
-    { name: "Adyar" },
-    { name: "OMR" },
-    { name: "Porur" },
-    { name: "Velachery" },
-  ];
-  const staticCities = ["Chennai", "Bangalore", "Mumbai", "Hyderabad"];
-
-  const regionsSource = popularRegions.length > 0
-    ? popularRegions
-    : defaultRegions;
-
-  const filteredRegions = isSearching
-    ? regionsSource.filter((r) => r.name.toLowerCase().includes(q))
-    : regionsSource;
+  // 2. Locations: when searching -> dynamic locations from API; when idle -> popular regions from API
+  const dynamicLocations: SuggestionLocation[] =
+    serverSuggestions.locations || [];
+  const filteredPopularRegions = isSearching
+    ? popularRegions.filter((r) => r.name.toLowerCase().includes(qLower))
+    : popularRegions;
 
   const filteredCities = isSearching
-    ? staticCities.filter((c) => c.toLowerCase().includes(q))
+    ? STATIC_CITIES.filter((c) => c.toLowerCase().includes(qLower))
     : [];
 
   // 3. Recent searches containing the query
   const filteredRecent = isSearching
-    ? recentSearches.filter((s) => s.query.toLowerCase().includes(q))
+    ? recentSearches.filter((s) => s.query.toLowerCase().includes(qLower))
     : recentSearches;
-
-  // 4. Categories matching the query
-  const propertyCategories = [
-    { value: "plots", label: "Plots" },
-    { value: "apartments", label: "Apartments" },
-    { value: "villas", label: "Villas" },
-    { value: "house", label: "Individual House" },
-    { value: "commercial", label: "Commercial Properties" },
-  ];
-  const matchingCategories = isSearching
-    ? propertyCategories.filter((c) => c.label.toLowerCase().includes(q))
-    : [];
-
-  // 5. Amenities matching the query
-  const defaultAmenities = [
-    "Wifi",
-    "Swimming pool",
-    "Security",
-    "Garden",
-    "Balcony",
-    "Air Conditioning",
-    "Fitness center",
-    "Car Parking",
-    "Bike Parking",
-  ];
-  const matchingAmenities = isSearching
-    ? defaultAmenities.filter((a) => a.toLowerCase().includes(q))
-    : [];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-100 select-none">
-      {/* 1. High Demand Properties */}
+      {/* 1. Properties Column */}
       <div className="flex flex-col justify-between pr-0 md:pr-3">
         <div>
           <motion.div
             variants={itemVariants}
-            className="flex items-center gap-2 mb-3 cursor-pointer group"
+            className="flex items-center justify-between mb-3 cursor-pointer group"
             onClick={() => handleScrollOrNavigate("high-demand-properties")}
           >
-            <Flame size={14} className="text-orange-500 fill-orange-500 group-hover:scale-110 transition-transform" />
-            <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500 group-hover:text-gray-900 transition-colors">
-              {isSearching ? "Matching Properties" : "High Demand Properties"}
-            </h4>
+            <div className="flex items-center gap-2">
+              <Flame
+                size={14}
+                className="text-orange-500 fill-orange-500 group-hover:scale-110 transition-transform"
+              />
+              <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500 group-hover:text-gray-900 transition-colors">
+                {isSearching ? "Matching Properties" : "High Demand Properties"}
+              </h4>
+            </div>
+            {isFetching && (
+              <Loader2 size={12} className="animate-spin text-primary" />
+            )}
           </motion.div>
 
           <div className="space-y-2">
-            {filteredProperties.map((prop, index) => (
+            {filteredProperties.map((prop: any, index: number) => {
+              const title = prop.name || prop.title;
+              return (
+                <motion.div
+                  variants={itemVariants}
+                  key={prop.id || `prop-${index}`}
+                  onClick={() => handlePropertyClick(prop)}
+                  className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                    <Building size={14} className="stroke-[2.5px]" />
+                  </div>
+                  <span className="text-[13px] font-semibold text-left text-gray-700 leading-tight truncate group-hover:text-gray-900 transition-colors">
+                    {title}
+                  </span>
+                </motion.div>
+              );
+            })}
+
+            {filteredProperties.length === 0 && (
               <motion.div
                 variants={itemVariants}
-                key={index}
-                onClick={() => {
-                  onSelectKeyword(prop.title);
-                  onSearch({ keyword: prop.title });
-                  onClose();
-                }}
-                className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
+                className="text-gray-400 text-xs italic py-3 text-left"
               >
-                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-                  <Building size={14} className="stroke-[2.5px]" />
-                </div>
-                <span className="text-[13px] font-semibold text-left text-gray-700 leading-tight truncate group-hover:text-gray-900 transition-colors">
-                  {prop.title}
-                </span>
-              </motion.div>
-            ))}
-            {filteredProperties.length === 0 && (
-              <motion.div variants={itemVariants} className="text-gray-400 text-xs italic py-3">
-                No matching properties
+                {isSearching
+                  ? "No matching properties"
+                  : "No properties available"}
               </motion.div>
             )}
           </div>
         </div>
       </div>
 
-      {/* 2. High Demand Regions */}
+      {/* 2. Locations Column */}
       <div className="flex flex-col justify-between pt-4 md:pt-0 pl-0 md:pl-4 pr-0 md:pr-3">
         <div>
           <motion.div
@@ -271,32 +318,53 @@ export default function SearchSuggestions({
             className="flex items-center gap-2 mb-3 cursor-pointer group"
             onClick={() => handleScrollOrNavigate("trending-cities")}
           >
-            <Flame size={14} className="text-orange-500 fill-orange-500 group-hover:scale-110 transition-transform" />
+            <Flame
+              size={14}
+              className="text-orange-500 fill-orange-500 group-hover:scale-110 transition-transform"
+            />
             <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500 group-hover:text-gray-900 transition-colors">
               {isSearching ? "Matching Locations" : "High Demand Regions"}
             </h4>
           </motion.div>
 
           <div className="space-y-2">
-            {/* Regions */}
-            {filteredRegions.map((region, index) => (
-              <motion.div
-                variants={itemVariants}
-                key={index}
-                onClick={() => handleRegionClick(region.name)}
-                className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
-              >
-                <div className="w-7 h-7 rounded-lg bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
-                  <MapPin size={14} className="stroke-[2.5px]" />
-                </div>
-                <span className="text-[13px] font-semibold text-gray-700 text-left leading-tight group-hover:text-gray-900 transition-colors">
-                  {region.name}
-                </span>
-              </motion.div>
-            ))}
+            {/* Dynamic Locations when searching */}
+            {isSearching && dynamicLocations.length > 0
+              ? dynamicLocations.map((loc, index) => (
+                  <motion.div
+                    variants={itemVariants}
+                    key={`loc-${index}`}
+                    onClick={() => handleRegionClick(loc.name)}
+                    className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
+                      <MapPin size={14} className="stroke-[2.5px]" />
+                    </div>
+                    <span className="text-[13px] font-semibold text-gray-700 text-left leading-tight group-hover:text-gray-900 transition-colors">
+                      {loc.name}
+                    </span>
+                  </motion.div>
+                ))
+              : /* High Demand Regions from API */
+                filteredPopularRegions.map((region, index) => (
+                  <motion.div
+                    variants={itemVariants}
+                    key={region.id || `reg-${index}`}
+                    onClick={() => handleRegionClick(region.name)}
+                    className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150 group"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
+                      <MapPin size={14} className="stroke-[2.5px]" />
+                    </div>
+                    <span className="text-[13px] font-semibold text-gray-700 text-left leading-tight group-hover:text-gray-900 transition-colors">
+                      {region.name}
+                    </span>
+                  </motion.div>
+                ))}
 
-            {/* Cities */}
+            {/* Cities matching query when searching */}
             {isSearching &&
+              dynamicLocations.length === 0 &&
               filteredCities.map((city, index) => (
                 <motion.div
                   variants={itemVariants}
@@ -313,9 +381,24 @@ export default function SearchSuggestions({
                 </motion.div>
               ))}
 
-            {filteredRegions.length === 0 && filteredCities.length === 0 && (
-              <motion.div variants={itemVariants} className="text-gray-400 text-xs italic py-3">
-                No matching locations
+            {isSearching &&
+              dynamicLocations.length === 0 &&
+              filteredPopularRegions.length === 0 &&
+              filteredCities.length === 0 && (
+                <motion.div
+                  variants={itemVariants}
+                  className="text-gray-400 text-xs italic py-3 text-left"
+                >
+                  No matching locations
+                </motion.div>
+              )}
+
+            {!isSearching && filteredPopularRegions.length === 0 && (
+              <motion.div
+                variants={itemVariants}
+                className="text-gray-400 text-xs italic py-3 text-left"
+              >
+                No regions available
               </motion.div>
             )}
           </div>
@@ -327,14 +410,17 @@ export default function SearchSuggestions({
         <div>
           {/* Recent Searches */}
           <div className="mb-4">
-            <motion.div variants={itemVariants} className="flex items-center justify-between mb-3">
+            <motion.div
+              variants={itemVariants}
+              className="flex items-center justify-between mb-3"
+            >
               <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500 flex items-center gap-2">
                 <Clock size={14} className="text-gray-400 stroke-[2.5px]" />
                 {isSearching
                   ? "Matching History"
                   : recentSearches.some((s) => s.count !== undefined)
-                  ? "Top Searches"
-                  : "Recent Searches"}
+                    ? "Top Searches"
+                    : "Recent Searches"}
               </h4>
             </motion.div>
 
@@ -342,7 +428,7 @@ export default function SearchSuggestions({
               {filteredRecent.map((item, index) => (
                 <motion.div
                   variants={itemVariants}
-                  key={index}
+                  key={item.id || index}
                   onClick={() => handleRecentClick(item.query)}
                   className="flex items-center justify-between group cursor-pointer hover:bg-gray-50 p-1.5 rounded-xl transition-colors duration-150"
                 >
@@ -354,69 +440,28 @@ export default function SearchSuggestions({
                       {item.query}
                     </span>
                   </div>
-                  <button
-                    onClick={(e) => handleRemoveItem(index, e)}
-                    className="w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
-                  >
-                    <X size={12} className="stroke-[2.5px]" />
-                  </button>
+                  {item.id && item.id > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => handleRemoveItem(index, e)}
+                      className="w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
+                      title="Delete search history"
+                    >
+                      <X size={12} className="stroke-[2.5px]" />
+                    </button>
+                  )}
                 </motion.div>
               ))}
               {filteredRecent.length === 0 && (
-                <motion.div variants={itemVariants} className="text-gray-400 text-xs italic py-1">
-                  No matching history
+                <motion.div
+                  variants={itemVariants}
+                  className="text-gray-400 text-xs italic py-1 text-left"
+                >
+                  {isSearching ? "No matching history" : "No recent searches"}
                 </motion.div>
               )}
             </div>
           </div>
-
-          {/* Filter Suggestions (Only when searching) */}
-          {isSearching && (matchingCategories.length > 0 || matchingAmenities.length > 0) && (
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <motion.div variants={itemVariants} className="flex items-center gap-2 mb-3">
-                <Tag size={14} className="text-indigo-500" />
-                <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500">
-                  Matching Filters
-                </h4>
-              </motion.div>
-
-              <div className="space-y-2">
-                {/* Categories */}
-                {matchingCategories.map((category) => (
-                  <motion.div
-                    variants={itemVariants}
-                    key={category.value}
-                    onClick={() => handleCategoryClick(category.value, category.label)}
-                    className="flex items-center gap-2.5 cursor-pointer hover:bg-indigo-50/50 p-1.5 rounded-xl transition-colors duration-150 group border border-dashed border-indigo-100"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                      <Tag size={14} className="stroke-[2.5px]" />
-                    </div>
-                    <span className="text-[13px] font-semibold text-gray-700 text-left leading-tight group-hover:text-indigo-900 transition-colors">
-                      Category: <strong className="text-indigo-600">{category.label}</strong>
-                    </span>
-                  </motion.div>
-                ))}
-
-                {/* Amenities */}
-                {matchingAmenities.map((amenity) => (
-                  <motion.div
-                    variants={itemVariants}
-                    key={amenity}
-                    onClick={() => handleAmenityClick(amenity)}
-                    className="flex items-center gap-2.5 cursor-pointer hover:bg-emerald-50/50 p-1.5 rounded-xl transition-colors duration-150 group border border-dashed border-emerald-100"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                      <CheckSquare size={14} className="stroke-[2.5px]" />
-                    </div>
-                    <span className="text-[13px] font-semibold text-gray-700 text-left leading-tight group-hover:text-emerald-900 transition-colors">
-                      Amenity: <strong className="text-emerald-600">{amenity}</strong>
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

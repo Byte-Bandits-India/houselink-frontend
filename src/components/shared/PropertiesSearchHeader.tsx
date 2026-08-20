@@ -233,6 +233,8 @@ export default function PropertiesSearchHeader() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const debounceKeywordTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // Sync with context changes (e.g., if filtered from sidebar)
   useEffect(() => {
     setLocalCity(filters.city);
@@ -240,7 +242,52 @@ export default function PropertiesSearchHeader() {
     setLocalActiveTab(filters.activeTab);
   }, [filters.city, filters.keyword, filters.activeTab]);
 
+  // Debounced search commit as user types
+  useEffect(() => {
+    if (debounceKeywordTimerRef.current) {
+      clearTimeout(debounceKeywordTimerRef.current);
+    }
+
+    // Only debounce update if localKeyword differs from current committed filters.keyword
+    if (localKeyword !== filters.keyword) {
+      debounceKeywordTimerRef.current = setTimeout(() => {
+        const parsed = parseKeywordToFilters(
+          localKeyword,
+          filters,
+          popularRegionsList,
+          dbCategories,
+          dbFeatures,
+          dbFacilities,
+        );
+        setFilters({
+          ...filters,
+          city: localCity,
+          keyword: localKeyword,
+          activeTab: localActiveTab,
+          ...parsed,
+        });
+      }, 400);
+    }
+
+    return () => {
+      if (debounceKeywordTimerRef.current) {
+        clearTimeout(debounceKeywordTimerRef.current);
+      }
+    };
+  }, [
+    localKeyword,
+    localCity,
+    localActiveTab,
+    popularRegionsList,
+    dbCategories,
+    dbFeatures,
+    dbFacilities,
+  ]);
+
   const handleSearchCommit = () => {
+    if (debounceKeywordTimerRef.current) {
+      clearTimeout(debounceKeywordTimerRef.current);
+    }
     const parsed = parseKeywordToFilters(
       localKeyword,
       filters,
@@ -254,7 +301,6 @@ export default function PropertiesSearchHeader() {
       city: localCity,
       keyword: localKeyword,
       activeTab: localActiveTab,
-      location: "", // Clear conflicting region location on manual search commit
       ...parsed,
     });
     setIsInputFocused(false);
@@ -262,6 +308,9 @@ export default function PropertiesSearchHeader() {
 
   const handleClearKeyword = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (debounceKeywordTimerRef.current) {
+      clearTimeout(debounceKeywordTimerRef.current);
+    }
     setLocalKeyword("");
     setFilters({
       ...filters,
@@ -373,7 +422,7 @@ export default function PropertiesSearchHeader() {
           <label className="text-[11px] uppercase font-bold text-white/70 mb-1.5 tracking-wider">
             Keyword, Location, Property Name
           </label>
-          <div className="relative bg-white rounded-full h-12 pl-4 sm:pl-5 pr-0 flex items-center shadow-sm w-full overflow-hidden">
+          <div className="relative bg-white rounded-full h-12 pl-4 sm:pl-5 pr-1.5 flex items-center shadow-sm w-full">
             <Search size={16} className="text-gray-400 mr-2.5 flex-shrink-0" />
             <div className="relative flex-1 h-full flex items-center min-w-0">
               <input
@@ -436,7 +485,7 @@ export default function PropertiesSearchHeader() {
                 setIsInputFocused(false);
                 setIsFilterModalOpen(true);
               }}
-              className="h-8 px-3 rounded-full border border-gray-200 text-gray-700 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer mr-2 z-10"
+              className="h-9 px-3.5 rounded-full border border-gray-200 text-gray-700 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer mr-1.5 z-10"
               title="Open Advanced Filters"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
@@ -445,11 +494,11 @@ export default function PropertiesSearchHeader() {
               </span>
             </button>
 
-            {/* Search Property Gradient Button Flush to End */}
+            {/* Search Property Gradient Button */}
             <button
               type="button"
               onClick={handleSearchCommit}
-              className="h-full px-5 sm:px-6 bg-gradient-to-r from-primary to-secondary hover:brightness-105 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap z-10 flex-shrink-0"
+              className="h-9 px-5 sm:px-6 rounded-full bg-gradient-to-r from-primary to-secondary hover:brightness-105 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap z-10 flex-shrink-0 shadow-sm"
             >
               <Search size={14} className="stroke-[2.5px] hidden sm:inline" />
               <span>Search Property</span>
