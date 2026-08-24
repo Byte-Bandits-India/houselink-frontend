@@ -303,7 +303,7 @@ export default function BuyPackagesModal({
                 <div
                   key={pkg.id}
                   className={cn(
-                    "relative rounded-3xl p-6 flex flex-col justify-between shadow-sm transition-all duration-300 border h-[380px] text-left",
+                    "relative rounded-3xl p-6 flex flex-col justify-between shadow-sm transition-all duration-300 border min-h-[380px] text-left",
                     isThisPackageActive
                       ? "bg-white border-[#163D75] shadow-sm text-ink"
                       : isDarkCard
@@ -414,29 +414,21 @@ export default function BuyPackagesModal({
                   />
 
                   {/* Feature Bullet List */}
-                  <ul
-                    className={cn(
-                      "text-xs space-y-1.5 w-full shrink-0",
-                      isDarkCard ? "text-white/80" : "text-ink-secondary"
-                    )}
-                  >
-                    <li className="flex items-center gap-2">
-                      <i className="fa-regular fa-circle-check text-sm opacity-80" />
-                      <span>
-                        {pkg.noOfCredit} Landlord Contact Unlocks
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <i className="fa-regular fa-circle-check text-sm opacity-80" />
-                      <span>
-                        30-Day Active Validity per Contact Unlock
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <i className="fa-regular fa-circle-check text-sm opacity-80" />
-                      <span>Direct Phone &amp; Email Access</span>
-                    </li>
-                  </ul>
+                  {pkg.features && pkg.features.length > 0 && (
+                    <ul
+                      className={cn(
+                        "text-xs space-y-1.5 w-full shrink-0",
+                        isDarkCard ? "text-white/80" : "text-ink-secondary"
+                      )}
+                    >
+                      {pkg.features.map((point, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <i className="fa-regular fa-circle-check text-sm opacity-80" />
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               );
             })}

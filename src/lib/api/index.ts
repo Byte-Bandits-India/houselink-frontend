@@ -23,7 +23,7 @@ export {
 } from "./auth";
 
 // Location API
-export { getStates, getCities } from "./locations";
+export { getCountries, getStates, getCities } from "./locations";
 
 export {
   createProperty,

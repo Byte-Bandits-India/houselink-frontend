@@ -8,6 +8,7 @@ import {
   sendOtpRegister,
   register,
   retryOtp,
+  getCountries,
   getStates,
   getCities,
   ApiError,
@@ -67,12 +68,24 @@ export default function RegisterPage() {
     return digits;
   };
 
-  // ── Fetch states on mount ──────────────────────────────────────────────────
+  // ── Fetch country, then its states, on mount ──────────────────────────────
   useEffect(() => {
-    getStates()
-      .then((res) => setStates(res.data))
-      .catch(() => setErrors((e) => ({ ...e, states: "Failed to load states" })))
-      .finally(() => setLoadingStates(false));
+    getCountries()
+      .then((res) => {
+        const country = res.data[0];
+        if (!country) {
+          setErrors((e) => ({ ...e, states: "No countries configured" }));
+          setLoadingStates(false);
+          return;
+        }
+        return getStates(country.id)
+          .then((res) => setStates(res.data))
+          .finally(() => setLoadingStates(false));
+      })
+      .catch(() => {
+        setErrors((e) => ({ ...e, states: "Failed to load states" }));
+        setLoadingStates(false);
+      });
   }, []);
 
   // ── Fetch cities when stateId changes ─────────────────────────────────────

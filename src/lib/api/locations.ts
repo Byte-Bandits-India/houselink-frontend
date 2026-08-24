@@ -1,22 +1,29 @@
 /**
  * Locations API functions
  *
- * GET /api/v1/locations/states?countryId=13   → all Indian states
+ * GET /api/v1/locations/countries             → all countries
+ * GET /api/v1/locations/states?countryId=<id> → states for a given country
  * GET /api/v1/locations/cities?stateId=<id>   → cities for a given state
  *
  * No authentication required for these endpoints.
  */
 
 import { apiClient } from "./client";
-import type { StatesResponse, CitiesResponse } from "@/types/auth";
+import type { CountriesResponse, StatesResponse, CitiesResponse } from "@/types/auth";
 
 /**
- * Fetch all states for India (countryId=13).
- * Pass a different countryId to fetch states for another country.
+ * Fetch all countries.
  */
-export async function getStates(
-  countryId: number = 13
-): Promise<StatesResponse> {
+export async function getCountries(): Promise<CountriesResponse> {
+  return apiClient.get<CountriesResponse>(`/locations/countries`, {
+    skipAuth: true,
+  });
+}
+
+/**
+ * Fetch all states for a given countryId.
+ */
+export async function getStates(countryId: number): Promise<StatesResponse> {
   return apiClient.get<StatesResponse>(
     `/locations/states?countryId=${countryId}`,
     { skipAuth: true }

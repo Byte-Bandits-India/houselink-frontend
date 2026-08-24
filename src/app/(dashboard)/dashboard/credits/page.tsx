@@ -358,7 +358,7 @@ function CreditsPageContent() {
               <div
                 key={pkg.id}
                 className={cn(
-                  "relative rounded-3xl p-6 flex flex-col justify-between shadow-sm transition-all duration-300 border h-[380px] text-left",
+                  "relative rounded-3xl p-6 flex flex-col justify-between shadow-sm transition-all duration-300 border min-h-[380px] text-left",
                   isThisPackageActive
                     ? "bg-white border-[#163D75] shadow-sm text-ink"
                     : isDarkCard
@@ -463,33 +463,21 @@ function CreditsPageContent() {
                 />
 
                 {/* Feature Bullet List */}
-                <ul
-                  className={cn(
-                    "text-xs space-y-1.5 w-full shrink-0",
-                    isDarkCard ? "text-white/80" : "text-ink-secondary"
-                  )}
-                >
-                  <li className="flex items-center gap-2">
-                    <i className="fa-regular fa-circle-check text-sm opacity-80" />
-                    <span>
-                      {isRent
-                        ? `${pkg.noOfCredit} Landlord Contact Unlocks`
-                        : `${pkg.noOfCredit} posts till the plan expires`}
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <i className="fa-regular fa-circle-check text-sm opacity-80" />
-                    <span>
-                      {isRent
-                        ? "30-Day Active Validity per Contact Unlock"
-                        : `Valid up-to ${pkg.totalDaysLimit ? `${Math.round(pkg.totalDaysLimit / 30)} month${Math.round(pkg.totalDaysLimit / 30) > 1 ? 's' : ''}` : "1 month"}`}
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <i className="fa-regular fa-circle-check text-sm opacity-80" />
-                    <span>{isRent ? "Direct Phone & Email Access" : "Basic Listings"}</span>
-                  </li>
-                </ul>
+                {pkg.features && pkg.features.length > 0 && (
+                  <ul
+                    className={cn(
+                      "text-xs space-y-1.5 w-full shrink-0",
+                      isDarkCard ? "text-white/80" : "text-ink-secondary"
+                    )}
+                  >
+                    {pkg.features.map((point, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <i className="fa-regular fa-circle-check text-sm opacity-80" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             );
           })}

@@ -1,5 +1,10 @@
 // ─── Location types ───────────────────────────────────────────────────────────
 
+export type Country = {
+  id: number;
+  name: string;
+};
+
 export type State = {
   id: number;
   name: string;
@@ -91,6 +96,11 @@ export type MeResponse = {
 };
 
 // ─── Location response shapes ─────────────────────────────────────────────────
+
+export type CountriesResponse = {
+  success: boolean;
+  data: Country[];
+};
 
 export type StatesResponse = {
   success: boolean;

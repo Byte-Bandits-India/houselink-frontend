@@ -4,6 +4,7 @@ export type Package = {
   userType: "Owner" | "Builder" | "Consultant" | null;
   name: string;
   description: string | null;
+  features: string[] | null;
   price: number;
   finalPrice: number | null;
   totalDaysLimit: number | null;
