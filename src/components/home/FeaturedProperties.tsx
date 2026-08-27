@@ -102,14 +102,14 @@ function FeaturedPropertiesContent() {
         // Apply client-side filters
         let filteredData = applyFilters(data);
 
-        // Sort: featured properties first, and then by updatedAt / createdAt descending
+        // Sort: featured properties first, then by last updated/approved time descending
         filteredData.sort((a, b) => {
           const aFeatured = a.isFeatured ? 1 : 0;
           const bFeatured = b.isFeatured ? 1 : 0;
           if (bFeatured !== aFeatured) {
             return bFeatured - aFeatured;
           }
-          
+
           const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
           const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
           if (bTime !== aTime) {
