@@ -199,6 +199,7 @@ export type SearchFilterModalProps = {
   isOpen: boolean;
   onClose: () => void;
   initialKeyword: string;
+  initialLocation?: string;
   initialPurpose: "sell" | "rent";
   onSearch: (filters: {
     keyword?: string;

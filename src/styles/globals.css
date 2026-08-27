@@ -354,4 +354,32 @@
         transition: all 600ms linear;
         background-color: transparent;
     }
+
+    .visible-scrollbar {
+        scrollbar-width: thin !important;
+        scrollbar-color: #94a3b8 #e2e8f0 !important;
+        -ms-overflow-style: auto !important;
+    }
+
+    .visible-scrollbar::-webkit-scrollbar {
+        display: block !important;
+        width: 6px !important;
+        height: 6px !important;
+    }
+
+    .visible-scrollbar::-webkit-scrollbar-track {
+        display: block !important;
+        background: #e2e8f0 !important;
+        border-radius: 9999px !important;
+    }
+
+    .visible-scrollbar::-webkit-scrollbar-thumb {
+        display: block !important;
+        background: #94a3b8 !important;
+        border-radius: 9999px !important;
+    }
+
+    .visible-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #64748b !important;
+    }
 }

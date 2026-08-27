@@ -671,10 +671,16 @@ export default function PropertySearch() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           initialKeyword={keyword}
+          initialLocation={location || keyword}
           initialPurpose={activeTab as "sell" | "rent"}
           onSearch={(modalFilters) => {
+            if (modalFilters.location) {
+              setKeyword(modalFilters.location);
+              setLocation(modalFilters.location);
+            }
             handleSearch({
               ...modalFilters,
+              keyword: modalFilters.location || modalFilters.keyword,
               fromModal: true,
             });
           }}
@@ -892,10 +898,16 @@ export default function PropertySearch() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         initialKeyword={keyword}
+        initialLocation={location || keyword}
         initialPurpose={activeTab as "sell" | "rent"}
         onSearch={(modalFilters) => {
+          if (modalFilters.location) {
+            setKeyword(modalFilters.location);
+            setLocation(modalFilters.location);
+          }
           handleSearch({
             ...modalFilters,
+            keyword: modalFilters.location || modalFilters.keyword,
             fromModal: true,
           });
         }}

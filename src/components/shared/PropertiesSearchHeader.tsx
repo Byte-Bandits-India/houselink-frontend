@@ -342,10 +342,11 @@ export default function PropertiesSearchHeader() {
   }) => {
     const nextFilters = { ...filters };
     if (overrides) {
-      if (overrides.location) {
-        nextFilters.location = overrides.location;
-        nextFilters.keyword = overrides.location;
-        setLocalKeyword(overrides.location);
+      const chosenLoc = overrides.location || overrides.keyword;
+      if (chosenLoc) {
+        nextFilters.location = chosenLoc;
+        nextFilters.keyword = chosenLoc;
+        setLocalKeyword(chosenLoc);
       } else if (overrides.keyword !== undefined) {
         nextFilters.keyword = overrides.keyword;
         setLocalKeyword(overrides.keyword);
@@ -682,6 +683,7 @@ export default function PropertiesSearchHeader() {
         onClose={() => setIsFilterModalOpen(false)}
         initialPurpose={localActiveTab}
         initialKeyword={localKeyword}
+        initialLocation={filters.location || localKeyword}
         onSearch={handleFilterModalSearch}
       />
     </div>

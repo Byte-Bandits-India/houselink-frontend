@@ -1153,6 +1153,20 @@ export async function getPropertyCategories(params?: Record<string, any>): Promi
   return apiClient.get<{ success: boolean; data: any[] }>(`/categories${query}`, { skipAuth: true });
 }
 
+export async function getLocationSuggestions(search?: string): Promise<string[]> {
+  const searchParams = new URLSearchParams();
+  if (search && search.trim()) {
+    searchParams.append("search", search.trim());
+  }
+  const query = searchParams.toString() ? `?${searchParams.toString()}` : "";
+  const res = await apiClient.get<{ success: boolean; data: string[] }>(
+    `/properties/location-suggestions${query}`,
+    { skipAuth: true }
+  );
+  return res.data || [];
+}
+
+
 
 
 

@@ -21,11 +21,12 @@ export async function getCountries(): Promise<CountriesResponse> {
 }
 
 /**
- * Fetch all states for a given countryId.
+ * Fetch all states for a given countryId (defaults to countryId=13 India on backend if omitted).
  */
-export async function getStates(countryId: number): Promise<StatesResponse> {
+export async function getStates(countryId?: number): Promise<StatesResponse> {
+  const query = countryId !== undefined && countryId !== null ? `?countryId=${countryId}` : "";
   return apiClient.get<StatesResponse>(
-    `/locations/states?countryId=${countryId}`,
+    `/locations/states${query}`,
     { skipAuth: true }
   );
 }
@@ -34,7 +35,10 @@ export async function getStates(countryId: number): Promise<StatesResponse> {
  * Fetch cities for a given stateId.
  * Returns 400 if stateId is missing.
  */
-export async function getCities(stateId: number): Promise<CitiesResponse> {
+export async function getCities(stateId?: number): Promise<CitiesResponse> {
+  if (stateId === undefined || stateId === null || isNaN(Number(stateId))) {
+    return { success: true, data: [] } as CitiesResponse;
+  }
   return apiClient.get<CitiesResponse>(
     `/locations/cities?stateId=${stateId}`,
     { skipAuth: true }

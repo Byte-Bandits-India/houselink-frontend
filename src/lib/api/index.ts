@@ -45,6 +45,7 @@ export {
   getCityIdByName,
   getImageUrl,
   getPropertyCategories,
+  getLocationSuggestions,
 } from "./properties";
 
 // Blogs API
