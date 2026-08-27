@@ -27,9 +27,13 @@ export type PageFilterValues = {
   minPrice?: string;
   maxPrice: string;
   priceRanges?: string;
+  minArea?: string;
   maxArea: string;
   amenities: string;
+  facilities?: string;
   houseType?: string;
+  furnishingType?: string;
+  sortBy?: string;
 };
 
 export const defaultFilterValues: PageFilterValues = {
@@ -42,9 +46,13 @@ export const defaultFilterValues: PageFilterValues = {
   minPrice: "",
   maxPrice: "",
   priceRanges: "",
+  minArea: "",
   maxArea: "",
   amenities: "",
+  facilities: "",
   houseType: "",
+  furnishingType: "",
+  sortBy: "",
 };
 
 type PageFilterContextType = {

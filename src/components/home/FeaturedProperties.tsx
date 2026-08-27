@@ -76,6 +76,24 @@ function FeaturedPropertiesContent() {
         if (maxPrice) {
           params.max_price = maxPrice;
         }
+        if ((homeFilters as any).minPrice) {
+          params.min_price = (homeFilters as any).minPrice;
+        }
+        if (maxArea) {
+          params.max_area = maxArea;
+        }
+        if ((homeFilters as any).minArea) {
+          params.min_area = (homeFilters as any).minArea;
+        }
+        if ((homeFilters as any).houseType) {
+          params.house_type = (homeFilters as any).houseType;
+        }
+        if (amenities) {
+          params.features = amenities;
+        }
+        if ((homeFilters as any).facilities) {
+          params.facilities = (homeFilters as any).facilities;
+        }
 
         if (keyword) {
           params.search = keyword;

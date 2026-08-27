@@ -1,4 +1,4 @@
-import { PropertyFormData, PropertySubtype, AMENITIES_LIST } from "@/types/property";
+import { PropertyFormData, PropertySubtype, AMENITIES_LIST, GetPropertiesParams } from "@/types/property";
 import { apiClient } from "./client";
 import { getStates, getCities } from "./locations";
 
@@ -992,7 +992,7 @@ export async function updateProperty(
 /**
  * Fetch all properties with optional query filters
  */
-export async function getProperties(params?: Record<string, any>): Promise<{
+export async function getProperties(params?: GetPropertiesParams): Promise<{
   success: boolean;
   data: any[];
   meta?: { total: number; page: number; page_size: number; total_pages: number };
@@ -1002,11 +1002,18 @@ export async function getProperties(params?: Record<string, any>): Promise<{
     const cleanParams: Record<string, string> = {};
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== "") {
-        cleanParams[key] = String(value);
+        if (Array.isArray(value)) {
+          if (value.length > 0) {
+            cleanParams[key] = value.join(",");
+          }
+        } else {
+          cleanParams[key] = String(value);
+        }
       }
     });
     const searchParams = new URLSearchParams(cleanParams);
-    query = `?${searchParams.toString()}`;
+    const qs = searchParams.toString();
+    if (qs) query = `?${qs}`;
   }
   return apiClient.get<{
     success: boolean;

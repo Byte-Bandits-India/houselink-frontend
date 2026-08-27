@@ -371,3 +371,56 @@ export function getSchemaFields(
 
   return fields;
 }
+
+export interface GetPropertiesParams {
+  page?: number | string;
+  limit?: number | string;
+  page_size?: number | string;
+  pageSize?: number | string;
+  propertyFor?: "sell" | "rent" | "lease" | "rent_lease" | string;
+  property_for?: string;
+  for?: string;
+  propertyOwnership?: "owner" | "builder" | "consultant" | string;
+  property_ownership?: string;
+  categoryId?: number | string;
+  categories_id?: number | string;
+  category_id?: number | string;
+  category?: string;
+  cityId?: number | string;
+  city_id?: number | string;
+  stateId?: number | string;
+  state_id?: number | string;
+  minPrice?: number | string;
+  min_price?: number | string;
+  maxPrice?: number | string;
+  max_price?: number | string;
+  minArea?: number | string;
+  min_area?: number | string;
+  maxArea?: number | string;
+  max_area?: number | string;
+  houseType?: string;
+  house_type?: string;
+  furnishingType?: string;
+  furnishing_type?: string;
+  features?: string | string[] | number[];
+  feature_ids?: string | string[] | number[];
+  amenities?: string | string[];
+  facilities?: string | string[] | number[];
+  facility_ids?: string | string[] | number[];
+  location?: string;
+  locality?: string;
+  search?: string;
+  sortBy?: "newest" | "oldest" | "price_asc" | "price_desc" | "views" | "featured_first" | string;
+  sort_by?: string;
+  customerId?: number | string;
+  customer_id?: number | string;
+  is_active?: boolean | string;
+  isActive?: boolean | string;
+  is_featured?: boolean | string;
+  isFeatured?: boolean | string;
+  moderation?: string;
+  moderationStatus?: string;
+  status?: string;
+  [key: string]: any;
+}
+

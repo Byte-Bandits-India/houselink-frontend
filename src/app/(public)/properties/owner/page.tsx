@@ -246,6 +246,16 @@ function OwnerPropertiesListContent() {
         }
 
         if (filters.maxPrice) fetchParams.max_price = filters.maxPrice;
+        if ((filters as any).minPrice) fetchParams.min_price = (filters as any).minPrice;
+        if (filters.maxArea) fetchParams.max_area = filters.maxArea;
+        if ((filters as any).minArea) fetchParams.min_area = (filters as any).minArea;
+        if (filters.houseType) fetchParams.house_type = filters.houseType;
+        if (filters.amenities) fetchParams.features = filters.amenities;
+        if ((filters as any).facilities) fetchParams.facilities = (filters as any).facilities;
+        if ((filters as any).furnishingType || (filters as any).furnishing) {
+          fetchParams.furnishing_type = (filters as any).furnishingType || (filters as any).furnishing;
+        }
+        if (filters.sortBy) fetchParams.sort_by = filters.sortBy;
 
         const locationTags = filters.location
           ? filters.location

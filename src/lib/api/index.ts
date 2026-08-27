@@ -47,6 +47,7 @@ export {
   getPropertyCategories,
   getLocationSuggestions,
 } from "./properties";
+export type { GetPropertiesParams } from "@/types/property";
 
 // Blogs API
 export {
