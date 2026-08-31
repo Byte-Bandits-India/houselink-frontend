@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChevronDown, ChevronUp, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { usePageFilter, PRICE_RANGES, defaultFilterValues, type PageFilterValues } from "@/contexts/HomeFilterContext";
 import PropertyTypeSwitch from "./PropertyTypeSwitch";
-import { getFeatures, getFacilities } from "@/lib/api";
+import { getFeatures, getFacilities, getPropertyCategories } from "@/lib/api";
 
 export default function PropertiesFilterSidebar() {
   const { filters, setFilters } = usePageFilter();
@@ -19,6 +19,13 @@ export default function PropertiesFilterSidebar() {
   // Dynamic filter lists fetched from backend
   const [dbFeatures, setDbFeatures] = useState<Array<{ id: number; name: string }>>([]);
   const [dbFacilities, setDbFacilities] = useState<Array<{ id: number; name: string }>>([]);
+  const [categoriesList, setCategoriesList] = useState<Array<{ value: string; label: string }>>([
+    { value: "apartments", label: "Apartments" },
+    { value: "villas", label: "Villas" },
+    { value: "house", label: "Individual House" },
+    { value: "commercial", label: "Commercial Properties" },
+    { value: "all", label: "Show All Properties" },
+  ]);
 
   // Local state for instantaneous UI responsiveness
   const [localFilters, setLocalFilters] = useState<PageFilterValues>(filters);
@@ -39,6 +46,46 @@ export default function PropertiesFilterSidebar() {
     }
     loadFilterData();
   }, []);
+
+  // Dynamically load categories based on activeTab purpose
+  useEffect(() => {
+    getPropertyCategories({ for: localFilters.activeTab })
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data)) {
+          // Individual residential categories
+          const residentialCategories = res.data
+            .filter((c: any) => c.type?.toLowerCase() === "residential")
+            .map((c: any) => {
+              const lowerName = c.name.toLowerCase();
+              let val = lowerName.replace(/\s+/g, "_");
+              if (lowerName.includes("plot")) val = "plots";
+              else if (lowerName.includes("apartment")) val = "apartments";
+              else if (lowerName.includes("villa")) val = "villas";
+              else if (lowerName.includes("individual house") || lowerName.includes("house")) val = "house";
+              return {
+                value: val,
+                label: c.name,
+              };
+            });
+
+          // Single entry for Commercial Properties
+          const hasCommercial = res.data.some(
+            (c: any) => c.type?.toLowerCase() === "commercial"
+          );
+
+          const list = [
+            ...residentialCategories,
+            ...(hasCommercial
+              ? [{ value: "commercial", label: "Commercial Properties" }]
+              : []),
+            { value: "all", label: "Show All Properties" },
+          ];
+
+          setCategoriesList(list);
+        }
+      })
+      .catch((err) => console.error("Failed to load categories in sidebar:", err));
+  }, [localFilters.activeTab]);
 
   // Synchronize external filter changes when no active debounce timer is running
   useEffect(() => {
@@ -170,15 +217,6 @@ export default function PropertiesFilterSidebar() {
     });
   };
 
-  const categories = [
-    { value: "plots", label: "Plots" },
-    { value: "apartments", label: "Apartments" },
-    { value: "villas", label: "Villas" },
-    { value: "house", label: "Individual House" },
-    { value: "commercial", label: "Commercial Properties" },
-    { value: "all", label: "Show All Properties" },
-  ];
-
   const houseTypes = [
     { value: "1 RK", label: "1 RK" },
     { value: "1 BHK", label: "1 BHK" },
@@ -266,7 +304,7 @@ export default function PropertiesFilterSidebar() {
 
             {/* Checkbox List */}
             <div className="flex flex-col gap-3">
-              {categories.map((cat) => {
+              {categoriesList.map((cat) => {
                 const isChecked =
                   cat.value === "all"
                     ? !localFilters.activeCategory || localFilters.activeCategory === "all"

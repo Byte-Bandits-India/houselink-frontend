@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { message } from "antd";
+import { getPropertyCategories } from "@/lib/api";
 import {
   PropertyFormData,
   PropertySubtype,
@@ -115,9 +117,41 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   </h3>
 );
 
+const SUBTYPE_VALUE_MAP: Record<string, PropertySubtype> = {
+  apartments: "apartment",
+  apartment: "apartment",
+  villas: "villa",
+  villa: "villa",
+  individual_house: "individual_house",
+  "individual house": "individual_house",
+  plots: "plot",
+  plot: "plot",
+  land: "land",
+  shop: "shop",
+  building: "building",
+  godown: "godown",
+  warehouse: "warehouse",
+  office_space: "office_space",
+  "office space": "office_space",
+};
+
 export default function Step1BasicDetails({ data, onChange, disabled = false, showErrors = false }: Props) {
   const { user } = useAuth();
   const subtype = data.property_subtype || "";
+
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+
+  // Dynamically load categories allowed for the chosen purpose (sell vs rent_lease)
+  useEffect(() => {
+    const purpose = data.property_for === "sell" ? "sell" : "rent_lease";
+    getPropertyCategories({ for: purpose })
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data)) {
+          setDbCategories(res.data);
+        }
+      })
+      .catch((err) => console.error("Error loading categories for property form:", err));
+  }, [data.property_for]);
 
   const hasOwnerCredits = (user?.creditPointsOwner ?? 0) > 0;
   const hasBuilderCredits = (user?.creditPointsBuilder ?? 0) > 0;
@@ -143,14 +177,28 @@ export default function Step1BasicDetails({ data, onChange, disabled = false, sh
   const propertyOnFloorNum = data.property_on_floor ? parseInt(data.property_on_floor, 10) : NaN;
   const isFloorInvalid = !isNaN(totalFloorsNum) && !isNaN(propertyOnFloorNum) && propertyOnFloorNum > totalFloorsNum;
 
-  const isResidential = data.property_main_type === "residential";
-  const showResidential =
-    isResidential
-      ? RESIDENTIAL_SUBTYPES.filter((s) =>
-        data.property_for === "sell" ? true : s.value !== "plot"
-      )
-      : [];
-  const showCommercial = !isResidential ? COMMERCIAL_SUBTYPES : [];
+  // Filter allowed subtypes based on property_main_type and purpose
+  const dynamicSubtypes = useMemo(() => {
+    if (dbCategories.length === 0) {
+      if (data.property_main_type === "residential") {
+        return RESIDENTIAL_SUBTYPES.filter((s) =>
+          data.property_for === "sell" ? true : s.value !== "plot"
+        );
+      }
+      return COMMERCIAL_SUBTYPES;
+    }
+
+    return dbCategories
+      .filter((c) => c.status === "active" && c.type === data.property_main_type)
+      .map((c) => {
+        const normalizedKey = c.name.toLowerCase().trim();
+        const subtypeVal = SUBTYPE_VALUE_MAP[normalizedKey] || (normalizedKey.replace(/\s+/g, "_") as PropertySubtype);
+        return {
+          value: subtypeVal,
+          label: c.name,
+        };
+      });
+  }, [dbCategories, data.property_main_type, data.property_for]);
 
   const handleSubtype = (val: PropertySubtype) => {
     const isNewCommercial = ["shop", "building", "godown", "warehouse", "office_space", "land"].includes(val);
@@ -317,7 +365,7 @@ export default function Step1BasicDetails({ data, onChange, disabled = false, sh
       {/* Property Type Buttons */}
       <RequiredSectionTitle>Property Type</RequiredSectionTitle>
       <div className="flex gap-2 flex-wrap">
-        {[...showResidential, ...showCommercial].map((s) => (
+        {dynamicSubtypes.map((s) => (
           <SubtypeButton
             key={s.value}
             active={data.property_subtype === s.value}

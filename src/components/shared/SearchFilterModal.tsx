@@ -168,14 +168,17 @@ export default function SearchFilterModal({
     };
   }, []);
 
-  // Load backend filter metadata
+  // Load backend categories dynamically based on selected purpose
   useEffect(() => {
-    getPropertyCategories()
+    getPropertyCategories({ for: purpose })
       .then((res) => {
         if (res?.success) setCategoriesList(res.data || []);
       })
-      .catch((err) => console.error("Error loading categories:", err));
+      .catch((err) => console.error("Error loading categories for purpose:", err));
+  }, [purpose]);
 
+  // Load backend features & facilities
+  useEffect(() => {
     getFeatures()
       .then((res) => {
         if (res?.success) setDbFeatures(res.data || []);

@@ -8,6 +8,7 @@ import {
   getStates,
   getCities,
   getFeatures,
+  getPropertyCategories,
   recordSearch,
   getSearches,
   getPopularProperties,
@@ -172,6 +173,8 @@ export default function PropertySearch() {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [citiesList, setCitiesList] =
     useState<{ value: string; label: string }[]>(cities);
+  const [categoriesList, setCategoriesList] =
+    useState<{ value: string; label: string }[]>(propertyCategories);
   const [amenityList, setAmenityList] = useState<string[]>(defaultAmenities);
   const [recentSearches, setRecentSearches] = useState<SearchApiItem[]>([]);
   const [popularProperties, setPopularProperties] = useState<
@@ -258,6 +261,31 @@ export default function PropertySearch() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeFilters]);
+
+  // Load categories dynamically from backend whenever activeTab changes
+  useEffect(() => {
+    getPropertyCategories({ for: activeTab })
+      .then((res) => {
+        if (res?.success && res.data && res.data.length > 0) {
+          const list = res.data.map((c: any) => ({
+            value: c.name.toLowerCase().includes("plot")
+              ? "plots"
+              : c.name.toLowerCase().includes("villa")
+              ? "villas"
+              : c.name.toLowerCase().includes("apartment")
+              ? "apartments"
+              : c.name.toLowerCase().includes("house")
+              ? "house"
+              : c.name.toLowerCase().includes("commercial") || c.type === "commercial"
+              ? "commercial"
+              : String(c.id),
+            label: c.name,
+          }));
+          setCategoriesList(list);
+        }
+      })
+      .catch((err) => console.error("Error loading categories for tab:", err));
+  }, [activeTab]);
 
   useEffect(() => {
     async function loadBackendData() {
@@ -755,11 +783,7 @@ export default function PropertySearch() {
             className="flex-[1.2_1_140px]"
           >
             <NativeSelect
-              options={
-                activeTab === "sell"
-                  ? propertyCategories
-                  : propertyCategories.filter((cat) => cat.value !== "plots")
-              }
+              options={categoriesList}
               placeholder="Select Category"
               value={activeCategory === "all" ? "" : activeCategory}
               onChange={setActiveCategory}

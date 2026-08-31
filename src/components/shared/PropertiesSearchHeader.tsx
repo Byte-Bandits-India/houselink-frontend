@@ -176,7 +176,7 @@ export default function PropertiesSearchHeader() {
       try {
         Promise.all([
           getPopularRegions().catch(() => []),
-          getPropertyCategories()
+          getPropertyCategories({ for: filters.activeTab })
             .then((res) => (res?.success ? res.data : []))
             .catch(() => []),
           getFeatures()

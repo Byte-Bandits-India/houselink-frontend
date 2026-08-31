@@ -179,22 +179,26 @@ function FeaturedPropertiesListContent() {
   const [dbFeatures, setDbFeatures] = useState<any[]>([]);
   const [dbFacilities, setDbFacilities] = useState<any[]>([]);
 
-  // 1. Load backend filter metadata once on mount
+  // 1. Load backend filter metadata
+  useEffect(() => {
+    getPropertyCategories({ for: filters.activeTab })
+      .then((res) => {
+        if (res?.success) setDbCategories(res.data || []);
+      })
+      .catch(() => {});
+  }, [filters.activeTab]);
+
   useEffect(() => {
     Promise.all([
       getPopularRegions().catch(() => []),
-      getPropertyCategories()
-        .then((res) => (res?.success ? res.data : []))
-        .catch(() => []),
       getFeatures()
         .then((res) => (res?.success ? res.data : []))
         .catch(() => []),
       getFacilities()
         .then((res) => (res?.success ? res.data : []))
         .catch(() => []),
-    ]).then(([regions, categories, features, facilities]) => {
+    ]).then(([regions, features, facilities]) => {
       if (Array.isArray(regions)) setPopularRegionsList(regions.map((r) => r.name));
-      setDbCategories(categories || []);
       setDbFeatures(features || []);
       setDbFacilities(facilities || []);
     });
