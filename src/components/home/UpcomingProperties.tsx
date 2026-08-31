@@ -7,7 +7,14 @@ import { smoothScrollBy } from "@/lib/smoothScroll";
 import { MapPin, ArrowRight, Building, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/animations";
-import { getProperties, mapApiPropertyToCardProps, getImageUrl, getUpcomingConfig } from "@/lib/api";
+import {
+  getProperties,
+  mapApiPropertyToCardProps,
+  getImageUrl,
+  getUpcomingConfig,
+  type UpcomingBannerItem,
+} from "@/lib/api";
+import { upcomingProperties as fallbackUpcomingProperties } from "./Options";
 
 function getDefaultImage(categoryName?: string): string {
   if (!categoryName) return "/assets/default.png";
@@ -147,7 +154,7 @@ export default function UpcomingProperties() {
   const scrollContainer = useRef<HTMLDivElement>(null);
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [banners, setBanners] = useState<{ image: string; link?: string }[]>([]);
+  const [banners, setBanners] = useState<UpcomingBannerItem[]>([]);
   // Tracks which face is showing ("active") and which just left ("outgoing"),
   // so both can be animated with a 3D rotateY transition at the same time.
   const [slideIndices, setSlideIndices] = useState({ active: 0, outgoing: -1 });
@@ -160,14 +167,43 @@ export default function UpcomingProperties() {
           moderation: "approved",
           page_size: "100"
         });
-        if (res.success && res.data) {
+        if (res.success && res.data && res.data.length > 0) {
           const featured = res.data
             .filter((p: any) => p.isFeatured)
             .map(mapApiPropertyToCardProps);
-          setProperties(featured);
+          if (featured.length > 0) {
+            setProperties(featured);
+          } else {
+            setProperties(res.data.slice(0, 10).map(mapApiPropertyToCardProps));
+          }
+        } else {
+          setProperties(
+            fallbackUpcomingProperties.map((p) => ({
+              id: p.id,
+              name: p.title,
+              categoryName: p.category,
+              property_for: p.purpose,
+              city: p.location,
+              price: p.price,
+              image: p.image,
+              isFeatured: true,
+            }))
+          );
         }
       } catch (err) {
         console.error("Error loading upcoming featured properties:", err);
+        setProperties(
+          fallbackUpcomingProperties.map((p) => ({
+            id: p.id,
+            name: p.title,
+            categoryName: p.category,
+            property_for: p.purpose,
+            city: p.location,
+            price: p.price,
+            image: p.image,
+            isFeatured: true,
+          }))
+        );
       } finally {
         setIsLoading(false);
       }
@@ -178,16 +214,19 @@ export default function UpcomingProperties() {
         const res = await getUpcomingConfig();
         if (res.success && res.data) {
           if (res.data.banners && res.data.banners.length > 0) {
-            setBanners(res.data.banners);
+            const activeBanners = res.data.banners.filter((b) => b.status !== "inactive");
+            const bannersToUse = activeBanners.length > 0 ? activeBanners : res.data.banners;
+            const sortedBanners = [...bannersToUse].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+            setBanners(sortedBanners);
           } else if (res.data.images && res.data.images.length > 0) {
-            setBanners(res.data.images.map((img) => ({ image: img, link: "" })));
+            setBanners(res.data.images.map((img, i) => ({ image: img, link: "", order: i + 1 })));
           } else {
-            setBanners([{ image: "/assets/home/upComming.png", link: "" }]);
+            setBanners([{ image: "/assets/home/upComming.png", link: "", order: 1 }]);
           }
         }
       } catch (err) {
         console.error("Failed to load upcoming banner images:", err);
-        setBanners([{ image: "/assets/home/upComming.png", link: "" }]);
+        setBanners([{ image: "/assets/home/upComming.png", link: "", order: 1 }]);
       }
     }
 

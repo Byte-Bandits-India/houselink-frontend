@@ -1,6 +1,17 @@
 import { apiClient } from "./client";
 
+export interface IntroVideoItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  videoUrl: string;
+  posterUrl?: string;
+  status: "active" | "inactive";
+  order?: number;
+}
+
 export interface IntroVideoConfigData {
+  videos?: IntroVideoItem[];
   videoUrl: string;
   posterUrl: string;
   enabled: boolean;

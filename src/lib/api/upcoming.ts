@@ -1,8 +1,15 @@
 import { apiClient } from "./client";
 
 export interface UpcomingBannerItem {
+  id?: string | number;
   image: string;
+  laptopImage?: string;
+  tabletImage?: string;
+  mobileImage?: string;
+  title?: string;
   link?: string;
+  status?: "active" | "inactive";
+  order?: number;
 }
 
 export interface UpcomingConfig {
