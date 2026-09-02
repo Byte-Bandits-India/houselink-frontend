@@ -216,6 +216,7 @@ export type SearchFilterModalProps = {
     keyword?: string;
     location?: string;
     property_purpose: "sell" | "rent";
+    min_price?: string;
     max_price?: string;
     max_area?: string;
     amenities?: string[];

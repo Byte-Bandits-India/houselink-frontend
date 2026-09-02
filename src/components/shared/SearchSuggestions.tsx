@@ -38,6 +38,28 @@ const itemVariants: Variants = {
   },
 };
 
+function formatSearchQueryDisplay(query: string): string {
+  if (!query) return "";
+  if (query.includes(" in ")) {
+    const [kw, loc] = query.split(" in ").map((s) => s.trim());
+    if (
+      kw.toLowerCase() === loc.toLowerCase() ||
+      loc.toLowerCase().includes(kw.toLowerCase())
+    ) {
+      return loc
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join(", ");
+    }
+  }
+  return query
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
 export default function SearchSuggestions({
   query = "",
   tags = [],
@@ -210,6 +232,68 @@ export default function SearchSuggestions({
   };
 
   const handleRecentClick = (text: string) => {
+    // If text contains " in ", separate keyword and location
+    if (text.includes(" in ")) {
+      const [kwPart, locPart] = text.split(" in ").map((s) => s.trim());
+      const isDuplicate =
+        kwPart.toLowerCase() === locPart.toLowerCase() ||
+        locPart.toLowerCase().includes(kwPart.toLowerCase());
+
+      const finalKw = isDuplicate ? "" : kwPart;
+      const locList = locPart
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (onAddTag) {
+        locList.forEach((loc) => {
+          onAddTag({
+            id: `loc-${loc.toLowerCase()}`,
+            label: loc,
+            type: "location",
+            value: loc,
+          });
+        });
+        if (finalKw) {
+          onAddTag({
+            id: `kw-${finalKw.toLowerCase()}`,
+            label: finalKw,
+            type: "keyword",
+            value: finalKw,
+          });
+        }
+      } else {
+        onSearch({
+          location: locList.join(",") || undefined,
+          keyword: finalKw || undefined,
+        });
+        onClose();
+      }
+      return;
+    }
+
+    // If text contains comma-separated locations (e.g. "ECR, Besant Nagar")
+    if (text.includes(",")) {
+      const parts = text
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (onAddTag) {
+        parts.forEach((loc) => {
+          onAddTag({
+            id: `loc-${loc.toLowerCase()}`,
+            label: loc,
+            type: "location",
+            value: loc,
+          });
+        });
+      } else {
+        onSearch({ location: parts.join(","), keyword: parts.join(" ") });
+        onClose();
+      }
+      return;
+    }
+
     if (onAddTag) {
       onAddTag({
         id: `kw-${text.toLowerCase()}`,
@@ -584,7 +668,7 @@ export default function SearchSuggestions({
                         <Home size={14} className="stroke-[2.5px]" />
                       </div>
                       <span className="text-[13px] font-semibold text-gray-700 leading-tight group-hover:text-gray-900 transition-colors truncate">
-                        {item.query}
+                        {formatSearchQueryDisplay(item.query)}
                       </span>
                     </div>
                     {item.id && item.id > 0 && (

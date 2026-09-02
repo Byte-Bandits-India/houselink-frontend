@@ -44,6 +44,7 @@ import {
 import { Button } from "../ui/button";
 
 import { SearchFilterModalProps } from "@/types/components";
+import PriceInWords from "./PriceInWords";
 
 const houseTypes = ["1 BHK", "2 BHK", "3 BHK", "4 BHK", "5+ BHK", "1 RK"];
 
@@ -90,7 +91,8 @@ export default function SearchFilterModal({
   const [step, setStep] = useState(1);
 
   // Step 1 States
-  const [region, setRegion] = useState("");
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [regionInput, setRegionInput] = useState("");
   const [purpose, setPurpose] = useState<"sell" | "rent">(initialPurpose);
   const [category, setCategory] = useState("");
   const [categoriesList, setCategoriesList] = useState<
@@ -108,7 +110,8 @@ export default function SearchFilterModal({
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Step 2 States
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]); // in Crores
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [areaRange, setAreaRange] = useState<[number, number]>([0, 10000]); // in sq.ft.
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedHouseType, setSelectedHouseType] = useState<string>("");
@@ -129,7 +132,10 @@ export default function SearchFilterModal({
       .replace(/\b\d{3}\s\d{3}\b/g, "")
       .trim();
     cleaned = cleaned
-      .replace(/,\s*(india|tamil\s*nadu|kerala|karnataka|andhra\s*pradesh|telangana|maharashtra)\s*$/gi, "")
+      .replace(
+        /,\s*(india|tamil\s*nadu|kerala|karnataka|andhra\s*pradesh|telangana|maharashtra)\s*$/gi,
+        "",
+      )
       .replace(/,\s*chennai\s*$/gi, "")
       .trim();
     const parts = cleaned.split(",").map((p) => p.trim()).filter(Boolean);
@@ -169,12 +175,18 @@ export default function SearchFilterModal({
     if (isOpen) {
       setStep(1);
       setPurpose(initialPurpose);
-      setRegion(initialLocation || initialKeyword || "");
+      const initialLocs = (initialLocation || initialKeyword || "")
+        .split(",")
+        .map((l) => l.trim())
+        .filter(Boolean);
+      setSelectedLocations(initialLocs);
+      setRegionInput("");
       setCategory("");
       setRegionError(false);
       setShowRegionSuggestions(false);
       setHighlightedIndex(-1);
-      setPriceRange([0, 1]);
+      setMinPrice("");
+      setMaxPrice("");
       setAreaRange([0, 10000]);
       setSelectedAmenities([]);
       setSelectedHouseType("");
@@ -224,11 +236,58 @@ export default function SearchFilterModal({
       .catch((err) => console.error("Error loading facilities:", err));
   }, []);
 
+  const handleAddLocationTag = (loc: string) => {
+    const trimmed = loc.trim();
+    if (!trimmed) return;
+    const exists = selectedLocations.some(
+      (l) => l.toLowerCase() === trimmed.toLowerCase(),
+    );
+    if (!exists) {
+      setSelectedLocations((prev) => [...prev, trimmed]);
+    }
+    setRegionInput("");
+    setRegionError(false);
+    setHighlightedIndex(-1);
+    fetchLocationSuggestions("", purpose);
+    inputRef.current?.focus();
+  };
+
+  const handleRemoveLocationTag = (locToRemove: string) => {
+    setSelectedLocations((prev) =>
+      prev.filter((l) => l.toLowerCase() !== locToRemove.toLowerCase()),
+    );
+  };
+
+  const handleToggleLocationSuggestion = (loc: string) => {
+    const trimmed = loc.trim();
+    const exists = selectedLocations.some(
+      (l) => l.toLowerCase() === trimmed.toLowerCase(),
+    );
+    if (exists) {
+      handleRemoveLocationTag(trimmed);
+    } else {
+      handleAddLocationTag(trimmed);
+    }
+  };
+
   const handleNext = () => {
     if (step === 1) {
-      if (!region.trim()) {
+      const effectiveLocs = [
+        ...selectedLocations,
+        ...(regionInput.trim() ? [regionInput.trim()] : []),
+      ];
+      if (effectiveLocs.length === 0) {
         setRegionError(true);
         return;
+      }
+      if (
+        regionInput.trim() &&
+        !selectedLocations.some(
+          (l) => l.toLowerCase() === regionInput.trim().toLowerCase(),
+        )
+      ) {
+        setSelectedLocations((prev) => [...prev, regionInput.trim()]);
+        setRegionInput("");
       }
       setRegionError(false);
       setShowRegionSuggestions(false);
@@ -257,13 +316,20 @@ export default function SearchFilterModal({
 
   const handleOpenSuggestions = () => {
     setShowRegionSuggestions(true);
-    fetchLocationSuggestions(region, purpose);
+    fetchLocationSuggestions(regionInput, purpose);
   };
 
   const handleRegionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setRegion(val);
-    if (val.trim()) {
+    if (val.includes(",")) {
+      const parts = val.split(",").map((p) => p.trim()).filter(Boolean);
+      parts.forEach((p) => handleAddLocationTag(p));
+      setRegionInput("");
+      return;
+    }
+
+    setRegionInput(val);
+    if (val.trim() || selectedLocations.length > 0) {
       setRegionError(false);
     }
     setShowRegionSuggestions(true);
@@ -277,15 +343,12 @@ export default function SearchFilterModal({
     }, 200);
   };
 
-  const handleSelectSuggestion = (loc: string) => {
-    setRegion(loc);
-    setShowRegionSuggestions(false);
-    setRegionError(false);
-    setHighlightedIndex(-1);
-  };
-
-  const handleClearRegion = () => {
-    setRegion("");
+  const handleClearLocations = () => {
+    if (regionInput) {
+      setRegionInput("");
+    } else {
+      setSelectedLocations([]);
+    }
     setRegionError(false);
     setHighlightedIndex(-1);
     fetchLocationSuggestions("", purpose);
@@ -312,16 +375,24 @@ export default function SearchFilterModal({
         prev > 0 ? prev - 1 : suggestions.length - 1,
       );
     } else if (e.key === "Enter") {
+      e.preventDefault();
       if (
         showRegionSuggestions &&
         highlightedIndex >= 0 &&
         suggestions[highlightedIndex]
       ) {
-        e.preventDefault();
-        handleSelectSuggestion(suggestions[highlightedIndex]);
+        handleToggleLocationSuggestion(suggestions[highlightedIndex]);
+      } else if (regionInput.trim()) {
+        handleAddLocationTag(regionInput.trim());
       } else {
         setShowRegionSuggestions(false);
       }
+    } else if (
+      e.key === "Backspace" &&
+      !regionInput &&
+      selectedLocations.length > 0
+    ) {
+      setSelectedLocations((prev) => prev.slice(0, -1));
     } else if (e.key === "Escape") {
       setShowRegionSuggestions(false);
     }
@@ -332,13 +403,17 @@ export default function SearchFilterModal({
   };
 
   const handleSubmit = () => {
-    const loc = region.trim();
+    const allLocs = [
+      ...selectedLocations,
+      ...(regionInput.trim() ? [regionInput.trim()] : []),
+    ];
+    const locString = allLocs.join(",");
     onSearch({
-      keyword: loc || initialKeyword || undefined,
-      location: loc || undefined,
+      keyword: undefined,
+      location: locString || undefined,
       property_purpose: purpose,
-      max_price:
-        priceRange[1] === 1 ? undefined : String(priceRange[1] * 10000000), // convert Cr to Rupees
+      min_price: minPrice.trim() || undefined,
+      max_price: maxPrice.trim() || undefined,
       max_area: areaRange[1] === 10000 ? undefined : String(areaRange[1]),
       amenities: selectedAmenities.length > 0 ? selectedAmenities : undefined,
       house_type: selectedHouseType || undefined,
@@ -374,7 +449,7 @@ export default function SearchFilterModal({
                   activeTab={purpose}
                   onChange={(val) => {
                     setPurpose(val);
-                    fetchLocationSuggestions(region, val);
+                    fetchLocationSuggestions(regionInput, val);
                   }}
                   variant="header"
                 />
@@ -388,7 +463,7 @@ export default function SearchFilterModal({
 
               <div ref={regionContainerRef} className="relative w-full">
                 <div
-                  className={`relative flex items-center w-full bg-gray-50 border rounded-xl h-11 px-3.5 transition-all duration-200 focus-within:bg-white focus-within:ring-2 cursor-pointer ${
+                  className={`relative flex items-center flex-wrap gap-1.5 w-full bg-gray-50 border rounded-xl min-h-[44px] py-1.5 px-3 transition-all duration-200 focus-within:bg-white focus-within:ring-2 cursor-pointer ${
                     regionError
                       ? "border-red-500 focus-within:ring-red-200"
                       : "border-gray-200 focus-within:border-primary focus-within:ring-primary/20"
@@ -398,31 +473,57 @@ export default function SearchFilterModal({
                     handleOpenSuggestions();
                   }}
                 >
-                  <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mr-2.5 pointer-events-none" />
+                  <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mr-1 pointer-events-none" />
+
+                  {/* Active Location Tag Chips */}
+                  {selectedLocations.map((loc) => (
+                    <span
+                      key={loc}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs shrink-0 animate-in fade-in"
+                    >
+                      <span>{loc}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveLocationTag(loc);
+                        }}
+                        className="hover:opacity-75 rounded-full p-0.5 ml-0.5 cursor-pointer"
+                        title="Remove location"
+                      >
+                        <X size={11} className="stroke-[2.5px]" />
+                      </button>
+                    </span>
+                  ))}
+
                   <input
                     ref={inputRef}
                     type="text"
-                    value={region}
+                    value={regionInput}
                     onChange={handleRegionInputChange}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleOpenSuggestions();
                     }}
                     onKeyDown={handleKeyDown}
-                    placeholder="Search or enter location (e.g. Adyar, Guindy)..."
-                    className="w-full bg-transparent text-sm font-medium text-gray-800 placeholder:text-gray-400 focus:outline-none cursor-text"
+                    placeholder={
+                      selectedLocations.length === 0
+                        ? "Search or enter location (e.g. Adyar, Guindy)..."
+                        : "Add location..."
+                    }
+                    className="flex-1 min-w-[120px] bg-transparent text-sm font-medium text-gray-800 placeholder:text-gray-400 focus:outline-none cursor-text py-0.5"
                   />
                   {isLoadingSuggestions ? (
-                    <Loader2 className="w-4 h-4 text-primary animate-spin flex-shrink-0 ml-2" />
-                  ) : region ? (
+                    <Loader2 className="w-4 h-4 text-primary animate-spin flex-shrink-0 ml-auto" />
+                  ) : selectedLocations.length > 0 || regionInput ? (
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleClearRegion();
+                        handleClearLocations();
                       }}
-                      className="w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200/60 transition-colors flex-shrink-0 ml-2 cursor-pointer"
-                      title="Clear location"
+                      className="w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200/60 transition-colors flex-shrink-0 ml-auto cursor-pointer"
+                      title={regionInput ? "Clear input" : "Clear all locations"}
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -440,17 +541,20 @@ export default function SearchFilterModal({
                       <div className="py-0.5">
                         {suggestions.map((loc, idx) => {
                           const isHighlighted = idx === highlightedIndex;
-                          const isSelected =
-                            loc.toLowerCase() === region.toLowerCase().trim();
+                          const isSelected = selectedLocations.some(
+                            (l) => l.toLowerCase() === loc.toLowerCase(),
+                          );
                           return (
                             <button
                               key={`${loc}-${idx}`}
                               type="button"
-                              onClick={() => handleSelectSuggestion(loc)}
+                              onClick={() => handleToggleLocationSuggestion(loc)}
                               onMouseEnter={() => setHighlightedIndex(idx)}
                               className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-colors text-left cursor-pointer ${
-                                isHighlighted || isSelected
-                                  ? "bg-blue-50/80 text-primary font-semibold"
+                                isSelected
+                                  ? "bg-blue-50 text-blue-700 font-bold"
+                                  : isHighlighted
+                                  ? "bg-gray-100 text-gray-900"
                                   : "text-gray-700 hover:bg-gray-50"
                               }`}
                             >
@@ -466,8 +570,12 @@ export default function SearchFilterModal({
                                 </div>
                                 <span className="truncate">{loc}</span>
                               </div>
-                              {isSelected && (
-                                <Check className="w-3.5 h-3.5 text-primary flex-shrink-0 ml-2" />
+                              {isSelected ? (
+                                <Check className="w-3.5 h-3.5 text-primary flex-shrink-0 ml-2 stroke-[3px]" />
+                              ) : (
+                                <span className="text-[10px] text-gray-400 font-medium">
+                                  + Tag
+                                </span>
                               )}
                             </button>
                           );
@@ -475,16 +583,15 @@ export default function SearchFilterModal({
                       </div>
                     ) : (
                       <div className="py-3 px-3 text-center text-xs text-gray-500">
-                        {region.trim() ? (
+                        {regionInput.trim() ? (
                           <p>
                             No properties listed in{" "}
                             <span className="font-semibold text-gray-700">
-                              "{region}"
+                              "{regionInput}"
                             </span>{" "}
                             yet.
                             <span className="block text-[11px] text-gray-400 mt-0.5">
-                              Press Enter or Next to search this location
-                              anyway.
+                              Press Enter to add this location tag anyway.
                             </span>
                           </p>
                         ) : (
@@ -498,7 +605,7 @@ export default function SearchFilterModal({
 
               {regionError && (
                 <span className="text-[11px] font-medium text-red-500 mt-1 block">
-                  Please enter or select a region to proceed.
+                  Please enter or select at least one location to proceed.
                 </span>
               )}
             </div>
@@ -544,41 +651,93 @@ export default function SearchFilterModal({
                 </div>
               </div>
 
-              {/* Price Range Slider */}
+              {/* Price Range Integer Inputs */}
               <div className="border border-slate-100 rounded-xl p-4 md:p-5 bg-white shadow-xs">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center flex-shrink-0">
                     <IndianRupee className="w-5 h-5 stroke-[2.5px]" />
                   </div>
                   <span className="font-medium text-sm text-gray-800">
-                    Price Range
+                    Price Range (₹)
                   </span>
                 </div>
 
-                <div className="flex justify-between text-xs font-medium text-gray-400 mb-2">
-                  <span>From</span>
-                  <span>To</span>
-                </div>
+                <div className="flex flex-col gap-3.5">
+                  {/* Min Price Field */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[12px] font-bold text-gray-700">
+                        Min Price (₹)
+                      </label>
+                      <PriceInWords amount={minPrice} variant="badge" />
+                    </div>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 text-gray-400 text-xs font-bold pointer-events-none select-none">
+                        ₹
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={minPrice}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          setMinPrice(val);
+                        }}
+                        placeholder="e.g. 1000000"
+                        className="w-full pl-7 pr-7 py-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-400 text-gray-800"
+                      />
+                      {minPrice && (
+                        <button
+                          type="button"
+                          onClick={() => setMinPrice("")}
+                          className="absolute right-2.5 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-200 cursor-pointer transition-colors"
+                          title="Clear Min Price"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                    <PriceInWords amount={minPrice} variant="full" />
+                  </div>
 
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={priceRange[1]}
-                  onChange={(e) => setPriceRange([0, Number(e.target.value)])}
-                  className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-primary mt-1"
-                />
-
-                <div className="flex justify-between text-xs font-medium text-gray-500 mt-2.5">
-                  <span>₹0</span>
-                  <span>
-                    {priceRange[1] >= 1
-                      ? `₹${priceRange[1]} Cr+`
-                      : priceRange[1] === 0
-                        ? "₹0"
-                        : `₹${Math.round(priceRange[1] * 100)} Lakhs`}
-                  </span>
+                  {/* Max Price Field */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[12px] font-bold text-gray-700">
+                        Max Price (₹)
+                      </label>
+                      <PriceInWords amount={maxPrice} variant="badge" />
+                    </div>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 text-gray-400 text-xs font-bold pointer-events-none select-none">
+                        ₹
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={maxPrice}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          setMaxPrice(val);
+                        }}
+                        placeholder="e.g. 5000000"
+                        className="w-full pl-7 pr-7 py-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-400 text-gray-800"
+                      />
+                      {maxPrice && (
+                        <button
+                          type="button"
+                          onClick={() => setMaxPrice("")}
+                          className="absolute right-2.5 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-200 cursor-pointer transition-colors"
+                          title="Clear Max Price"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                    <PriceInWords amount={maxPrice} variant="full" />
+                  </div>
                 </div>
               </div>
 

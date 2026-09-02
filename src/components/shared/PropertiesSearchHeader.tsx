@@ -620,17 +620,17 @@ export default function PropertiesSearchHeader() {
     amenities?: string[];
     fromModal?: boolean;
     property_purpose?: "sell" | "rent";
+    min_price?: string;
     max_price?: string;
     max_area?: string;
     house_type?: string;
   }) => {
     const nextFilters = { ...filters };
     if (overrides) {
-      const chosenLoc = overrides.location || overrides.keyword;
-      if (chosenLoc) {
-        nextFilters.location = chosenLoc;
-        nextFilters.keyword = chosenLoc;
-        setLocalKeyword(chosenLoc);
+      if (overrides.location) {
+        nextFilters.location = overrides.location;
+        nextFilters.keyword = overrides.keyword || "";
+        setLocalKeyword(overrides.keyword || "");
       } else if (overrides.keyword !== undefined) {
         nextFilters.keyword = overrides.keyword;
         setLocalKeyword(overrides.keyword);
@@ -645,6 +645,9 @@ export default function PropertiesSearchHeader() {
       if (overrides.property_purpose !== undefined) {
         nextFilters.activeTab = overrides.property_purpose;
         setLocalActiveTab(overrides.property_purpose);
+      }
+      if (overrides.min_price !== undefined) {
+        nextFilters.minPrice = overrides.min_price;
       }
       if (overrides.max_price !== undefined) {
         nextFilters.maxPrice = overrides.max_price;

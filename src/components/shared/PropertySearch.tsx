@@ -68,6 +68,28 @@ const propertyCategories = [
   { value: "commercial", label: "Commercial Properties" },
 ];
 
+function formatSearchQueryDisplay(query: string): string {
+  if (!query) return "";
+  if (query.includes(" in ")) {
+    const [kw, loc] = query.split(" in ").map((s) => s.trim());
+    if (
+      kw.toLowerCase() === loc.toLowerCase() ||
+      loc.toLowerCase().includes(kw.toLowerCase())
+    ) {
+      return loc
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join(", ");
+    }
+  }
+  return query
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
 /* ── Controlled select ── */
 function NativeSelect({
   options,
@@ -488,7 +510,15 @@ export default function PropertySearch() {
       searchLocation &&
       searchLocation.trim()
     ) {
-      queryToRecord = `${searchKeyword.trim()} in ${searchLocation.trim()}`;
+      const kwNorm = searchKeyword.trim().toLowerCase();
+      const locNorm = searchLocation.trim().toLowerCase();
+      if (kwNorm === locNorm || locNorm.includes(kwNorm)) {
+        queryToRecord = searchLocation.trim();
+      } else if (kwNorm.includes(locNorm)) {
+        queryToRecord = searchKeyword.trim();
+      } else {
+        queryToRecord = `${searchKeyword.trim()} in ${searchLocation.trim()}`;
+      }
     } else if (searchKeyword && searchKeyword.trim()) {
       queryToRecord = searchKeyword.trim();
     } else if (searchLocation && searchLocation.trim()) {
@@ -496,6 +526,15 @@ export default function PropertySearch() {
     }
 
     if (queryToRecord) {
+      // Normalize comma spaces e.g. "ECR,Besant Nagar" -> "ECR, Besant Nagar"
+      if (queryToRecord.includes(",")) {
+        queryToRecord = queryToRecord
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .join(", ");
+      }
+
       recordSearch(queryToRecord).catch((err) =>
         console.error("Error recording search query:", err),
       );
@@ -683,39 +722,101 @@ export default function PropertySearch() {
           onOpenFilter={() => setIsModalOpen(true)}
         />
 
-        {/* Recent searches */}
+        {/* Recent searches: 4 in top row, 2 in bottom row */}
         {recentSearches.length > 0 && (
-          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-gray-500 mt-5">
-            <span className="font-bold text-gray-600 w-full text-center mb-1 md:w-auto md:mb-0">
-              Recent searches:
-            </span>
-            {recentSearches.slice(0, 6).map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setKeyword(item.query);
-                  setCity("chennai");
-                  handleSearch({ keyword: item.query, city: "chennai" });
-                }}
-                className="flex items-center gap-1.5 bg-white/70 hover:bg-white text-gray-600 px-3.5 py-1.5 rounded-full border border-gray-200/85 transition-colors shadow-sm cursor-pointer"
-              >
-                <svg
-                  className="w-3.5 h-3.5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
+          <div className="flex flex-col items-center justify-center gap-2.5 text-xs text-gray-500 mt-5">
+            {/* Top row: Label + up to 4 items */}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span className="font-bold text-gray-600 mr-0.5">
+                Recent searches:
+              </span>
+              {recentSearches.slice(0, 4).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    if (item.query.includes(" in ")) {
+                      const [kw, loc] = item.query
+                        .split(" in ")
+                        .map((s) => s.trim());
+                      const isDup =
+                        kw.toLowerCase() === loc.toLowerCase() ||
+                        loc.toLowerCase().includes(kw.toLowerCase());
+                      handleSearch({
+                        location: loc || undefined,
+                        keyword: isDup ? undefined : kw || undefined,
+                      });
+                    } else if (item.query.includes(",")) {
+                      handleSearch({ location: item.query });
+                    } else {
+                      handleSearch({ keyword: item.query });
+                    }
+                  }}
+                  className="flex items-center gap-1.5 bg-white/70 hover:bg-white text-gray-600 px-3.5 py-1.5 rounded-full border border-gray-200/85 transition-colors shadow-xs hover:border-gray-300 cursor-pointer"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                {item.query}
-              </button>
-            ))}
+                  <svg
+                    className="w-3.5 h-3.5 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  {formatSearchQueryDisplay(item.query)}
+                </button>
+              ))}
+            </div>
+
+            {/* Bottom row: remaining up to 2 items */}
+            {recentSearches.length > 4 && (
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {recentSearches.slice(4, 6).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      if (item.query.includes(" in ")) {
+                        const [kw, loc] = item.query
+                          .split(" in ")
+                          .map((s) => s.trim());
+                        const isDup =
+                          kw.toLowerCase() === loc.toLowerCase() ||
+                          loc.toLowerCase().includes(kw.toLowerCase());
+                        handleSearch({
+                          location: loc || undefined,
+                          keyword: isDup ? undefined : kw || undefined,
+                        });
+                      } else if (item.query.includes(",")) {
+                        handleSearch({ location: item.query });
+                      } else {
+                        handleSearch({ keyword: item.query });
+                      }
+                    }}
+                    className="flex items-center gap-1.5 bg-white/70 hover:bg-white text-gray-600 px-3.5 py-1.5 rounded-full border border-gray-200/85 transition-colors shadow-xs hover:border-gray-300 cursor-pointer"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {formatSearchQueryDisplay(item.query)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -727,12 +828,13 @@ export default function PropertySearch() {
           initialPurpose={activeTab as "sell" | "rent"}
           onSearch={(modalFilters) => {
             if (modalFilters.location) {
-              setKeyword(modalFilters.location);
               setLocation(modalFilters.location);
+              setKeyword(modalFilters.keyword || "");
+            } else if (modalFilters.keyword) {
+              setKeyword(modalFilters.keyword);
             }
             handleSearch({
               ...modalFilters,
-              keyword: modalFilters.location || modalFilters.keyword,
               fromModal: true,
             });
           }}
@@ -950,12 +1052,13 @@ export default function PropertySearch() {
         initialPurpose={activeTab as "sell" | "rent"}
         onSearch={(modalFilters) => {
           if (modalFilters.location) {
-            setKeyword(modalFilters.location);
             setLocation(modalFilters.location);
+            setKeyword(modalFilters.keyword || "");
+          } else if (modalFilters.keyword) {
+            setKeyword(modalFilters.keyword);
           }
           handleSearch({
             ...modalFilters,
-            keyword: modalFilters.location || modalFilters.keyword,
             fromModal: true,
           });
         }}
