@@ -8,7 +8,6 @@ import {
   sendOtpRegister,
   register,
   retryOtp,
-  getCountries,
   getStates,
   getCities,
   ApiError,
@@ -68,24 +67,19 @@ export default function RegisterPage() {
     return digits;
   };
 
-  // ── Fetch country, then its states, on mount ──────────────────────────────
+  // ── Fetch active states on mount ──────────────────────────────────────────
   useEffect(() => {
-    getCountries()
+    setLoadingStates(true);
+    getStates()
       .then((res) => {
-        const country = res.data[0];
-        if (!country) {
-          setErrors((e) => ({ ...e, states: "No countries configured" }));
-          setLoadingStates(false);
-          return;
+        if (res.success && Array.isArray(res.data)) {
+          setStates(res.data);
         }
-        return getStates(country.id)
-          .then((res) => setStates(res.data))
-          .finally(() => setLoadingStates(false));
       })
       .catch(() => {
         setErrors((e) => ({ ...e, states: "Failed to load states" }));
-        setLoadingStates(false);
-      });
+      })
+      .finally(() => setLoadingStates(false));
   }, []);
 
   // ── Fetch cities when stateId changes ─────────────────────────────────────
@@ -96,9 +90,11 @@ export default function RegisterPage() {
       return;
     }
     setLoadingCities(true);
-    getCities(stateId as number)
+    getCities(Number(stateId))
       .then((res) => {
-        setCities(res.data);
+        if (res.success && Array.isArray(res.data)) {
+          setCities(res.data);
+        }
         setCityId("");
       })
       .catch(() => setErrors((e) => ({ ...e, city: "Failed to load cities" })))

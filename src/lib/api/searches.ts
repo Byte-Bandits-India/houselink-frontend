@@ -60,14 +60,18 @@ export async function getSearches(): Promise<SearchApiResponse> {
  * Dynamic multi-entity search suggestions for properties, locations, categories, and amenities
  */
 export async function getSearchSuggestions(params: {
-  q: string;
+  q?: string;
   city?: string;
   type?: string;
+  location?: string;
+  category?: string;
 }): Promise<SearchSuggestionsData> {
   const queryParts: string[] = [];
   if (params.q) queryParts.push(`q=${encodeURIComponent(params.q)}`);
   if (params.city) queryParts.push(`city=${encodeURIComponent(params.city)}`);
   if (params.type) queryParts.push(`type=${encodeURIComponent(params.type)}`);
+  if (params.location) queryParts.push(`location=${encodeURIComponent(params.location)}`);
+  if (params.category) queryParts.push(`category=${encodeURIComponent(params.category)}`);
 
   const qs = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
   const res = await apiClient.get<SearchSuggestionsResponse>(`/searches/suggestions${qs}`);

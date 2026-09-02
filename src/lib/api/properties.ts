@@ -1060,7 +1060,23 @@ export function mapApiPropertyToCardProps(p: any): any {
 
   // map features
   const featuresVal = (p.propertyFeatures || [])
-    .map((pf: any) => ({ name: pf.feature?.name }))
+    .map((pf: any) => ({
+      id: pf.feature?.id,
+      name: pf.feature?.name,
+      image: pf.feature?.image || pf.feature?.icon || undefined,
+      icon: pf.feature?.image || pf.feature?.icon || undefined,
+    }))
+    .filter((f: any) => !!f.name);
+
+  // map facilities
+  const facilitiesVal = (p.propertyFacilities || [])
+    .map((pf: any) => ({
+      id: pf.facility?.id,
+      name: pf.facility?.name,
+      image: pf.facility?.image || pf.facility?.icon || undefined,
+      icon: pf.facility?.image || pf.facility?.icon || undefined,
+      value: pf.facilityValue || undefined,
+    }))
     .filter((f: any) => !!f.name);
 
   // map property purpose
@@ -1092,6 +1108,7 @@ export function mapApiPropertyToCardProps(p: any): any {
     area: areaVal || undefined,
     direction: directionVal || undefined,
     features: featuresVal,
+    facilities: facilitiesVal,
     property_for: purposeVal,
     security_deposit: p.securityDeposit ? Number(p.securityDeposit) : undefined,
     lease_duration: p.leaseDuration || undefined,
@@ -1160,17 +1177,52 @@ export async function getPropertyCategories(params?: Record<string, any>): Promi
   return apiClient.get<{ success: boolean; data: any[] }>(`/categories${query}`, { skipAuth: true });
 }
 
-export async function getLocationSuggestions(search?: string): Promise<string[]> {
+export function normalizeLocationSuggestion(raw: string): string {
+  if (!raw) return "";
+  let cleaned = raw
+    .replace(/\b\d{6}\b/g, "")
+    .replace(/\b\d{3}\s\d{3}\b/g, "")
+    .trim();
+  cleaned = cleaned
+    .replace(/,\s*(india|tamil\s*nadu|kerala|karnataka|andhra\s*pradesh|telangana|maharashtra)\s*$/gi, "")
+    .replace(/,\s*chennai\s*$/gi, "")
+    .trim();
+  const parts = cleaned.split(",").map((p) => p.trim()).filter(Boolean);
+  return parts[0] || cleaned;
+}
+
+export async function getLocationSuggestions(
+  search?: string,
+  propertyFor?: string
+): Promise<string[]> {
   const searchParams = new URLSearchParams();
   if (search && search.trim()) {
     searchParams.append("search", search.trim());
+  }
+  if (propertyFor && propertyFor.trim()) {
+    searchParams.append("property_for", propertyFor.trim());
   }
   const query = searchParams.toString() ? `?${searchParams.toString()}` : "";
   const res = await apiClient.get<{ success: boolean; data: string[] }>(
     `/properties/location-suggestions${query}`,
     { skipAuth: true }
   );
-  return res.data || [];
+  const rawList = res.data || [];
+  const seen = new Set<string>();
+  const cleanedList: string[] = [];
+
+  for (const item of rawList) {
+    const norm = normalizeLocationSuggestion(item);
+    if (norm && norm.length >= 2) {
+      const lower = norm.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        cleanedList.push(norm);
+      }
+    }
+  }
+
+  return cleanedList;
 }
 
 

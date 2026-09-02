@@ -11,7 +11,6 @@ import {
   MapPin,
   BedDouble,
   Bath,
-  CheckCircle,
   GraduationCap,
   Activity,
   Train,
@@ -94,6 +93,66 @@ const getFacilityConfig = (name: string) => {
     icon: <Building2 size={18} className="text-slate-600" />,
     bg: "bg-slate-50 border-slate-100",
   };
+};
+
+const getAmenityIconClass = (name?: string): string => {
+  if (!name) return "fi fi-ss-check-circle";
+  const lower = name.toLowerCase().trim();
+  if (
+    lower.includes("security") ||
+    lower.includes("shield") ||
+    lower.includes("cctv") ||
+    lower.includes("guard")
+  )
+    return "fi fi-ss-shield-check";
+  if (
+    lower.includes("terrace") ||
+    lower.includes("balcony") ||
+    lower.includes("roof")
+  )
+    return "fi fi-ss-terrace";
+  if (
+    lower.includes("garden") ||
+    lower.includes("tree") ||
+    lower.includes("park") ||
+    lower.includes("lawn")
+  )
+    return "fi fi-ss-tree";
+  if (
+    lower.includes("parking") ||
+    lower.includes("car") ||
+    lower.includes("garage")
+  )
+    return "fi fi-ss-parking";
+  if (
+    lower.includes("gym") ||
+    lower.includes("fitness") ||
+    lower.includes("workout")
+  )
+    return "fi fi-ss-dumbbell";
+  if (lower.includes("pool") || lower.includes("swim"))
+    return "fi fi-ss-swimming-pool";
+  if (lower.includes("lift") || lower.includes("elevator"))
+    return "fi fi-ss-elevator";
+  if (lower.includes("wifi") || lower.includes("internet"))
+    return "fi fi-ss-wifi-alt";
+  if (
+    lower.includes("power") ||
+    lower.includes("generator") ||
+    lower.includes("backup")
+  )
+    return "fi fi-ss-bolt";
+  if (lower.includes("water") || lower.includes("supply"))
+    return "fi fi-ss-faucet-drip";
+  if (lower.includes("club") || lower.includes("community"))
+    return "fi fi-ss-users";
+  if (
+    lower.includes("play") ||
+    lower.includes("kids") ||
+    lower.includes("children")
+  )
+    return "fi fi-ss-gamepad";
+  return "fi fi-ss-check-circle";
 };
 
 const formatFacilityDistance = (val: string | null | undefined): string => {
@@ -249,7 +308,11 @@ export default async function PropertyDetailPage({
   };
 
   const features = (property.propertyFeatures || [])
-    .map((pf: any) => ({ name: pf.feature?.name }))
+    .map((pf: any) => ({
+      id: pf.feature?.id,
+      name: pf.feature?.name,
+      image: pf.feature?.image || pf.feature?.icon || undefined,
+    }))
     .filter((f: any) => !!f.name);
 
   const allRows: [string, string][] = [];
@@ -536,18 +599,28 @@ export default async function PropertyDetailPage({
                   Amenities &amp; Features
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {features.map((f: any, i: number) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5 text-sm text-gray-700 font-medium"
-                    >
-                      <CheckCircle
-                        size={15}
-                        className="text-emerald-500 shrink-0"
-                      />
-                      {f.name}
-                    </div>
-                  ))}
+                  {features.map((f: any, i: number) => {
+                    const imgUrl = f.image ? getImageUrl(f.image) : null;
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center gap-2.5 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5 text-sm text-gray-700 font-medium hover:bg-gray-100/70 transition-colors"
+                      >
+                        {imgUrl ? (
+                          <img
+                            src={imgUrl}
+                            alt={f.name}
+                            className="w-5 h-5 object-contain shrink-0"
+                          />
+                        ) : (
+                          <i
+                            className={`${getAmenityIconClass(f.name)} text-[16px] text-gray-700 leading-none shrink-0`}
+                          />
+                        )}
+                        <span className="truncate">{f.name}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -605,6 +678,9 @@ export default async function PropertyDetailPage({
                     {property.propertyFacilities.map((item: any, i: number) => {
                       if (!item.facility) return null;
                       const config = getFacilityConfig(item.facility.name);
+                      const facilityImgUrl = item.facility.image
+                        ? getImageUrl(item.facility.image)
+                        : null;
                       return (
                         <div
                           key={i}
@@ -614,7 +690,15 @@ export default async function PropertyDetailPage({
                             <div
                               className={`w-9 h-9 rounded-lg flex items-center justify-center border shrink-0 ${config.bg}`}
                             >
-                              {config.icon}
+                              {facilityImgUrl ? (
+                                <img
+                                  src={facilityImgUrl}
+                                  alt={item.facility.name}
+                                  className="w-5 h-5 object-contain"
+                                />
+                              ) : (
+                                config.icon
+                              )}
                             </div>
                             <span className="text-sm font-medium text-gray-700">
                               {item.facility.name}

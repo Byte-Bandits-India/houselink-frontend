@@ -538,16 +538,40 @@ export default function PropertySearch() {
       houseType: searchHouseType,
     };
 
-    setFilters(nextFilters);
+    const queryParts: string[] = [];
+    if (searchPurpose)
+      queryParts.push(
+        `property_purpose=${encodeURIComponent(searchPurpose)}`,
+      );
+    if (searchCategory && searchCategory !== "all")
+      queryParts.push(`category=${encodeURIComponent(searchCategory)}`);
+    if (searchLocation)
+      queryParts.push(`location=${encodeURIComponent(searchLocation)}`);
+    if (searchCity && searchCity.toLowerCase() !== "chennai" && searchCity !== "")
+      queryParts.push(`city=${encodeURIComponent(searchCity)}`);
+    if (searchKeyword)
+      queryParts.push(`keyword=${encodeURIComponent(searchKeyword)}`);
+    if (searchAmenities && searchAmenities.length > 0)
+      queryParts.push(`amenities=${encodeURIComponent(searchAmenities.join(","))}`);
+    if (searchMaxPrice)
+      queryParts.push(`max_price=${encodeURIComponent(searchMaxPrice)}`);
+    if (searchMaxArea)
+      queryParts.push(`max_area=${encodeURIComponent(searchMaxArea)}`);
+    if (searchHouseType)
+      queryParts.push(`house_type=${encodeURIComponent(searchHouseType)}`);
+
+    const targetUrl = `/properties${
+      queryParts.length > 0 ? `?${queryParts.join("&")}` : ""
+    }`;
 
     if (isListingPage) {
       if (isHomePage) {
-        router.push("/properties", { scroll: false });
+        router.push(targetUrl, { scroll: false });
       } else {
         scrollToResults();
       }
     } else {
-      router.push(basePath, { scroll: false });
+      router.push(targetUrl, { scroll: false });
     }
   };
 

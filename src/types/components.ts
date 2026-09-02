@@ -74,8 +74,19 @@ export type BreadcrumbProps = {
   variant?: "default" | "simple";
 };
 
+export type SearchTag = {
+  id: string;
+  label: string;
+  type: "location" | "category" | "amenity" | "keyword" | "city" | "purpose";
+  value: string;
+};
+
 export type SearchSuggestionsProps = {
   query?: string;
+  tags?: SearchTag[];
+  onAddTag?: (tag: SearchTag) => void;
+  onRemoveTag?: (tagId: string) => void;
+  onClearTags?: () => void;
   onSelectKeyword: (keyword: string) => void;
   onSelectLocation: (location: string) => void;
   onSelectCategory?: (category: string) => void;

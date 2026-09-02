@@ -44,96 +44,104 @@ function parseUrlParams(
   if (keyword) {
     const lower = keyword.toLowerCase();
 
-    // Purpose
-    if (
-      lower.includes("rent") ||
-      lower.includes("lease") ||
-      lower.includes("rental") ||
-      lower.includes("renting")
-    ) {
-      activeTab = "rent";
-    } else if (
-      lower.includes("sale") ||
-      lower.includes("sell") ||
-      lower.includes("selling") ||
-      lower.includes("buy") ||
-      lower.includes("purchase")
-    ) {
-      activeTab = "sell";
-    }
-
-    // Category
-    for (const cat of dbCategories) {
-      const name = cat.name.toLowerCase();
-      let isMatched = false;
-      let val = name;
-
+    // Purpose (if not explicitly given in URL)
+    if (!searchParams.get("property_purpose")) {
       if (
-        name.includes("apartment") &&
-        (lower.includes("apartment") || lower.includes("flat"))
+        lower.includes("rent") ||
+        lower.includes("lease") ||
+        lower.includes("rental") ||
+        lower.includes("renting")
       ) {
-        isMatched = true;
-        val = "apartments";
-      } else if (name.includes("villa") && lower.includes("villa")) {
-        isMatched = true;
-        val = "villas";
+        activeTab = "rent";
       } else if (
-        name.includes("house") &&
-        (lower.includes("house") || lower.includes("home"))
+        lower.includes("sale") ||
+        lower.includes("sell") ||
+        lower.includes("selling") ||
+        lower.includes("buy") ||
+        lower.includes("purchase")
       ) {
-        isMatched = true;
-        val = "house";
-      } else if (
-        (name.includes("plot") || name.includes("land")) &&
-        (lower.includes("plot") || lower.includes("land"))
-      ) {
-        isMatched = true;
-        val = "plots";
-      } else if (
-        name.includes("commercial") &&
-        (lower.includes("commercial") ||
-          lower.includes("shop") ||
-          lower.includes("office") ||
-          lower.includes("warehouse") ||
-          lower.includes("godown"))
-      ) {
-        isMatched = true;
-        val = "commercial";
-      } else if (lower.includes(name)) {
-        isMatched = true;
-        if (name === "individual house") val = "house";
-      }
-
-      if (isMatched) {
-        activeCategory = val;
-        break;
+        activeTab = "sell";
       }
     }
 
-    // House Type
-    if (lower.includes("1 bhk") || lower.includes("1bhk")) houseType = "1 BHK";
-    else if (lower.includes("2 bhk") || lower.includes("2bhk"))
-      houseType = "2 BHK";
-    else if (lower.includes("3 bhk") || lower.includes("3bhk"))
-      houseType = "3 BHK";
-    else if (lower.includes("4 bhk") || lower.includes("4bhk"))
-      houseType = "4 BHK";
-    else if (
-      lower.includes("5 bhk") ||
-      lower.includes("5bhk") ||
-      lower.includes("5+ bhk") ||
-      lower.includes("5+bhk")
-    )
-      houseType = "5+ BHK";
-    else if (lower.includes("1 rk") || lower.includes("1rk"))
-      houseType = "1 RK";
+    // Category (if not explicitly set in URL)
+    if (activeCategory === "all") {
+      for (const cat of dbCategories) {
+        const name = cat.name.toLowerCase();
+        let isMatched = false;
+        let val = name;
 
-    // Location / Region
-    for (const reg of popularRegionsList) {
-      const regLower = reg.toLowerCase();
-      if (lower.includes(regLower)) {
-        location = reg;
-        break;
+        if (
+          name.includes("apartment") &&
+          (lower.includes("apartment") || lower.includes("flat"))
+        ) {
+          isMatched = true;
+          val = "apartments";
+        } else if (name.includes("villa") && lower.includes("villa")) {
+          isMatched = true;
+          val = "villas";
+        } else if (
+          name.includes("house") &&
+          (lower.includes("house") || lower.includes("home"))
+        ) {
+          isMatched = true;
+          val = "house";
+        } else if (
+          (name.includes("plot") || name.includes("land")) &&
+          (lower.includes("plot") || lower.includes("land"))
+        ) {
+          isMatched = true;
+          val = "plots";
+        } else if (
+          name.includes("commercial") &&
+          (lower.includes("commercial") ||
+            lower.includes("shop") ||
+            lower.includes("office") ||
+            lower.includes("warehouse") ||
+            lower.includes("godown"))
+        ) {
+          isMatched = true;
+          val = "commercial";
+        } else if (lower.includes(name)) {
+          isMatched = true;
+          if (name === "individual house") val = "house";
+        }
+
+        if (isMatched) {
+          activeCategory = val;
+          break;
+        }
+      }
+    }
+
+    // House Type (if not explicitly set in URL)
+    if (!houseType) {
+      if (lower.includes("1 bhk") || lower.includes("1bhk")) houseType = "1 BHK";
+      else if (lower.includes("2 bhk") || lower.includes("2bhk"))
+        houseType = "2 BHK";
+      else if (lower.includes("3 bhk") || lower.includes("3bhk"))
+        houseType = "3 BHK";
+      else if (lower.includes("4 bhk") || lower.includes("4bhk"))
+        houseType = "4 BHK";
+      else if (
+        lower.includes("5 bhk") ||
+        lower.includes("5bhk") ||
+        lower.includes("5+ bhk") ||
+        lower.includes("5+bhk")
+      )
+        houseType = "5+ BHK";
+      else if (lower.includes("1 rk") || lower.includes("1rk"))
+        houseType = "1 RK";
+    }
+
+    // Location / Region (if not explicitly set in URL)
+    if (!location) {
+      for (const reg of popularRegionsList) {
+        const regLower = reg.toLowerCase();
+        if (lower.includes(regLower)) {
+          location = reg;
+          break;
+        }
       }
     }
 

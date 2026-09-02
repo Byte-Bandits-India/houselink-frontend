@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { ChevronDown, Search, SlidersHorizontal, X, MapPin, Building, Sparkles, Tag as TagIcon } from "lucide-react";
 import { usePageFilter } from "@/contexts/HomeFilterContext";
 import {
   getStates,
@@ -15,6 +15,7 @@ import TypewriterTitle from "@/components/ui/TypewriterTitle";
 import { AnimatePresence, motion } from "framer-motion";
 import SearchSuggestions from "@/components/shared/SearchSuggestions";
 import SearchFilterModal from "@/components/shared/SearchFilterModal";
+import type { SearchTag } from "@/types/components";
 
 function parseKeywordToFilters(
   keyword: string,
@@ -156,9 +157,9 @@ function parseKeywordToFilters(
 export default function PropertiesSearchHeader() {
   const { filters, setFilters } = usePageFilter();
 
-  const [localCity, setLocalCity] = useState(filters.city);
-  const [localKeyword, setLocalKeyword] = useState(filters.keyword);
-  const [localActiveTab, setLocalActiveTab] = useState(filters.activeTab);
+  const [localCity, setLocalCity] = useState(filters.city || "");
+  const [localKeyword, setLocalKeyword] = useState(filters.keyword || "");
+  const [localActiveTab, setLocalActiveTab] = useState(filters.activeTab || "sell");
   const [citiesList, setCitiesList] = useState<
     { value: string; label: string }[]
   >([]);
@@ -168,7 +169,9 @@ export default function PropertiesSearchHeader() {
   const [dbFacilities, setDbFacilities] = useState<any[]>([]);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [searchTags, setSearchTags] = useState<SearchTag[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Load backend filter metadata dynamically on mount
   useEffect(() => {
@@ -176,7 +179,7 @@ export default function PropertiesSearchHeader() {
       try {
         Promise.all([
           getPopularRegions().catch(() => []),
-          getPropertyCategories({ for: filters.activeTab })
+          getPropertyCategories({ for: filters.activeTab || "sell" })
             .then((res) => (res?.success ? res.data : []))
             .catch(() => []),
           getFeatures()
@@ -237,10 +240,257 @@ export default function PropertiesSearchHeader() {
 
   // Sync with context changes (e.g., if filtered from sidebar)
   useEffect(() => {
-    setLocalCity(filters.city);
-    setLocalKeyword(filters.keyword);
-    setLocalActiveTab(filters.activeTab);
+    setLocalCity(filters.city || "");
+    setLocalKeyword(filters.keyword || "");
+    setLocalActiveTab(filters.activeTab || "sell");
   }, [filters.city, filters.keyword, filters.activeTab]);
+
+  // Compute all active search tags dynamically from context filters + custom user tags
+  const activeTags: SearchTag[] = useMemo(() => {
+    const list: SearchTag[] = [];
+
+    // 1. Location tags (split comma-separated)
+    if (filters.location) {
+      const locs = filters.location
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      for (const loc of locs) {
+        list.push({
+          id: `loc-${loc.toLowerCase()}`,
+          label: loc,
+          type: "location",
+          value: loc,
+        });
+      }
+    }
+
+    // 2. Category tags (split comma-separated)
+    if (filters.activeCategory && filters.activeCategory !== "all") {
+      const cats = filters.activeCategory
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s && s.toLowerCase() !== "all");
+      for (const cat of cats) {
+        const catObj = dbCategories.find(
+          (c) =>
+            c.name.toLowerCase() === cat.toLowerCase() ||
+            c.id.toString() === cat,
+        );
+        const label = catObj
+          ? catObj.name
+          : cat.charAt(0).toUpperCase() + cat.slice(1);
+        list.push({
+          id: `cat-${cat.toLowerCase()}`,
+          label: label,
+          type: "category",
+          value: cat,
+        });
+      }
+    }
+
+    // 3. City tags (split comma-separated if non-empty and not chennai)
+    if (
+      filters.city &&
+      filters.city.toLowerCase() !== "chennai" &&
+      filters.city.toLowerCase() !== ""
+    ) {
+      const cities = filters.city
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s && s.toLowerCase() !== "chennai");
+      for (const cVal of cities) {
+        const cityObj = citiesList.find((c) => c.value === cVal.toLowerCase());
+        const label = cityObj
+          ? cityObj.label
+          : cVal.charAt(0).toUpperCase() + cVal.slice(1);
+        list.push({
+          id: `city-${cVal.toLowerCase()}`,
+          label: `City: ${label}`,
+          type: "city",
+          value: cVal,
+        });
+      }
+    }
+
+    // 4. House Type tag
+    if (filters.houseType) {
+      list.push({
+        id: `type-${filters.houseType.toLowerCase()}`,
+        label: filters.houseType,
+        type: "keyword",
+        value: filters.houseType,
+      });
+    }
+
+    // 5. Amenities tags
+    if (filters.amenities) {
+      const split = filters.amenities
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      for (const item of split) {
+        list.push({
+          id: `amenity-${item.toLowerCase()}`,
+          label: item.charAt(0).toUpperCase() + item.slice(1),
+          type: "amenity",
+          value: item,
+        });
+      }
+    }
+
+    // 6. User Custom Tags
+    for (const st of searchTags) {
+      if (
+        !list.some(
+          (existing) =>
+            existing.type === st.type &&
+            existing.value.toLowerCase() === st.value.toLowerCase(),
+        )
+      ) {
+        list.push(st);
+      }
+    }
+
+    return list;
+  }, [filters, dbCategories, citiesList, searchTags]);
+
+  const handleAddTag = (tag: SearchTag) => {
+    setSearchTags((prev) => {
+      const exists = prev.some(
+        (t) =>
+          t.type === tag.type &&
+          t.value.toLowerCase() === tag.value.toLowerCase(),
+      );
+      if (exists) return prev;
+      return [...prev, tag];
+    });
+
+    // Also update filter context accordingly (stacking tags)
+    const nextFilters = { ...filters };
+    if (tag.type === "location") {
+      const current = nextFilters.location
+        ? nextFilters.location
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+      if (!current.some((l) => l.toLowerCase() === tag.value.toLowerCase())) {
+        nextFilters.location = [...current, tag.value].join(",");
+      }
+    } else if (tag.type === "category") {
+      const current =
+        nextFilters.activeCategory && nextFilters.activeCategory !== "all"
+          ? nextFilters.activeCategory
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [];
+      if (!current.some((c) => c.toLowerCase() === tag.value.toLowerCase())) {
+        nextFilters.activeCategory = [...current, tag.value].join(",");
+      }
+    } else if (tag.type === "city") {
+      const current = nextFilters.city
+        ? nextFilters.city
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+      if (!current.some((c) => c.toLowerCase() === tag.value.toLowerCase())) {
+        nextFilters.city = [...current, tag.value.toLowerCase()].join(",");
+      }
+      setLocalCity(nextFilters.city);
+    } else if (tag.type === "amenity") {
+      const current = nextFilters.amenities
+        ? nextFilters.amenities
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+      if (!current.some((a) => a.toLowerCase() === tag.value.toLowerCase())) {
+        nextFilters.amenities = [...current, tag.value.toLowerCase()].join(",");
+      }
+    } else if (tag.type === "keyword" && tag.id.startsWith("type-")) {
+      nextFilters.houseType = tag.value;
+    }
+
+    setFilters(nextFilters);
+    setLocalKeyword("");
+    inputRef.current?.focus();
+  };
+
+  const handleRemoveTag = (tagId: string) => {
+    const tag = activeTags.find((t) => t.id === tagId);
+    setSearchTags((prev) => prev.filter((t) => t.id !== tagId));
+
+    if (!tag) return;
+
+    const nextFilters = { ...filters };
+    if (tag.type === "location") {
+      const current = nextFilters.location
+        ? nextFilters.location
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+      nextFilters.location = current
+        .filter((l) => l.toLowerCase() !== tag.value.toLowerCase())
+        .join(",");
+      if (nextFilters.keyword === tag.value) nextFilters.keyword = "";
+    } else if (tag.type === "category") {
+      const current =
+        nextFilters.activeCategory && nextFilters.activeCategory !== "all"
+          ? nextFilters.activeCategory
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [];
+      const updated = current.filter(
+        (c) => c.toLowerCase() !== tag.value.toLowerCase(),
+      );
+      nextFilters.activeCategory =
+        updated.length > 0 ? updated.join(",") : "all";
+    } else if (tag.type === "city") {
+      const current = nextFilters.city
+        ? nextFilters.city
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+      const updated = current.filter(
+        (c) => c.toLowerCase() !== tag.value.toLowerCase(),
+      );
+      nextFilters.city = updated.join(",");
+      if (!nextFilters.city) setLocalCity("");
+    } else if (tag.type === "amenity") {
+      const current = nextFilters.amenities
+        ? nextFilters.amenities
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+      nextFilters.amenities = current
+        .filter((a) => a.toLowerCase() !== tag.value.toLowerCase())
+        .join(",");
+    } else if (tag.id.startsWith("type-")) {
+      nextFilters.houseType = "";
+    }
+
+    setFilters(nextFilters);
+  };
+
+  const handleClearTags = () => {
+    setSearchTags([]);
+    setLocalKeyword("");
+    setFilters({
+      ...filters,
+      keyword: "",
+      location: "",
+      activeCategory: "all",
+      amenities: "",
+      houseType: "",
+    });
+  };
 
   // Debounced search commit as user types
   useEffect(() => {
@@ -248,8 +498,8 @@ export default function PropertiesSearchHeader() {
       clearTimeout(debounceKeywordTimerRef.current);
     }
 
-    // Only debounce update if localKeyword differs from current committed filters.keyword
-    if (localKeyword !== filters.keyword) {
+    // Only debounce update if localKeyword is non-empty and differs from current committed filters.keyword
+    if (localKeyword.trim() && localKeyword !== filters.keyword) {
       debounceKeywordTimerRef.current = setTimeout(() => {
         const parsed = parseKeywordToFilters(
           localKeyword,
@@ -288,19 +538,52 @@ export default function PropertiesSearchHeader() {
     if (debounceKeywordTimerRef.current) {
       clearTimeout(debounceKeywordTimerRef.current);
     }
+    const locTags = activeTags
+      .filter((t) => t.type === "location")
+      .map((t) => t.value);
+    const catTags = activeTags
+      .filter((t) => t.type === "category")
+      .map((t) => t.value);
+    const cityTags = activeTags
+      .filter((t) => t.type === "city")
+      .map((t) => t.value);
+    const purposeTag = activeTags.find((t) => t.type === "purpose")?.value as
+      | "sell"
+      | "rent"
+      | undefined;
+    const amenityTags = activeTags
+      .filter((t) => t.type === "amenity")
+      .map((t) => t.value);
+    const kwTags = activeTags
+      .filter((t) => t.type === "keyword" && !t.id.startsWith("type-"))
+      .map((t) => t.value);
+
+    const fullKw = [localKeyword.trim(), ...kwTags].filter(Boolean).join(" ");
+
     const parsed = parseKeywordToFilters(
-      localKeyword,
+      fullKw,
       filters,
       popularRegionsList,
       dbCategories,
       dbFeatures,
       dbFacilities,
     );
+
     setFilters({
       ...filters,
-      city: localCity,
-      keyword: localKeyword,
-      activeTab: localActiveTab,
+      city: cityTags.length > 0 ? cityTags.join(",") : (localCity || ""),
+      keyword: fullKw || "",
+      location:
+        locTags.length > 0 ? locTags.join(",") : (filters.location || ""),
+      activeCategory:
+        catTags.length > 0
+          ? catTags.join(",")
+          : (filters.activeCategory || "all"),
+      activeTab: purposeTag || localActiveTab || "sell",
+      amenities:
+        amenityTags.length > 0
+          ? amenityTags.join(",")
+          : (filters.amenities || ""),
       ...parsed,
     });
     setIsInputFocused(false);
@@ -312,6 +595,7 @@ export default function PropertiesSearchHeader() {
       clearTimeout(debounceKeywordTimerRef.current);
     }
     setLocalKeyword("");
+    setSearchTags([]);
     setFilters({
       ...filters,
       keyword: "",
@@ -388,7 +672,7 @@ export default function PropertiesSearchHeader() {
           </label>
           <div className="relative bg-white rounded-full h-12 px-4 flex items-center shadow-sm border border-transparent focus-within:border-white/20">
             <select
-              value={localCity}
+              value={localCity || ""}
               onChange={(e) => {
                 const val = e.target.value;
                 setLocalCity(val);
@@ -423,21 +707,72 @@ export default function PropertiesSearchHeader() {
           <label className="text-[11px] uppercase font-bold text-white/70 mb-1.5 tracking-wider">
             Keyword, Location, Property Name
           </label>
-          <div className="relative bg-white rounded-full h-12 pl-4 sm:pl-5 pr-1.5 flex items-center shadow-sm w-full">
+          <div
+            onClick={() => {
+              setIsInputFocused(true);
+              inputRef.current?.focus();
+            }}
+            className="relative bg-white rounded-full h-12 pl-4 sm:pl-5 pr-1.5 flex items-center shadow-sm w-full cursor-text"
+          >
             <Search size={16} className="text-gray-400 mr-2.5 flex-shrink-0" />
-            <div className="relative flex-1 h-full flex items-center min-w-0">
+            <div className="relative flex-1 h-full flex items-center gap-1.5 min-w-0 flex-wrap overflow-hidden py-1">
+              {/* Inline Search Tags */}
+              {activeTags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border shadow-2xs shrink-0 select-none z-10 ${
+                    tag.type === "location"
+                      ? "bg-blue-50 text-blue-700 border-blue-200"
+                      : tag.type === "category"
+                        ? "bg-purple-50 text-purple-700 border-purple-200"
+                        : tag.type === "amenity"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : tag.type === "city"
+                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                            : "bg-slate-100 text-slate-700 border-slate-200"
+                  }`}
+                >
+                  {tag.type === "location" && <MapPin size={10} />}
+                  {tag.type === "category" && <Building size={10} />}
+                  {tag.type === "amenity" && <Sparkles size={10} />}
+                  {tag.type === "purpose" && <TagIcon size={10} />}
+                  <span>{tag.label}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveTag(tag.id);
+                    }}
+                    className="hover:opacity-75 rounded-full p-0.5 ml-0.5 cursor-pointer"
+                    title="Remove"
+                  >
+                    <X size={11} className="stroke-[2.5px]" />
+                  </button>
+                </span>
+              ))}
+
               <input
+                ref={inputRef}
                 type="text"
-                value={localKeyword}
+                value={localKeyword || ""}
                 onChange={(e) => setLocalKeyword(e.target.value)}
                 onFocus={() => setIsInputFocused(true)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSearchCommit();
+                  if (e.key === "Enter") {
+                    handleSearchCommit();
+                  } else if (
+                    e.key === "Backspace" &&
+                    localKeyword === "" &&
+                    activeTags.length > 0
+                  ) {
+                    const lastTag = activeTags[activeTags.length - 1];
+                    if (lastTag) handleRemoveTag(lastTag.id);
+                  }
                 }}
-                className="w-full bg-transparent border-none outline-none text-sm text-gray-800 font-medium py-2 z-10"
+                className="flex-1 min-w-[100px] bg-transparent border-none outline-none text-sm text-gray-800 font-medium py-1 z-10"
               />
 
-              {!isInputFocused && !localKeyword && (
+              {!isInputFocused && !localKeyword && activeTags.length === 0 && (
                 <div className="absolute inset-0 pointer-events-none flex items-center text-left">
                   <TypewriterTitle
                     sequences={[
@@ -466,7 +801,7 @@ export default function PropertiesSearchHeader() {
             </div>
 
             {/* Clear Search Button */}
-            {localKeyword && (
+            {(localKeyword || activeTags.length > 0) && (
               <button
                 type="button"
                 onClick={handleClearKeyword}
@@ -514,33 +849,28 @@ export default function PropertiesSearchHeader() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.99 }}
                 transition={{ duration: 0.15 }}
-                className="absolute left-0 right-0 top-full mt-3 bg-white rounded-2xl p-4 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-150 z-50 overflow-y-auto max-h-[360px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+                className="absolute left-0 right-0 top-full mt-3 bg-white rounded-2xl p-4 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-150 z-50 overflow-y-auto max-h-[460px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
               >
                 <SearchSuggestions
                   query={localKeyword}
+                  tags={activeTags}
+                  onAddTag={handleAddTag}
+                  onRemoveTag={handleRemoveTag}
+                  onClearTags={handleClearTags}
                   onSelectKeyword={(kw) => {
-                    setLocalKeyword(kw);
-                    const parsed = parseKeywordToFilters(
-                      kw,
-                      filters,
-                      popularRegionsList,
-                      dbCategories,
-                      dbFeatures,
-                      dbFacilities,
-                    );
-                    setFilters({
-                      ...filters,
-                      keyword: kw,
-                      location: "", // Clear conflicting region location
-                      ...parsed,
+                    handleAddTag({
+                      id: `kw-${kw.toLowerCase()}`,
+                      label: kw,
+                      type: "keyword",
+                      value: kw,
                     });
                   }}
                   onSelectLocation={(loc) => {
-                    setLocalKeyword(loc); // Show the chosen high demand region in the search text input
-                    setFilters({
-                      ...filters,
-                      location: loc,
-                      keyword: loc,
+                    handleAddTag({
+                      id: `loc-${loc.toLowerCase()}`,
+                      label: loc,
+                      type: "location",
+                      value: loc,
                     });
                   }}
                   onSelectCategory={(cat) => {
@@ -554,34 +884,27 @@ export default function PropertiesSearchHeader() {
                     const catLabel = catObj
                       ? catObj.name
                       : cat.charAt(0).toUpperCase() + cat.slice(1);
-                    setLocalKeyword(catLabel);
-                    setFilters({
-                      ...filters,
-                      activeCategory: cat,
-                      keyword: catLabel,
+                    handleAddTag({
+                      id: `cat-${cat.toLowerCase()}`,
+                      label: catLabel,
+                      type: "category",
+                      value: cat,
                     });
                   }}
                   onSelectCity={(cityVal) => {
-                    setLocalCity(cityVal.toLowerCase());
-                    setLocalKeyword(cityVal);
-                    setFilters({
-                      ...filters,
-                      city: cityVal.toLowerCase(),
-                      keyword: cityVal,
+                    handleAddTag({
+                      id: `city-${cityVal.toLowerCase()}`,
+                      label: cityVal,
+                      type: "city",
+                      value: cityVal,
                     });
                   }}
                   onSelectAmenity={(amenityVal) => {
-                    const current = filters.amenities
-                      ? filters.amenities.split(",")
-                      : [];
-                    const updated = current.includes(amenityVal.toLowerCase())
-                      ? current
-                      : [...current, amenityVal.toLowerCase()];
-                    setLocalKeyword(amenityVal);
-                    setFilters({
-                      ...filters,
-                      amenities: updated.join(","),
-                      keyword: amenityVal,
+                    handleAddTag({
+                      id: `amenity-${amenityVal.toLowerCase()}`,
+                      label: amenityVal,
+                      type: "amenity",
+                      value: amenityVal,
                     });
                   }}
                   selectedAmenities={
@@ -590,27 +913,8 @@ export default function PropertiesSearchHeader() {
                   onSearch={(overrides) => {
                     const nextFilters = { ...filters };
                     if (overrides) {
-                      if (overrides.keyword !== undefined) {
-                        nextFilters.keyword = overrides.keyword;
-                        setLocalKeyword(overrides.keyword);
-                        if (overrides.keyword) {
-                          const parsed = parseKeywordToFilters(
-                            overrides.keyword,
-                            nextFilters,
-                            popularRegionsList,
-                            dbCategories,
-                            dbFeatures,
-                            dbFacilities,
-                          );
-                          Object.assign(nextFilters, parsed);
-                        }
-                      }
                       if (overrides.location !== undefined) {
                         nextFilters.location = overrides.location;
-                        if (overrides.location) {
-                          setLocalKeyword(overrides.location);
-                          nextFilters.keyword = overrides.location;
-                        }
                       }
                       if (overrides.category !== undefined) {
                         nextFilters.activeCategory = overrides.category;
@@ -635,8 +939,16 @@ export default function PropertiesSearchHeader() {
                       if (Array.isArray(overrides.amenities)) {
                         nextFilters.amenities = overrides.amenities.join(",");
                       }
+                      if (overrides.keyword !== undefined) {
+                        nextFilters.keyword = overrides.keyword;
+                        setLocalKeyword(overrides.keyword);
+                      } else {
+                        nextFilters.keyword = "";
+                        setLocalKeyword("");
+                      }
                     }
                     setFilters(nextFilters);
+                    setIsInputFocused(false);
                   }}
                   onClose={() => setIsInputFocused(false)}
                 />
@@ -648,9 +960,9 @@ export default function PropertiesSearchHeader() {
         {/* Property Type Toggle Column */}
         <div className="flex flex-col w-full lg:w-auto text-left min-w-0">
           <label className="text-[11px] uppercase font-bold text-white/70 mb-1.5 tracking-wider truncate">
-            Choose the Property Type
+            Property For
           </label>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => handleToggleTab("sell")}
@@ -676,6 +988,65 @@ export default function PropertiesSearchHeader() {
           </div>
         </div>
       </div>
+
+      {/* Active Filter Tags Row below inputs */}
+      {activeTags.length > 0 && (
+        <div className="container mx-auto px-6 mt-3 flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-white/80 mr-1 flex items-center gap-1">
+            <Sparkles size={12} className="text-white/90" />
+            Active Filters ({activeTags.length}):
+          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {activeTags.map((tag) => (
+              <span
+                key={tag.id}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white text-gray-800 shadow-sm border border-white/40 transition-all"
+              >
+                {tag.type === "location" && (
+                  <MapPin size={12} className="text-blue-600 stroke-[2.5px]" />
+                )}
+                {tag.type === "category" && (
+                  <Building
+                    size={12}
+                    className="text-purple-600 stroke-[2.5px]"
+                  />
+                )}
+                {tag.type === "amenity" && (
+                  <Sparkles
+                    size={12}
+                    className="text-emerald-600 stroke-[2.5px]"
+                  />
+                )}
+                {tag.type === "city" && (
+                  <MapPin
+                    size={12}
+                    className="text-amber-600 stroke-[2.5px]"
+                  />
+                )}
+                {tag.type === "purpose" && (
+                  <TagIcon size={12} className="text-rose-600 stroke-[2.5px]" />
+                )}
+                <span>{tag.label}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveTag(tag.id)}
+                  className="hover:bg-gray-100 hover:text-red-600 rounded-full p-0.5 ml-0.5 cursor-pointer text-gray-400 transition-colors"
+                  title="Remove filter"
+                >
+                  <X size={12} className="stroke-[2.5px]" />
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={handleClearTags}
+              className="text-xs font-bold text-white/90 hover:text-white underline underline-offset-2 ml-1 cursor-pointer transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Advanced Filter Modal */}
       <SearchFilterModal

@@ -121,11 +121,41 @@ export default function SearchFilterModal({
     Array<{ id: number; name: string }>
   >([]);
 
-  const fetchLocationSuggestions = async (searchQuery: string) => {
+  // Location cleaning and deduplication helper
+  const cleanLocationItem = (loc: string): string => {
+    if (!loc) return "";
+    let cleaned = loc
+      .replace(/\b\d{6}\b/g, "")
+      .replace(/\b\d{3}\s\d{3}\b/g, "")
+      .trim();
+    cleaned = cleaned
+      .replace(/,\s*(india|tamil\s*nadu|kerala|karnataka|andhra\s*pradesh|telangana|maharashtra)\s*$/gi, "")
+      .replace(/,\s*chennai\s*$/gi, "")
+      .trim();
+    const parts = cleaned.split(",").map((p) => p.trim()).filter(Boolean);
+    return parts[0] || cleaned;
+  };
+
+  const fetchLocationSuggestions = async (
+    searchQuery: string,
+    currentPurpose: string = purpose,
+  ) => {
     try {
       setIsLoadingSuggestions(true);
-      const list = await getLocationSuggestions(searchQuery);
-      setSuggestions(list);
+      const list = await getLocationSuggestions(searchQuery, currentPurpose);
+      const seen = new Set<string>();
+      const deduped: string[] = [];
+      for (const item of list) {
+        const cleaned = cleanLocationItem(item);
+        if (cleaned && cleaned.length >= 2) {
+          const lower = cleaned.toLowerCase();
+          if (!seen.has(lower)) {
+            seen.add(lower);
+            deduped.push(cleaned);
+          }
+        }
+      }
+      setSuggestions(deduped);
     } catch (err) {
       console.error("Error fetching location suggestions:", err);
       setSuggestions([]);
@@ -174,7 +204,9 @@ export default function SearchFilterModal({
       .then((res) => {
         if (res?.success) setCategoriesList(res.data || []);
       })
-      .catch((err) => console.error("Error loading categories for purpose:", err));
+      .catch((err) =>
+        console.error("Error loading categories for purpose:", err),
+      );
   }, [purpose]);
 
   // Load backend features & facilities
@@ -225,9 +257,7 @@ export default function SearchFilterModal({
 
   const handleOpenSuggestions = () => {
     setShowRegionSuggestions(true);
-    if (suggestions.length === 0) {
-      fetchLocationSuggestions(region);
-    }
+    fetchLocationSuggestions(region, purpose);
   };
 
   const handleRegionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -243,7 +273,7 @@ export default function SearchFilterModal({
       clearTimeout(debounceTimerRef.current);
     }
     debounceTimerRef.current = setTimeout(() => {
-      fetchLocationSuggestions(val);
+      fetchLocationSuggestions(val, purpose);
     }, 200);
   };
 
@@ -258,7 +288,7 @@ export default function SearchFilterModal({
     setRegion("");
     setRegionError(false);
     setHighlightedIndex(-1);
-    fetchLocationSuggestions("");
+    fetchLocationSuggestions("", purpose);
     inputRef.current?.focus();
   };
 
@@ -335,6 +365,21 @@ export default function SearchFilterModal({
         {step === 1 ? (
           /* ─── STEP 1 ─── */
           <div className="flex flex-col gap-5 text-left pb-2 bg-white">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Property Purpose
+              </label>
+              <div className="w-[200px]">
+                <PropertyTypeSwitch
+                  activeTab={purpose}
+                  onChange={(val) => {
+                    setPurpose(val);
+                    fetchLocationSuggestions(region, val);
+                  }}
+                  variant="header"
+                />
+              </div>
+            </div>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                 Property Region / Location{" "}
@@ -456,19 +501,6 @@ export default function SearchFilterModal({
                   Please enter or select a region to proceed.
                 </span>
               )}
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Property Purpose
-              </label>
-              <div className="w-[200px]">
-                <PropertyTypeSwitch
-                  activeTab={purpose}
-                  onChange={(val) => setPurpose(val)}
-                  variant="header"
-                />
-              </div>
             </div>
           </div>
         ) : (

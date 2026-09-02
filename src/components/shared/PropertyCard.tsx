@@ -1,8 +1,8 @@
-import Image from 'next/image';
-import { Heart, MapPin } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { getImageUrl } from '@/lib/api';
-import { useWishlist } from '@/context/WishlistContext';
+import Image from "next/image";
+import { Heart, MapPin } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { getImageUrl } from "@/lib/api";
+import { useWishlist } from "@/context/WishlistContext";
 
 import type { PropertyCardProps } from "@/types/components";
 
@@ -20,7 +20,11 @@ function getDefaultImage(categoryName?: string): string {
   if (name.includes("plot")) {
     return "/assets/default_images/plotsAvatar.jpg";
   }
-  if (name.includes("individual house") || name.includes("individual_house") || name.includes("house")) {
+  if (
+    name.includes("individual house") ||
+    name.includes("individual_house") ||
+    name.includes("house")
+  ) {
     return "/assets/default_images/houseAvatar.jpg";
   }
   if (name.includes("land")) {
@@ -48,10 +52,14 @@ function getDefaultImage(categoryName?: string): string {
 }
 
 export default function PropertyCard(props: PropertyCardProps) {
-  const url = props.permalink ? `/properties/${props.permalink}` : `/properties/${props.id}`;
-  const priceFormatted = typeof props.price === 'number'
-    ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(props.price)
-    : props.price;
+  const priceFormatted =
+    typeof props.price === "number"
+      ? new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
+          maximumFractionDigits: 0,
+        }).format(props.price)
+      : props.price;
 
   const { isWishlisted, toggleWishlist } = useWishlist();
   const wishlisted = isWishlisted(Number(props.id));
@@ -67,8 +75,20 @@ export default function PropertyCard(props: PropertyCardProps) {
     const c = category.toLowerCase().trim();
     if (c.includes("plot") || c.includes("land")) return "text-amber-500";
     if (c.includes("villa")) return "text-emerald-600";
-    if (c.includes("individual house") || c.includes("individual_house") || c.includes("house")) return "text-rose-500";
-    if (c.includes("commercial") || c.includes("office") || c.includes("shop") || c.includes("godown") || c.includes("warehouse")) return "text-violet-600";
+    if (
+      c.includes("individual house") ||
+      c.includes("individual_house") ||
+      c.includes("house")
+    )
+      return "text-rose-500";
+    if (
+      c.includes("commercial") ||
+      c.includes("office") ||
+      c.includes("shop") ||
+      c.includes("godown") ||
+      c.includes("warehouse")
+    )
+      return "text-violet-600";
     if (c.includes("apartment")) return "text-sky-600";
     return "text-primary";
   };
@@ -87,13 +107,17 @@ export default function PropertyCard(props: PropertyCardProps) {
       {/* Image container */}
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-xl select-none image-anime">
         <Image
-          src={props.image && props.image !== "/assets/blur.png" ? getImageUrl(props.image) : getDefaultImage(props.categoryName)}
+          src={
+            props.image && props.image !== "/assets/blur.png"
+              ? getImageUrl(props.image)
+              : getDefaultImage(props.categoryName)
+          }
           alt={props.name}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           fill
           unoptimized={true}
         />
-        
+
         {/* Heart button - moved to bottom-right of image container to avoid ribbon clash */}
         <button
           onClick={handleWishlistClick}
@@ -101,7 +125,9 @@ export default function PropertyCard(props: PropertyCardProps) {
           type="button"
           aria-label="Add to favorites"
         >
-          <Heart className={`h-4.5 w-4.5 stroke-[2px] ${wishlisted ? "fill-red-500 text-red-500" : "text-neutral-700"}`} />
+          <Heart
+            className={`h-4.5 w-4.5 stroke-[2px] ${wishlisted ? "fill-red-500 text-red-500" : "text-neutral-700"}`}
+          />
         </button>
 
         {/* Badges on top-left - Featured, Owner/Builder, and Sell/Rent */}
@@ -118,13 +144,14 @@ export default function PropertyCard(props: PropertyCardProps) {
           )}
           {props.property_for && (
             <span className="rounded-md bg-[#153e75] text-white px-2.5 py-1 font-semibold text-[11px] md:text-xs shadow-sm">
-              {props.property_for === "For Sale" || props.property_for.toLowerCase() === "sell"
+              {props.property_for === "For Sale" ||
+              props.property_for.toLowerCase() === "sell"
                 ? "Sell"
                 : props.property_for === "Rent"
-                ? "Rent"
-                : props.property_for === "Lease"
-                ? "Lease"
-                : props.property_for}
+                  ? "Rent"
+                  : props.property_for === "Lease"
+                    ? "Lease"
+                    : props.property_for}
             </span>
           )}
         </div>
@@ -132,9 +159,20 @@ export default function PropertyCard(props: PropertyCardProps) {
 
       {/* Category ribbon / badge */}
       {displayName && (
-        <div className={`absolute -top-3.5 right-4 z-20 select-none filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.15)] ${categoryColorClass}`}>
-          <svg width="84" height="34" viewBox="0 0 84 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M 8 0 H 76 C 80 0, 84 4, 84 8 C 80 12, 80 22, 84 26 C 84 30, 80 34, 76 34 H 8 C 4 34, 0 30, 0 26 C 4 22, 4 12, 0 8 C 0 4, 4 0, 8 0 Z" fill="currentColor" />
+        <div
+          className={`absolute -top-3.5 right-4 z-20 select-none filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.15)] ${categoryColorClass}`}
+        >
+          <svg
+            width="84"
+            height="34"
+            viewBox="0 0 84 34"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M 8 0 H 76 C 80 0, 84 4, 84 8 C 80 12, 80 22, 84 26 C 84 30, 80 34, 76 34 H 8 C 4 34, 0 30, 0 26 C 4 22, 4 12, 0 8 C 0 4, 4 0, 8 0 Z"
+              fill="currentColor"
+            />
           </svg>
           <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white tracking-wider uppercase">
             {displayName}
@@ -160,16 +198,18 @@ export default function PropertyCard(props: PropertyCardProps) {
           <div className="flex items-center gap-3 text-slate-500 font-semibold text-xs md:text-[13px]">
             {props.bedrooms !== undefined && (
               <span className="flex items-center gap-1">
-                <i className="fa fa-bed text-primary text-[13px]"></i> {props.bedrooms} Bed
+                <i className="fa fa-bed text-primary text-[13px]"></i>{" "}
+                {props.bedrooms} Bed
               </span>
             )}
             {props.bathrooms !== undefined && (
               <span className="flex items-center gap-1">
-                <i className="fa fa-bath text-primary text-[13px]"></i> {props.bathrooms} Bath
+                <i className="fa fa-bath text-primary text-[13px]"></i>{" "}
+                {props.bathrooms} Bath
               </span>
             )}
           </div>
-          
+
           {/* Price */}
           <span className="font-black text-primary text-sm md:text-base">
             {priceFormatted}

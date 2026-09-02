@@ -1,9 +1,20 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, ChevronUp, RotateCcw, SlidersHorizontal } from "lucide-react";
-import { usePageFilter, PRICE_RANGES, defaultFilterValues, type PageFilterValues } from "@/contexts/HomeFilterContext";
+import {
+  ChevronDown,
+  ChevronUp,
+  RotateCcw,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
+import {
+  usePageFilter,
+  defaultFilterValues,
+  type PageFilterValues,
+} from "@/contexts/HomeFilterContext";
 import PropertyTypeSwitch from "./PropertyTypeSwitch";
+import PriceInWords from "./PriceInWords";
 import { getFeatures, getFacilities, getPropertyCategories } from "@/lib/api";
 
 export default function PropertiesFilterSidebar() {
@@ -17,9 +28,15 @@ export default function PropertiesFilterSidebar() {
   const [facilitiesExpanded, setFacilitiesExpanded] = useState(true);
 
   // Dynamic filter lists fetched from backend
-  const [dbFeatures, setDbFeatures] = useState<Array<{ id: number; name: string }>>([]);
-  const [dbFacilities, setDbFacilities] = useState<Array<{ id: number; name: string }>>([]);
-  const [categoriesList, setCategoriesList] = useState<Array<{ value: string; label: string }>>([
+  const [dbFeatures, setDbFeatures] = useState<
+    Array<{ id: number; name: string }>
+  >([]);
+  const [dbFacilities, setDbFacilities] = useState<
+    Array<{ id: number; name: string }>
+  >([]);
+  const [categoriesList, setCategoriesList] = useState<
+    Array<{ value: string; label: string }>
+  >([
     { value: "apartments", label: "Apartments" },
     { value: "villas", label: "Villas" },
     { value: "house", label: "Individual House" },
@@ -61,7 +78,11 @@ export default function PropertiesFilterSidebar() {
               if (lowerName.includes("plot")) val = "plots";
               else if (lowerName.includes("apartment")) val = "apartments";
               else if (lowerName.includes("villa")) val = "villas";
-              else if (lowerName.includes("individual house") || lowerName.includes("house")) val = "house";
+              else if (
+                lowerName.includes("individual house") ||
+                lowerName.includes("house")
+              )
+                val = "house";
               return {
                 value: val,
                 label: c.name,
@@ -70,7 +91,7 @@ export default function PropertiesFilterSidebar() {
 
           // Single entry for Commercial Properties
           const hasCommercial = res.data.some(
-            (c: any) => c.type?.toLowerCase() === "commercial"
+            (c: any) => c.type?.toLowerCase() === "commercial",
           );
 
           const list = [
@@ -84,7 +105,9 @@ export default function PropertiesFilterSidebar() {
           setCategoriesList(list);
         }
       })
-      .catch((err) => console.error("Failed to load categories in sidebar:", err));
+      .catch((err) =>
+        console.error("Failed to load categories in sidebar:", err),
+      );
   }, [localFilters.activeTab]);
 
   // Synchronize external filter changes when no active debounce timer is running
@@ -139,24 +162,17 @@ export default function PropertiesFilterSidebar() {
     localFilters.keyword ||
     localFilters.location ||
     localFilters.maxArea ||
-    localFilters.city
+    localFilters.city,
   );
 
-  // ── Price Range Selection (Checkboxes) ──
-  const selectedPriceRanges = localFilters.priceRanges
-    ? localFilters.priceRanges.split(",").filter(Boolean)
-    : [];
-
-  const handlePriceRangeSelect = (rangeId: string) => {
-    const currentRanges = localFilters.priceRanges
-      ? localFilters.priceRanges.split(",").filter(Boolean)
-      : [];
-    const updated = currentRanges.includes(rangeId)
-      ? currentRanges.filter((id) => id !== rangeId)
-      : [...currentRanges, rangeId];
+  // ── Price Range Selection (Integer Inputs) ──
+  const handlePriceChange = (field: "minPrice" | "maxPrice", value: string) => {
+    const clean = value.replace(/[^0-9]/g, "");
+    if (clean.length > 10) return;
     applyFilterChange({
       ...localFilters,
-      priceRanges: updated.join(","),
+      [field]: clean,
+      priceRanges: "",
     });
   };
 
@@ -190,7 +206,9 @@ export default function PropertiesFilterSidebar() {
     : [];
 
   const handleHouseTypeSelect = (value: string) => {
-    const current = localFilters.houseType ? localFilters.houseType.split(",").filter(Boolean) : [];
+    const current = localFilters.houseType
+      ? localFilters.houseType.split(",").filter(Boolean)
+      : [];
     const updated = current.includes(value)
       ? current.filter((v) => v !== value)
       : [...current, value];
@@ -206,7 +224,9 @@ export default function PropertiesFilterSidebar() {
     : [];
 
   const handleToggleAmenity = (amenityName: string) => {
-    const currentList = localFilters.amenities ? localFilters.amenities.split(",").filter(Boolean) : [];
+    const currentList = localFilters.amenities
+      ? localFilters.amenities.split(",").filter(Boolean)
+      : [];
     const lowerName = amenityName.toLowerCase();
     const updated = currentList.includes(lowerName)
       ? currentList.filter((a) => a !== lowerName)
@@ -228,12 +248,13 @@ export default function PropertiesFilterSidebar() {
 
   return (
     <div className="w-full max-w-[318px] bg-white rounded-2xl border border-gray-150 p-5 text-left shadow-sm flex flex-col gap-6 select-none">
-      
       {/* ── SIDEBAR TOP HEADER & CLEAR BUTTON ── */}
       <div className="flex items-center justify-between pb-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-primary" />
-          <h3 className="font-extrabold text-sm text-gray-900 uppercase tracking-wider">Filters</h3>
+          <h3 className="font-extrabold text-sm text-gray-900 uppercase tracking-wider">
+            Filters
+          </h3>
         </div>
         {hasActiveFilters && (
           <button
@@ -258,26 +279,80 @@ export default function PropertiesFilterSidebar() {
           {priceExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
         {priceExpanded && (
-          <div className="pt-4 flex flex-col gap-3">
-            {PRICE_RANGES.map((range) => {
-              const isChecked = selectedPriceRanges.includes(range.id);
-              return (
-                <label
-                  key={range.id}
-                  className="flex items-center gap-3 cursor-pointer group select-none"
-                >
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => handlePriceRangeSelect(range.id)}
-                    className="w-[17px] h-[17px] rounded border-gray-300 text-primary focus:ring-primary accent-primary cursor-pointer transition-transform group-active:scale-95"
-                  />
-                  <span className="text-[13px] text-gray-600 font-semibold group-hover:text-gray-900 transition-colors">
-                    {range.label}
-                  </span>
+          <div className="pt-4 flex flex-col gap-3.5">
+            {/* Min Price Field */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[12px] font-bold text-gray-700">
+                  Min Price (₹)
                 </label>
-              );
-            })}
+                <PriceInWords amount={localFilters.minPrice} variant="badge" />
+              </div>
+              <div className="relative flex items-center">
+                <span className="absolute left-3 text-gray-400 text-xs font-bold pointer-events-none select-none">
+                  ₹
+                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={localFilters.minPrice || ""}
+                  onChange={(e) =>
+                    handlePriceChange("minPrice", e.target.value)
+                  }
+                  placeholder="e.g. 1000000"
+                  className="w-full pl-7 pr-7 py-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-400 text-gray-800"
+                />
+                {localFilters.minPrice && (
+                  <button
+                    type="button"
+                    onClick={() => handlePriceChange("minPrice", "")}
+                    className="absolute right-2.5 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-200 cursor-pointer transition-colors"
+                    title="Clear Min Price"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+              <PriceInWords amount={localFilters.minPrice} variant="full" />
+            </div>
+
+            {/* Max Price Field */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[12px] font-bold text-gray-700">
+                  Max Price (₹)
+                </label>
+                <PriceInWords amount={localFilters.maxPrice} variant="badge" />
+              </div>
+              <div className="relative flex items-center">
+                <span className="absolute left-3 text-gray-400 text-xs font-bold pointer-events-none select-none">
+                  ₹
+                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={localFilters.maxPrice || ""}
+                  onChange={(e) =>
+                    handlePriceChange("maxPrice", e.target.value)
+                  }
+                  placeholder="e.g. 5000000"
+                  className="w-full pl-7 pr-7 py-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-400 text-gray-800"
+                />
+                {localFilters.maxPrice && (
+                  <button
+                    type="button"
+                    onClick={() => handlePriceChange("maxPrice", "")}
+                    className="absolute right-2.5 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-200 cursor-pointer transition-colors"
+                    title="Clear Max Price"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+              <PriceInWords amount={localFilters.maxPrice} variant="full" />
+            </div>
           </div>
         )}
       </div>
@@ -290,15 +365,20 @@ export default function PropertiesFilterSidebar() {
           className="w-full flex items-center justify-between font-bold text-sm text-gray-800 uppercase tracking-wider pb-3 border-b border-gray-100 cursor-pointer"
         >
           <span>Property Category</span>
-          {categoryExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {categoryExpanded ? (
+            <ChevronUp size={16} />
+          ) : (
+            <ChevronDown size={16} />
+          )}
         </button>
         {categoryExpanded && (
           <div className="pt-4 flex flex-col gap-4">
-            
             {/* Toggle Buy / Rent */}
             <PropertyTypeSwitch
               activeTab={localFilters.activeTab}
-              onChange={(tab) => applyFilterChange({ ...localFilters, activeTab: tab })}
+              onChange={(tab) =>
+                applyFilterChange({ ...localFilters, activeTab: tab })
+              }
               variant="sidebar"
             />
 
@@ -307,7 +387,8 @@ export default function PropertiesFilterSidebar() {
               {categoriesList.map((cat) => {
                 const isChecked =
                   cat.value === "all"
-                    ? !localFilters.activeCategory || localFilters.activeCategory === "all"
+                    ? !localFilters.activeCategory ||
+                      localFilters.activeCategory === "all"
                     : selectedCategories.includes(cat.value);
                 return (
                   <label
@@ -327,7 +408,6 @@ export default function PropertiesFilterSidebar() {
                 );
               })}
             </div>
-
           </div>
         )}
       </div>
@@ -373,12 +453,18 @@ export default function PropertiesFilterSidebar() {
           className="w-full flex items-center justify-between font-bold text-sm text-gray-800 uppercase tracking-wider pb-3 border-b border-gray-100 cursor-pointer"
         >
           <span>Features</span>
-          {featuresExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {featuresExpanded ? (
+            <ChevronUp size={16} />
+          ) : (
+            <ChevronDown size={16} />
+          )}
         </button>
         {featuresExpanded && (
           <div className="pt-4 flex flex-wrap gap-2">
             {dbFeatures.map((feat) => {
-              const isSelected = activeAmenitiesList.includes(feat.name.toLowerCase());
+              const isSelected = activeAmenitiesList.includes(
+                feat.name.toLowerCase(),
+              );
               return (
                 <button
                   type="button"
@@ -406,12 +492,18 @@ export default function PropertiesFilterSidebar() {
           className="w-full flex items-center justify-between font-bold text-sm text-gray-800 uppercase tracking-wider pb-3 border-b border-gray-100 cursor-pointer"
         >
           <span>Facilities</span>
-          {facilitiesExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {facilitiesExpanded ? (
+            <ChevronUp size={16} />
+          ) : (
+            <ChevronDown size={16} />
+          )}
         </button>
         {facilitiesExpanded && (
           <div className="pt-4 flex flex-wrap gap-2">
             {dbFacilities.map((fac) => {
-              const isSelected = activeAmenitiesList.includes(fac.name.toLowerCase());
+              const isSelected = activeAmenitiesList.includes(
+                fac.name.toLowerCase(),
+              );
               return (
                 <button
                   type="button"
@@ -444,8 +536,6 @@ export default function PropertiesFilterSidebar() {
           </button>
         </div>
       )}
-
     </div>
   );
 }
-
