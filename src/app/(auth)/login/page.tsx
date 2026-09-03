@@ -36,7 +36,29 @@ function LoginForm() {
     if (digits.startsWith("91") && digits.length > 10) {
       return digits.slice(-10);
     }
-    return digits;
+    return digits.slice(0, 10);
+  };
+
+  const handlePhoneChange = (val?: string) => {
+    if (!val) {
+      setPhone("");
+      setPhoneError("");
+      return;
+    }
+    // Extract national digits capped at 10
+    if (val.startsWith("+91")) {
+      const national = val.slice(3).replace(/\D/g, "").slice(0, 10);
+      setPhone(`+91${national}`);
+    } else if (val.startsWith("+")) {
+      const prefixMatch = val.match(/^\+\d{1,4}/);
+      const prefix = prefixMatch ? prefixMatch[0] : "+";
+      const national = val.slice(prefix.length).replace(/\D/g, "").slice(0, 10);
+      setPhone(`${prefix}${national}`);
+    } else {
+      const digits = val.replace(/\D/g, "").slice(0, 10);
+      setPhone(digits ? `+91${digits}` : "");
+    }
+    setPhoneError("");
   };
 
   // Countdown timer logic
@@ -116,14 +138,15 @@ function LoginForm() {
   };
 
   const handleOtpChange = (index: number, value: string) => {
-    if (!/^\d*$/.test(value)) return;
+    const sanitized = value.replace(/\D/g, "").slice(-1);
+    if (value && !sanitized) return;
 
     const newOtp = [...otp];
-    newOtp[index] = value;
+    newOtp[index] = sanitized;
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 3) {
+    if (sanitized && index < 3) {
       otpRefs[index + 1].current?.focus();
     }
   };
@@ -164,7 +187,7 @@ function LoginForm() {
               <PhoneInput
                 defaultCountry="IN"
                 value={phone}
-                onChange={(val) => setPhone(val || "")}
+                onChange={handlePhoneChange}
                 disabled={otpSent}
                 placeholder="Enter your phone number"
                 variant="lg"
@@ -201,6 +224,8 @@ function LoginForm() {
                       key={index}
                       ref={otpRefs[index]}
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       maxLength={1}
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}

@@ -51,14 +51,34 @@ function PhoneInput({
         if (trimmed.startsWith("91") && trimmed.length === 12) {
           return `+${trimmed}` as PhoneValue;
         }
-        // If it's 10 digits, prepend "+91"
-        if (trimmed.length === 10) {
+        // If it's up to 10 digits, prepend "+91"
+        if (trimmed.length > 0 && trimmed.length <= 10) {
           return `+91${trimmed}` as PhoneValue;
         }
       }
     }
     return value;
   }, [value]);
+
+  const handleChange = (val?: PhoneValue) => {
+    if (!val) {
+      onChange?.("" as PhoneValue);
+      return;
+    }
+    const valStr = String(val);
+    if (valStr.startsWith("+91")) {
+      const national = valStr.slice(3).replace(/\D/g, "").slice(0, 10);
+      onChange?.(`+91${national}` as PhoneValue);
+    } else if (valStr.startsWith("+")) {
+      const prefixMatch = valStr.match(/^\+\d{1,4}/);
+      const prefix = prefixMatch ? prefixMatch[0] : "+";
+      const national = valStr.slice(prefix.length).replace(/\D/g, "").slice(0, 10);
+      onChange?.(`${prefix}${national}` as PhoneValue);
+    } else {
+      const digits = valStr.replace(/\D/g, "").slice(0, 10);
+      onChange?.(digits as PhoneValue);
+    }
+  };
 
   return (
     <PhoneInputContext.Provider value={{ variant: phoneInputSize, popupClassName }}>
@@ -74,7 +94,7 @@ function PhoneInput({
         inputComponent={InputComponent}
         smartCaret={false}
         value={formattedValue ?? undefined}
-        onChange={(val) => onChange?.(val ?? ("" as PhoneValue))}
+        onChange={handleChange}
         {...props}
       />
     </PhoneInputContext.Provider>
@@ -83,11 +103,61 @@ function PhoneInput({
 
 // ─── InputComponent ──────────────────────────────────────────────────────────
 
-function InputComponent({ className, ...props }: ComponentProps<typeof Input>) {
+function InputComponent({ className, onKeyDown, ...props }: ComponentProps<typeof Input>) {
   const { variant } = useContext(PhoneInputContext)
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow navigation, control keys, and shortcuts (Cmd+A, Cmd+C, Cmd+V, etc.)
+    if (
+      [
+        "Backspace",
+        "Delete",
+        "Tab",
+        "Escape",
+        "Enter",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+        "Home",
+        "End",
+      ].includes(e.key) ||
+      e.ctrlKey ||
+      e.metaKey ||
+      e.altKey
+    ) {
+      onKeyDown?.(e);
+      return;
+    }
+
+    // Only allow digits (0-9)
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
+      return;
+    }
+
+    // Limit to max 10 digits
+    const input = e.currentTarget;
+    const currentDigits = input.value.replace(/\D/g, "");
+    const hasSelection =
+      input.selectionStart !== null &&
+      input.selectionEnd !== null &&
+      input.selectionStart !== input.selectionEnd;
+
+    if (currentDigits.length >= 10 && !hasSelection) {
+      e.preventDefault();
+      return;
+    }
+
+    onKeyDown?.(e);
+  };
 
   return (
     <Input
+      type="tel"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      onKeyDown={handleKeyDown}
       className={cn(
         "rounded-l-none rounded-r-[50px] border-l-0 focus-visible:z-10",
         variant === "sm" && "h-8 text-sm",
