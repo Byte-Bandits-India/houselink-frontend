@@ -66,11 +66,12 @@ function FeaturedPropertiesContent() {
           params.property_for = "sell";
         }
 
-        if (city) {
+        if (city && city.toLowerCase() !== "all") {
           const cityId = await getCityIdByName(city);
           if (cityId) {
             params.city_id = String(cityId);
           }
+          params.city = city;
         }
 
         if (maxPrice) {
@@ -358,8 +359,10 @@ function FeaturedPropertiesContent() {
               ))
             ) : (
               <div className="w-full text-center py-16 bg-white rounded-2xl border border-gray-100">
-                <h4 className="text-xl text-ink-secondary">
-                  No properties found matching your search filters.
+                <h4 className="text-xl text-ink-secondary font-medium">
+                  {city && city.toLowerCase() !== "all"
+                    ? `No properties available in ${city}`
+                    : "No properties available"}
                 </h4>
               </div>
             )}

@@ -147,6 +147,7 @@ export default function PropertiesFilterSidebar() {
     const resetFilters: PageFilterValues = {
       ...defaultFilterValues,
       activeTab: localFilters.activeTab,
+      city: localFilters.city || filters.city,
     };
     setLocalFilters(resetFilters);
     setFilters(resetFilters);
@@ -161,8 +162,7 @@ export default function PropertiesFilterSidebar() {
     localFilters.minPrice ||
     localFilters.keyword ||
     localFilters.location ||
-    localFilters.maxArea ||
-    localFilters.city,
+    localFilters.maxArea,
   );
 
   // ── Price Range Selection (Integer Inputs) ──

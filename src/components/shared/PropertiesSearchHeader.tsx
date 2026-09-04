@@ -288,31 +288,6 @@ export default function PropertiesSearchHeader() {
         });
       }
     }
-
-    // 3. City tags (split comma-separated if non-empty and not chennai)
-    if (
-      filters.city &&
-      filters.city.toLowerCase() !== "chennai" &&
-      filters.city.toLowerCase() !== ""
-    ) {
-      const cities = filters.city
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s && s.toLowerCase() !== "chennai");
-      for (const cVal of cities) {
-        const cityObj = citiesList.find((c) => c.value === cVal.toLowerCase());
-        const label = cityObj
-          ? cityObj.label
-          : cVal.charAt(0).toUpperCase() + cVal.slice(1);
-        list.push({
-          id: `city-${cVal.toLowerCase()}`,
-          label: `City: ${label}`,
-          type: "city",
-          value: cVal,
-        });
-      }
-    }
-
     // 4. House Type tag
     if (filters.houseType) {
       list.push({
@@ -389,17 +364,6 @@ export default function PropertiesSearchHeader() {
       if (!current.some((c) => c.toLowerCase() === tag.value.toLowerCase())) {
         nextFilters.activeCategory = [...current, tag.value].join(",");
       }
-    } else if (tag.type === "city") {
-      const current = nextFilters.city
-        ? nextFilters.city
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [];
-      if (!current.some((c) => c.toLowerCase() === tag.value.toLowerCase())) {
-        nextFilters.city = [...current, tag.value.toLowerCase()].join(",");
-      }
-      setLocalCity(nextFilters.city);
     } else if (tag.type === "amenity") {
       const current = nextFilters.amenities
         ? nextFilters.amenities
@@ -448,20 +412,6 @@ export default function PropertiesSearchHeader() {
       const updated = current.filter(
         (c) => c.toLowerCase() !== tag.value.toLowerCase(),
       );
-      nextFilters.activeCategory =
-        updated.length > 0 ? updated.join(",") : "all";
-    } else if (tag.type === "city") {
-      const current = nextFilters.city
-        ? nextFilters.city
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [];
-      const updated = current.filter(
-        (c) => c.toLowerCase() !== tag.value.toLowerCase(),
-      );
-      nextFilters.city = updated.join(",");
-      if (!nextFilters.city) setLocalCity("");
     } else if (tag.type === "amenity") {
       const current = nextFilters.amenities
         ? nextFilters.amenities
@@ -857,6 +807,7 @@ export default function PropertiesSearchHeader() {
                 <SearchSuggestions
                   query={localKeyword}
                   tags={activeTags}
+                  city={filters.city}
                   onAddTag={handleAddTag}
                   onRemoveTag={handleRemoveTag}
                   onClearTags={handleClearTags}
@@ -895,12 +846,13 @@ export default function PropertiesSearchHeader() {
                     });
                   }}
                   onSelectCity={(cityVal) => {
-                    handleAddTag({
-                      id: `city-${cityVal.toLowerCase()}`,
-                      label: cityVal,
-                      type: "city",
-                      value: cityVal,
+                    const normalized = cityVal.toLowerCase();
+                    setLocalCity(normalized);
+                    setFilters({
+                      ...filters,
+                      city: normalized,
                     });
+                    setIsInputFocused(false);
                   }}
                   onSelectAmenity={(amenityVal) => {
                     handleAddTag({

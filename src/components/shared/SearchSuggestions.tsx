@@ -63,6 +63,7 @@ function formatSearchQueryDisplay(query: string): string {
 export default function SearchSuggestions({
   query = "",
   tags = [],
+  city,
   onAddTag,
   onRemoveTag,
   onSelectKeyword,
@@ -143,7 +144,7 @@ export default function SearchSuggestions({
     locationTags.length > 0 ? locationTags.join(",") : undefined;
   const categoryTag =
     categoryTags.length > 0 ? categoryTags.join(",") : undefined;
-  const cityTag = cityTags.length > 0 ? cityTags.join(",") : undefined;
+  const cityTag = city || (cityTags.length > 0 ? cityTags.join(",") : undefined);
 
   // Debounced fetch for dynamic suggestions when typing or tags change
   useEffect(() => {

@@ -37,7 +37,10 @@ export default function PropertiesListingLayout({
   const { filters, setFilters } = usePageFilter();
 
   const handleResetFilters = () => {
-    setFilters(defaultFilterValues);
+    setFilters({
+      ...defaultFilterValues,
+      city: filters.city,
+    });
   };
 
   const categoryLabel =
@@ -151,7 +154,9 @@ export default function PropertiesListingLayout({
                   <Search size={32} className="text-primary" />
                 </div>
                 <h4 className="text-xl font-bold text-gray-900 mb-2">
-                  No properties found
+                  {filters.city && filters.city.toLowerCase() !== "all"
+                    ? `No properties available in ${filters.city}`
+                    : "No properties found"}
                 </h4>
                 <p className="text-gray-500 text-sm max-w-sm">
                   We couldn't find any properties matching your current filters.

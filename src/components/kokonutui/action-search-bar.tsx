@@ -288,7 +288,6 @@ export default function ActionSearchBar({
                 if (setActiveCategory) setActiveCategory(cat);
               }}
               onSelectCity={(cityVal) => {
-                setKeyword(cityVal);
                 if (setCity) setCity(cityVal);
               }}
               onSelectAmenity={(amenityVal) => {

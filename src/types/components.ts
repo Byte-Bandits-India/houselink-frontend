@@ -84,6 +84,7 @@ export type SearchTag = {
 export type SearchSuggestionsProps = {
   query?: string;
   tags?: SearchTag[];
+  city?: string;
   onAddTag?: (tag: SearchTag) => void;
   onRemoveTag?: (tagId: string) => void;
   onClearTags?: () => void;
