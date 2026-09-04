@@ -39,7 +39,7 @@ export type PageFilterValues = {
 export const defaultFilterValues: PageFilterValues = {
   activeTab: "sell",
   activeCategory: "all",
-  city: "",
+  city: "chennai",
   keyword: "",
   location: "",
   categoryType: "",

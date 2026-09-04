@@ -4,7 +4,13 @@ import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { smoothScrollBy } from "@/lib/smoothScroll";
-import { MapPin, ArrowRight, Building, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  MapPin,
+  ArrowRight,
+  Building,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/animations";
 import {
@@ -14,7 +20,7 @@ import {
   getUpcomingConfig,
   type UpcomingBannerItem,
 } from "@/lib/api";
-import { upcomingProperties as fallbackUpcomingProperties } from "./Options";
+import { useHomeFilter } from "@/contexts/HomeFilterContext";
 
 function getDefaultImage(categoryName?: string): string {
   if (!categoryName) return "/assets/default.png";
@@ -28,7 +34,11 @@ function getDefaultImage(categoryName?: string): string {
   if (name.includes("plot")) {
     return "/assets/default_images/plotsAvatar.jpg";
   }
-  if (name.includes("individual house") || name.includes("individual_house") || name.includes("house")) {
+  if (
+    name.includes("individual house") ||
+    name.includes("individual_house") ||
+    name.includes("house")
+  ) {
     return "/assets/default_images/houseAvatar.jpg";
   }
   if (name.includes("land")) {
@@ -58,16 +68,20 @@ function getDefaultImage(categoryName?: string): string {
 function UpcomingPropertyCard({ property }: { property: any }) {
   const purposeColorMap: Record<string, string> = {
     "For Sale": "text-primary",
-    "Rent": "text-amber-500",
-    "Lease": "text-emerald-600",
+    Rent: "text-amber-500",
+    Lease: "text-emerald-600",
   };
-  const purposeColorClass = purposeColorMap[property.property_for] || "text-primary";
+  const purposeColorClass =
+    purposeColorMap[property.property_for] || "text-primary";
 
-  const imageUrl = property.image && property.image !== "/assets/blur.png" 
-    ? getImageUrl(property.image) 
-    : getDefaultImage(property.categoryName);
+  const imageUrl =
+    property.image && property.image !== "/assets/blur.png"
+      ? getImageUrl(property.image)
+      : getDefaultImage(property.categoryName);
 
-  const href = property.permalink ? `/properties/${property.permalink}` : `/properties/${property.id}`;
+  const href = property.permalink
+    ? `/properties/${property.permalink}`
+    : `/properties/${property.id}`;
 
   return (
     <Link
@@ -98,9 +112,20 @@ function UpcomingPropertyCard({ property }: { property: any }) {
       </div>
 
       {/* Purpose ribbon / badge */}
-      <div className={`absolute -top-3.5 right-4 z-20 select-none filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.15)] ${purposeColorClass}`}>
-        <svg width="84" height="34" viewBox="0 0 84 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M 8 0 H 76 C 80 0, 84 4, 84 8 C 80 12, 80 22, 84 26 C 84 30, 80 34, 76 34 H 8 C 4 34, 0 30, 0 26 C 4 22, 4 12, 0 8 C 0 4, 4 0, 8 0 Z" fill="currentColor" />
+      <div
+        className={`absolute -top-3.5 right-4 z-20 select-none filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.15)] ${purposeColorClass}`}
+      >
+        <svg
+          width="84"
+          height="34"
+          viewBox="0 0 84 34"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M 8 0 H 76 C 80 0, 84 4, 84 8 C 80 12, 80 22, 84 26 C 84 30, 80 34, 76 34 H 8 C 4 34, 0 30, 0 26 C 4 22, 4 12, 0 8 C 0 4, 4 0, 8 0 Z"
+            fill="currentColor"
+          />
         </svg>
         <span className="absolute inset-0 flex items-center justify-center text-[12px] font-black text-white tracking-wider">
           {property.property_for}
@@ -130,12 +155,14 @@ function UpcomingPropertyCard({ property }: { property: any }) {
         {/* Price and right chevron button */}
         <div className="flex items-center justify-between pt-4 mt-auto">
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-gray-400">
-              Price
-            </span>
+            <span className="text-xs font-bold text-gray-400">Price</span>
             <span className="text-[20px] font-black text-black leading-none mt-1.5">
               {typeof property.price === "number"
-                ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(property.price)
+                ? new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                    maximumFractionDigits: 0,
+                  }).format(property.price)
                 : property.price}
             </span>
           </div>
@@ -150,89 +177,114 @@ function UpcomingPropertyCard({ property }: { property: any }) {
   );
 }
 
-export default function UpcomingProperties() {
+interface UpcomingPropertiesProps {
+  city?: string;
+}
+
+export default function UpcomingProperties({
+  city: propCity,
+}: UpcomingPropertiesProps) {
+  const { filters: homeFilters } = useHomeFilter();
+  const activeCity = propCity !== undefined ? propCity : homeFilters.city;
+
   const scrollContainer = useRef<HTMLDivElement>(null);
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [banners, setBanners] = useState<UpcomingBannerItem[]>([]);
-  // Tracks which face is showing ("active") and which just left ("outgoing"),
-  // so both can be animated with a 3D rotateY transition at the same time.
   const [slideIndices, setSlideIndices] = useState({ active: 0, outgoing: -1 });
 
   useEffect(() => {
+    let isCancelled = false;
+
     async function loadFeaturedProperties() {
       try {
-        const res = await getProperties({
+        const queryParams: any = {
           is_active: "true",
           moderation: "approved",
-          page_size: "100"
-        });
-        if (res.success && res.data && res.data.length > 0) {
-          const featured = res.data
-            .filter((p: any) => p.isFeatured)
-            .map(mapApiPropertyToCardProps);
-          if (featured.length > 0) {
-            setProperties(featured);
+          page_size: "100",
+        };
+        if (activeCity && activeCity.toLowerCase() !== "all") {
+          queryParams.city = activeCity;
+        }
+
+        const res = await getProperties(queryParams);
+        if (!isCancelled) {
+          if (res.success && res.data && res.data.length > 0) {
+            const featured = res.data
+              .filter((p: any) => p.isFeatured)
+              .map(mapApiPropertyToCardProps);
+            if (featured.length > 0) {
+              setProperties(featured);
+            } else {
+              setProperties(
+                res.data.slice(0, 10).map(mapApiPropertyToCardProps),
+              );
+            }
           } else {
-            setProperties(res.data.slice(0, 10).map(mapApiPropertyToCardProps));
+            setProperties([]);
           }
-        } else {
-          setProperties(
-            fallbackUpcomingProperties.map((p) => ({
-              id: p.id,
-              name: p.title,
-              categoryName: p.category,
-              property_for: p.purpose,
-              city: p.location,
-              price: p.price,
-              image: p.image,
-              isFeatured: true,
-            }))
-          );
         }
       } catch (err) {
         console.error("Error loading upcoming featured properties:", err);
-        setProperties(
-          fallbackUpcomingProperties.map((p) => ({
-            id: p.id,
-            name: p.title,
-            categoryName: p.category,
-            property_for: p.purpose,
-            city: p.location,
-            price: p.price,
-            image: p.image,
-            isFeatured: true,
-          }))
-        );
+        if (!isCancelled) {
+          setProperties([]);
+        }
       } finally {
-        setIsLoading(false);
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
     }
-    
+
     async function loadBanner() {
       try {
-        const res = await getUpcomingConfig();
-        if (res.success && res.data) {
-          if (res.data.banners && res.data.banners.length > 0) {
-            const activeBanners = res.data.banners.filter((b) => b.status !== "inactive");
-            const bannersToUse = activeBanners.length > 0 ? activeBanners : res.data.banners;
-            const sortedBanners = [...bannersToUse].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-            setBanners(sortedBanners);
-          } else if (res.data.images && res.data.images.length > 0) {
-            setBanners(res.data.images.map((img, i) => ({ image: img, link: "", order: i + 1 })));
+        const res = await getUpcomingConfig(activeCity);
+        if (!isCancelled) {
+          if (res.success && res.data) {
+            if (res.data.banners && res.data.banners.length > 0) {
+              const activeBanners = res.data.banners.filter(
+                (b) => b.status !== "inactive",
+              );
+              const bannersToUse =
+                activeBanners.length > 0 ? activeBanners : res.data.banners;
+              const sortedBanners = [...bannersToUse].sort(
+                (a, b) => (a.order ?? 0) - (b.order ?? 0),
+              );
+              setBanners(sortedBanners);
+            } else if (res.data.images && res.data.images.length > 0) {
+              setBanners(
+                res.data.images.map((img, i) => ({
+                  image: img,
+                  link: "",
+                  order: i + 1,
+                })),
+              );
+            } else {
+              setBanners([]);
+            }
           } else {
-            setBanners([{ image: "/assets/home/upComming.png", link: "", order: 1 }]);
+            setBanners([]);
           }
         }
       } catch (err) {
         console.error("Failed to load upcoming banner images:", err);
-        setBanners([{ image: "/assets/home/upComming.png", link: "", order: 1 }]);
+        if (!isCancelled) {
+          setBanners([]);
+        }
       }
     }
 
+    setIsLoading(true);
+    setProperties([]);
+    setBanners([]);
+    setSlideIndices({ active: 0, outgoing: -1 });
     loadFeaturedProperties();
     loadBanner();
-  }, []);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeCity]);
 
   useEffect(() => {
     if (banners.length <= 1) return;
@@ -243,7 +295,7 @@ export default function UpcomingProperties() {
       }));
     }, 5000);
     return () => clearInterval(timer);
-  }, [banners]);
+  }, [banners.length]);
 
   const handleScroll = (direction: "left" | "right") => {
     if (scrollContainer.current) {
@@ -251,7 +303,7 @@ export default function UpcomingProperties() {
       smoothScrollBy(
         scrollContainer.current,
         direction === "left" ? -scrollAmount : scrollAmount,
-        450
+        450,
       );
     }
   };
@@ -264,167 +316,182 @@ export default function UpcomingProperties() {
     );
   }
 
-  if (properties.length === 0) {
-    return null; // Don't show the upcoming section if no featured properties are seeded/added yet
+  if (properties.length === 0 && banners.length === 0) {
+    return null;
   }
 
   return (
     <section className="py-8 bg-whiteBG" id="upcoming-properties">
-      <div className="container mx-auto px-4 max-w-[1440px]">
-        {/* Header Block */}
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={fadeUp}
-          className="flex items-center justify-between gap-6 mb-8"
-        >
-          <div className="flex items-center gap-4">
-            {/* Icon Box */}
-            <div className="w-14 h-14 bg-gradient-to-r from-primary to-secondary text-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
-              <MapPin size={22} className="stroke-[2.5px]" />
-            </div>
+      {banners.length > 0 && (
+        <div className="mb-10">
+          <div
+            className="banner-cube-wrap relative w-full overflow-hidden select-none"
+            style={{ aspectRatio: "1440 / 240" }}
+          >
+            {/* 3D rotate transition between banner faces */}
+            <style
+              dangerouslySetInnerHTML={{
+                __html: `
+              .banner-cube-wrap {
+                perspective: 1600px;
+              }
+              .banner-cube-face {
+                position: absolute;
+                inset: 0;
+                backface-visibility: hidden;
+                transform-style: preserve-3d;
+              }
+              .banner-cube-face.is-active {
+                transform: rotateX(0deg);
+                opacity: 1;
+                z-index: 2;
+                transition: transform 1s cubic-bezier(.65,0,.35,1);
+              }
+              .banner-cube-face.is-outgoing {
+                transform: rotateX(-90deg);
+                opacity: 1;
+                z-index: 1;
+                transition: transform 1s cubic-bezier(.65,0,.35,1);
+              }
+              .banner-cube-face.is-idle {
+                transform: rotateX(90deg);
+                opacity: 0;
+                z-index: 0;
+              }
+            `,
+              }}
+            />
 
-            {/* Texts */}
-            <div className="text-left">
-              <h2 className="text-xl md:text-2xl font-extrabold text-primary leading-tight">
-                Featured Properties
-              </h2>
-              <p className="text-gray-500 text-sm lg:text-md font-medium leading-tight -mt-2">
-                Explore handpicked properties in prime locations
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+            {banners.map((item, idx) => {
+              const role =
+                idx === slideIndices.active
+                  ? "is-active"
+                  : idx === slideIndices.outgoing
+                    ? "is-outgoing"
+                    : "is-idle";
 
-      <div className="mb-10">
-        <div
-          className="banner-cube-wrap relative w-full overflow-hidden select-none"
-          style={{ aspectRatio: "1440 / 240" }}
-        >
-          {/* 3D rotate transition between banner faces */}
-          <style dangerouslySetInnerHTML={{ __html: `
-            .banner-cube-wrap {
-              perspective: 1600px;
-            }
-            .banner-cube-face {
-              position: absolute;
-              inset: 0;
-              backface-visibility: hidden;
-              transform-style: preserve-3d;
-            }
-            .banner-cube-face.is-active {
-              transform: rotateX(0deg);
-              opacity: 1;
-              z-index: 2;
-              transition: transform 1s cubic-bezier(.65,0,.35,1);
-            }
-            .banner-cube-face.is-outgoing {
-              transform: rotateX(-90deg);
-              opacity: 1;
-              z-index: 1;
-              transition: transform 1s cubic-bezier(.65,0,.35,1);
-            }
-            .banner-cube-face.is-idle {
-              transform: rotateX(90deg);
-              opacity: 0;
-              z-index: 0;
-            }
-          `}} />
+              const isExternal =
+                item.link &&
+                (item.link.startsWith("http://") ||
+                  item.link.startsWith("https://"));
 
-          {banners.map((item, idx) => {
-            const role =
-              idx === slideIndices.active
-                ? "is-active"
-                : idx === slideIndices.outgoing
-                ? "is-outgoing"
-                : "is-idle";
+              const content = (
+                <Image
+                  src={getImageUrl(item.image)}
+                  alt={`Upcoming Banner ${idx + 1}`}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              );
 
-            const isExternal =
-              item.link && (item.link.startsWith("http://") || item.link.startsWith("https://"));
-
-            const content = (
-              <Image
-                src={getImageUrl(item.image)}
-                alt={`Upcoming Banner ${idx + 1}`}
-                fill
-                className="object-cover"
-                unoptimized
-              />
-            );
-
-            return (
-              <div key={idx} className={`banner-cube-face ${role}`}>
-                {item.link ? (
-                  isExternal ? (
-                    <a
-                      href={item.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full h-full cursor-pointer relative"
-                    >
-                      {content}
-                    </a>
+              return (
+                <div key={idx} className={`banner-cube-face ${role}`}>
+                  {item.link ? (
+                    isExternal ? (
+                      <a
+                        href={item.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full h-full cursor-pointer relative"
+                      >
+                        {content}
+                      </a>
+                    ) : (
+                      <Link
+                        href={item.link}
+                        className="block w-full h-full cursor-pointer relative"
+                      >
+                        {content}
+                      </Link>
+                    )
                   ) : (
-                    <Link
-                      href={item.link}
-                      className="block w-full h-full cursor-pointer relative"
-                    >
-                      {content}
-                    </Link>
-                  )
-                ) : (
-                  content
-                )}
+                    content
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {properties.length > 0 && (
+        <div className="container mx-auto px-4 max-w-[1440px]">
+          {/* Header Block */}
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            variants={fadeUp}
+            className="flex items-center justify-between gap-6"
+          >
+            <div className="flex items-center gap-4">
+              {/* Icon Box */}
+              <div className="w-14 h-14 bg-gradient-to-r from-primary to-secondary text-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                <MapPin size={22} className="stroke-[2.5px]" />
               </div>
-            );
-          })}
-        </div>
-      </div>
 
-      <div className="container mx-auto px-4 max-w-[1440px]">
-        {/* Arrow Slider Controls */}
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={() => handleScroll("left")}
-            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft size={20} className="stroke-[2px]" />
-          </button>
-          <button
-            onClick={() => handleScroll("right")}
-            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
-            aria-label="Scroll right"
-          >
-            <ChevronRight size={20} className="stroke-[2px]" />
-          </button>
-        </div>
-        
-        {/* Properties Carousel */}
-        <div
-          ref={scrollContainer}
-          className="flex overflow-x-auto gap-6 pt-5 pb-6 scrollbar-hide w-full"
-        >
-          {/* Style block to hide scrollbar */}
-          <style dangerouslySetInnerHTML={{ __html: `
-            .scrollbar-hide::-webkit-scrollbar {
-              display: none;
-            }
-            .scrollbar-hide {
-              -ms-overflow-style: none;
-              scrollbar-width: none;
-            }
-          `}} />
-
-          {properties.map((property) => (
-            <div key={property.id} className="flex-none w-[300px]">
-              <UpcomingPropertyCard property={property} />
+              {/* Texts */}
+              <div className="text-left">
+                <h2 className="text-xl md:text-2xl font-extrabold text-primary leading-tight">
+                  Featured Properties
+                </h2>
+                <p className="text-gray-500 text-sm lg:text-md font-medium leading-tight -mt-2">
+                  Explore handpicked properties in prime locations
+                </p>
+              </div>
             </div>
-          ))}
+          </motion.div>
         </div>
-      </div>
+      )}
+
+      {properties.length > 0 && (
+        <div className="container mx-auto px-4 max-w-[1440px]">
+          {/* Arrow Slider Controls */}
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => handleScroll("left")}
+              className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft size={20} className="stroke-[2px]" />
+            </button>
+            <button
+              onClick={() => handleScroll("right")}
+              className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+              aria-label="Scroll right"
+            >
+              <ChevronRight size={20} className="stroke-[2px]" />
+            </button>
+          </div>
+
+          {/* Properties Carousel */}
+          <div
+            ref={scrollContainer}
+            className="flex overflow-x-auto gap-6 pt-5 pb-6 scrollbar-hide w-full"
+          >
+            {/* Style block to hide scrollbar */}
+            <style
+              dangerouslySetInnerHTML={{
+                __html: `
+              .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+              }
+              .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+            `,
+              }}
+            />
+
+            {properties.map((property) => (
+              <div key={property.id} className="flex-none w-[300px]">
+                <UpcomingPropertyCard property={property} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

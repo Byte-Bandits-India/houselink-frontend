@@ -9,6 +9,8 @@ export type PopularPropertyApiItem = {
   status: "active" | "inactive";
   propertyId: number | null;
   property?: { id: number; name: string; permalink: string | null } | null;
+  cities?: string[];
+  cityOrders?: Record<string, number>;
 };
 
 export type PopularRegionApiItem = {
@@ -20,4 +22,6 @@ export type PopularRegionApiItem = {
   order: number;
   status: "active" | "inactive";
   locations: string[] | null;
+  cities?: string[];
+  cityOrders?: Record<string, number>;
 };

@@ -17,6 +17,7 @@ import Image from "next/image";
 import RotatingText, { RotatingTextRef } from "@/components/ui/RotatingText";
 import ShinyText from "@/components/ui/ShinyText";
 import { getHeroConfig, getImageUrl } from "@/lib/api";
+import { useHomeFilter } from "@/contexts/HomeFilterContext";
 
 const badgeIconMap: Record<HeroBadge["iconName"], React.ReactNode> = {
   ShieldCheck: <Image src="/assets/home/icons/verified.png" alt="Verified Properties" width={36} height={36} unoptimized />,
@@ -26,38 +27,45 @@ const badgeIconMap: Record<HeroBadge["iconName"], React.ReactNode> = {
 };
 
 export default function HomePageClient() {
+  const { filters: homeFilters } = useHomeFilter();
+  const city = homeFilters.city || "";
+
   const [textIndex, setTextIndex] = React.useState(0);
   const ref1 = React.useRef<RotatingTextRef>(null);
   const ref2 = React.useRef<RotatingTextRef>(null);
 
   const [heroConfig, setHeroConfig] = React.useState({
     bgImage: "/assets/heroBG.png",
-    shinyText: "Find your dream property in just a few clicks",
-    rotatingTexts1: ["Better Homes.", "Better Life."],
-    rotatingTexts2: ["Better Life.", "Better Homes."],
+    shinyText: "",
+    rotatingTexts1: [] as string[],
+    rotatingTexts2: [] as string[],
   });
 
   React.useEffect(() => {
     async function loadHeroConfig() {
       try {
-        const res = await getHeroConfig();
+        const res = await getHeroConfig(city);
         if (res.success && res.data) {
-          setHeroConfig(res.data);
+          setHeroConfig({
+            bgImage: res.data.bgImage || "/assets/heroBG.png",
+            shinyText: res.data.shinyText || "",
+            rotatingTexts1: res.data.rotatingTexts1 || [],
+            rotatingTexts2: res.data.rotatingTexts2 || [],
+          });
+          setTextIndex(0);
         }
       } catch (err) {
         console.error("Failed to load hero configuration from backend:", err);
       }
     }
     loadHeroConfig();
-  }, []);
+  }, [city]);
 
   React.useEffect(() => {
+    const maxLen = Math.max(heroConfig.rotatingTexts1.length, heroConfig.rotatingTexts2.length);
+    if (maxLen <= 1) return;
     const interval = setInterval(() => {
-      setTextIndex((prev) => {
-        const maxLen = Math.max(heroConfig.rotatingTexts1.length, heroConfig.rotatingTexts2.length);
-        if (maxLen <= 1) return 0;
-        return (prev + 1) % maxLen;
-      });
+      setTextIndex((prev) => (prev + 1) % maxLen);
     }, 5000);
     return () => clearInterval(interval);
   }, [heroConfig.rotatingTexts1.length, heroConfig.rotatingTexts2.length]);
@@ -71,7 +79,6 @@ export default function HomePageClient() {
     }
   }, [textIndex, heroConfig.rotatingTexts1.length, heroConfig.rotatingTexts2.length]);
 
-
   return (
     <>
       {/* ── Hero Section ── */}
@@ -81,65 +88,77 @@ export default function HomePageClient() {
       >
         <div className="container mx-auto px-4 flex flex-col items-center text-center relative z-10">
           {/* Subtitle */}
-          <div className="flex items-center justify-center gap-2 md:gap-3 mb-4 md:mb-6 lg:mb-10">
-            <Image
-              src="/assets/home/icons/left.png"
-              alt="Left decorative icon"
-              width={20}
-              height={20}
-              className="object-contain w-6 h-6 md:w-[124px] md:h-[15px] shrink-0"
-              unoptimized
-            />
-            <ShinyText
-              text={heroConfig.shinyText}
-              speed={2}
-              delay={0}
-              color="#4F8BD3"
-              shineColor="#FFFFFF"
-              spread={120}
-              direction="left"
-              yoyo={false}
-              pauseOnHover={false}
-              disabled={false}
-              className="text-sm md:text-base lg:text-lg font-bold tracking-wider"
-            />
-            <Image
-              src="/assets/home/icons/right.png"
-              alt="Right decorative icon"
-              width={20}
-              height={20}
-              className="object-contain w-6 h-6 md:w-[124px] md:h-[15px] shrink-0"
-              unoptimized
-            />
-          </div>
+          {heroConfig.shinyText && (
+            <div className="flex items-center justify-center gap-2 md:gap-3 mb-4 md:mb-6 lg:mb-10">
+              <Image
+                src="/assets/home/icons/left.png"
+                alt="Left decorative icon"
+                width={20}
+                height={20}
+                className="object-contain w-6 h-6 md:w-[124px] md:h-[15px] shrink-0"
+                unoptimized
+              />
+              <ShinyText
+                text={heroConfig.shinyText}
+                speed={2}
+                delay={0}
+                color="#4F8BD3"
+                shineColor="#FFFFFF"
+                spread={120}
+                direction="left"
+                yoyo={false}
+                pauseOnHover={false}
+                disabled={false}
+                className="text-sm md:text-base lg:text-lg font-bold tracking-wider"
+              />
+              <Image
+                src="/assets/home/icons/right.png"
+                alt="Right decorative icon"
+                width={20}
+                height={20}
+                className="object-contain w-6 h-6 md:w-[124px] md:h-[15px] shrink-0"
+                unoptimized
+              />
+            </div>
+          )}
           
           {/* Heading */}
-          <h1 className="text-5xl lg:text-[68px] font-extrabold tracking-tight mb-4 md:mb-6 lg:mb-10 min-h-[1.2em] select-none">
-            <span className={`inline-flex transition-colors duration-500 ${textIndex % 2 === 0 ? "text-primary" : "text-secondary"}`}>
-              <RotatingText
-                ref={ref1}
-                auto={false}
-                texts={heroConfig.rotatingTexts1}
-                mainClassName="overflow-hidden py-1 lg:py-2"
-                staggerDuration={0.025}
-                splitLevelClassName="overflow-hidden"
-                transition={{ type: "spring", damping: 30, stiffness: 400 }}
-              />
-            </span>
-            <span className="hidden md:inline">&nbsp;</span>
-            <br className="md:hidden"/>
-            <span className={`inline-flex transition-colors duration-500 ${textIndex % 2 === 0 ? "text-secondary" : "text-primary"}`}>
-              <RotatingText
-                ref={ref2}
-                auto={false}
-                texts={heroConfig.rotatingTexts2}
-                mainClassName="overflow-hidden py-1 lg:py-2"
-                staggerDuration={0.025}
-                splitLevelClassName="overflow-hidden"
-                transition={{ type: "spring", damping: 30, stiffness: 400 }}
-              />
-            </span>
-          </h1>
+          {(heroConfig.rotatingTexts1.length > 0 || heroConfig.rotatingTexts2.length > 0) && (
+            <h1 className="text-5xl lg:text-[68px] font-extrabold tracking-tight mb-4 md:mb-6 lg:mb-10 min-h-[1.2em] select-none">
+              {heroConfig.rotatingTexts1.length > 0 && (
+                <span className={`inline-flex transition-colors duration-500 ${textIndex % 2 === 0 ? "text-primary" : "text-secondary"}`}>
+                  <RotatingText
+                    ref={ref1}
+                    auto={false}
+                    texts={heroConfig.rotatingTexts1}
+                    mainClassName="overflow-hidden py-1 lg:py-2"
+                    staggerDuration={0.025}
+                    splitLevelClassName="overflow-hidden"
+                    transition={{ type: "spring", damping: 30, stiffness: 400 }}
+                  />
+                </span>
+              )}
+              {heroConfig.rotatingTexts1.length > 0 && heroConfig.rotatingTexts2.length > 0 && (
+                <>
+                  <span className="hidden md:inline">&nbsp;</span>
+                  <br className="md:hidden"/>
+                </>
+              )}
+              {heroConfig.rotatingTexts2.length > 0 && (
+                <span className={`inline-flex transition-colors duration-500 ${textIndex % 2 === 0 ? "text-secondary" : "text-primary"}`}>
+                  <RotatingText
+                    ref={ref2}
+                    auto={false}
+                    texts={heroConfig.rotatingTexts2}
+                    mainClassName="overflow-hidden py-1 lg:py-2"
+                    staggerDuration={0.025}
+                    splitLevelClassName="overflow-hidden"
+                    transition={{ type: "spring", damping: 30, stiffness: 400 }}
+                  />
+                </span>
+              )}
+            </h1>
+          )}
 
           {/* Badges/Features Row */}
           <div className="p-4 md:px-6 md:py-4 grid grid-cols-2 gap-4 md:flex md:flex-nowrap md:justify-center md:items-center md:gap-8 mb-6 md:mb-10 max-w-6xl w-full">
@@ -175,18 +194,18 @@ export default function HomePageClient() {
       {/* Spacer below the inline hero search */}
       <div className="h-12" />
 
-      <Banner />
+      <Banner city={city} />
 
-      <TopTrendingCities />
+      <TopTrendingCities city={city} />
 
-      <HighDemandProperties />
+      <HighDemandProperties city={city} />
 
       {/* ── Featured Properties ───────────────────────────────────────── */}
       <FeaturedProperties />
 
-      <UpcomingProperties />
+      <UpcomingProperties city={city} />
 
-      <IntroVideo />
+      <IntroVideo city={city} />
 
       {/* ── How We Work ──────────────────────────────────────────────── */}
       <HowWeWork />

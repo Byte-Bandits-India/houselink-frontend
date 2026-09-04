@@ -10,10 +10,14 @@ import { apiClient } from "./client";
 import type { AdsResponse } from "@/types/ad";
 
 /**
- * Fetch all active ad banners.
+ * Fetch all active ad banners (optionally filtered by city).
  */
-export async function getAds(): Promise<AdsResponse> {
-  return apiClient.get<AdsResponse>("/ads", {
+export async function getAds(city?: string): Promise<AdsResponse> {
+  const query =
+    city && city.toLowerCase() !== "all" && city.toLowerCase() !== "all cities"
+      ? `?city=${encodeURIComponent(city)}`
+      : "";
+  return apiClient.get<AdsResponse>(`/ads${query}`, {
     skipAuth: true,
   });
 }

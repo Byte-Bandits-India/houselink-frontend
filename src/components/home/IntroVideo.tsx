@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
-import { introVideoConfig } from "./Options";
 import { getIntroVideoConfig, type IntroVideoItem } from "@/lib/api";
+import { useHomeFilter } from "@/contexts/HomeFilterContext";
 
 function resolveMediaUrl(path: string | null | undefined): string {
   if (!path) return "";
@@ -12,41 +12,75 @@ function resolveMediaUrl(path: string | null | undefined): string {
   return `${baseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 }
 
-export default function IntroVideo() {
+interface IntroVideoProps {
+  city?: string;
+}
+
+export default function IntroVideo({ city: propCity }: IntroVideoProps) {
+  const { filters: homeFilters } = useHomeFilter();
+  const activeCity = propCity !== undefined ? propCity : homeFilters.city;
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videosList, setVideosList] = useState<IntroVideoItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [enabled, setEnabled] = useState<boolean>(true);
-  const [defaultVideoSrc, setDefaultVideoSrc] = useState<string>("/assets/videos/homePage.mp4");
-  const [defaultPosterSrc, setDefaultPosterSrc] = useState<string>(introVideoConfig.posterImage);
+  const [defaultVideoSrc, setDefaultVideoSrc] = useState<string>("");
+  const [defaultPosterSrc, setDefaultPosterSrc] = useState<string>("");
 
   useEffect(() => {
+    let isCancelled = false;
+
     async function loadConfig() {
       try {
-        const res = await getIntroVideoConfig();
-        if (res.success && res.data) {
-          if (res.data.enabled === false) {
-            setEnabled(false);
-            return;
-          }
+        const res = await getIntroVideoConfig(activeCity);
+        if (!isCancelled) {
+          if (res.success && res.data) {
+            if (res.data.enabled === false) {
+              setEnabled(false);
+              return;
+            }
+            setEnabled(true);
 
-          if (Array.isArray(res.data.videos) && res.data.videos.length > 0) {
-            setVideosList(res.data.videos);
+            if (Array.isArray(res.data.videos) && res.data.videos.length > 0) {
+              setVideosList(res.data.videos);
+            } else {
+              setVideosList([]);
+              if (res.data.videoUrl) {
+                setDefaultVideoSrc(resolveMediaUrl(res.data.videoUrl));
+              } else {
+                setDefaultVideoSrc("");
+              }
+              if (res.data.posterUrl) {
+                setDefaultPosterSrc(resolveMediaUrl(res.data.posterUrl));
+              } else {
+                setDefaultPosterSrc("");
+              }
+            }
+            setCurrentIndex(0);
           } else {
-            if (res.data.videoUrl) {
-              setDefaultVideoSrc(resolveMediaUrl(res.data.videoUrl));
-            }
-            if (res.data.posterUrl) {
-              setDefaultPosterSrc(resolveMediaUrl(res.data.posterUrl));
-            }
+            setEnabled(false);
+            setVideosList([]);
+            setDefaultVideoSrc("");
+            setDefaultPosterSrc("");
+            setCurrentIndex(0);
           }
         }
       } catch (err) {
-        console.debug("Intro video config fallback:", err);
+        console.debug("Intro video config load error:", err);
+        if (!isCancelled) {
+          setVideosList([]);
+          setDefaultVideoSrc("");
+          setDefaultPosterSrc("");
+        }
       }
     }
+
     loadConfig();
-  }, []);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeCity]);
 
   const activeVideos = useMemo(() => {
     return [...videosList]
@@ -65,7 +99,7 @@ export default function IntroVideo() {
     : defaultPosterSrc;
 
   useEffect(() => {
-    if (videoRef.current) {
+    if (videoRef.current && currentVideoSrc) {
       videoRef.current.muted = true;
       videoRef.current.play().catch(() => {
         // Autoplay handled silently
@@ -79,7 +113,7 @@ export default function IntroVideo() {
     }
   };
 
-  if (!enabled) return null;
+  if (!enabled || !currentVideoSrc) return null;
 
   return (
     <section
@@ -91,7 +125,7 @@ export default function IntroVideo() {
           ref={videoRef}
           key={currentVideoSrc}
           src={currentVideoSrc}
-          poster={currentPosterSrc}
+          poster={currentPosterSrc || undefined}
           autoPlay
           loop={activeVideos.length <= 1}
           muted

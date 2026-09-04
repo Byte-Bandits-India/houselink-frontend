@@ -10,6 +10,8 @@ export interface UpcomingBannerItem {
   link?: string;
   status?: "active" | "inactive";
   order?: number;
+  cityOrders?: Record<string, number>;
+  cities?: string[];
 }
 
 export interface UpcomingConfig {
@@ -26,7 +28,8 @@ export interface UpcomingConfigResponse {
  * GET /api/v1/upcoming
  * Fetches the upcoming banner configurations with images and destination links.
  */
-export async function getUpcomingConfig(): Promise<UpcomingConfigResponse> {
-  const res = await apiClient.get<UpcomingConfigResponse>("/upcoming");
+export async function getUpcomingConfig(city?: string): Promise<UpcomingConfigResponse> {
+  const path = city ? `/upcoming?city=${encodeURIComponent(city)}` : "/upcoming";
+  const res = await apiClient.get<UpcomingConfigResponse>(path);
   return res;
 }

@@ -8,6 +8,8 @@ export interface IntroVideoItem {
   posterUrl?: string;
   status: "active" | "inactive";
   order?: number;
+  cityOrders?: Record<string, number>;
+  cities?: string[];
 }
 
 export interface IntroVideoConfigData {
@@ -26,7 +28,8 @@ export interface IntroVideoConfigResponse {
  * GET /api/v1/intro-video
  * Fetches the homepage intro video configuration.
  */
-export async function getIntroVideoConfig(): Promise<IntroVideoConfigResponse> {
-  const res = await apiClient.get<IntroVideoConfigResponse>("/intro-video");
+export async function getIntroVideoConfig(city?: string): Promise<IntroVideoConfigResponse> {
+  const path = city ? `/intro-video?city=${encodeURIComponent(city)}` : "/intro-video";
+  const res = await apiClient.get<IntroVideoConfigResponse>(path);
   return res;
 }

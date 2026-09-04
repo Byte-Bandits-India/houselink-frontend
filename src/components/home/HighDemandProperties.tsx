@@ -1,7 +1,10 @@
+"use client";
+
 import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { useHomeFilter } from "@/contexts/HomeFilterContext";
 import { getPopularProperties, getImageUrl, type PopularPropertyApiItem } from "@/lib/api";
 import { smoothScrollBy } from "@/lib/smoothScroll";
 import type { HighDemandPropertyCardProps } from "@/types/home";
@@ -55,14 +58,19 @@ function PropertyCard({ image, type, title, price, location, href }: HighDemandP
   return content;
 }
 
-export default function HighDemandProperties() {
+export default function HighDemandProperties({ city: propCity }: { city?: string } = {}) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { filters } = useHomeFilter();
+  const activeCity = propCity !== undefined ? propCity : filters.city;
+
   const [properties, setProperties] = useState<PopularPropertyApiItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
-    getPopularProperties()
+    setIsLoading(true);
+    setProperties([]);
+    getPopularProperties(activeCity)
       .then((data) => {
         if (isMounted) setProperties(data);
       })
@@ -75,7 +83,7 @@ export default function HighDemandProperties() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activeCity]);
 
   const handleScroll = (direction: "left" | "right") => {
     if (scrollRef.current) {

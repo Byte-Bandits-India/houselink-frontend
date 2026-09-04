@@ -5,7 +5,6 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  getStates,
   getCities,
   getFeatures,
   getPropertyCategories,
@@ -39,13 +38,6 @@ const categories = [
   { id: "villas", name: "Villas" },
   { id: "house", name: "Individual House" },
   { id: "commercial", name: "Commercial Property" },
-];
-
-const cities = [
-  { value: "chennai", label: "Chennai" },
-  { value: "bangalore", label: "Bangalore" },
-  { value: "mumbai", label: "Mumbai" },
-  { value: "hyderabad", label: "Hyderabad" },
 ];
 
 const defaultAmenities = [
@@ -109,9 +101,7 @@ function NativeSelect({
         onChange={(e) => onChange(e.target.value)}
         className="w-full appearance-none bg-transparent border-none outline-none text-sm text-gray-800 font-medium pr-5 cursor-pointer"
       >
-        <option value="" disabled>
-          {placeholder}
-        </option>
+        <option value="">{placeholder}</option>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
@@ -187,14 +177,15 @@ export default function PropertySearch() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("");
-  const [city, setCity] = useState("");
+  const [city, setCity] = useState("chennai");
   const [categoryType, setCategoryType] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [priceRange, setPriceRange] = useState(100);
   const [areaRange, setAreaRange] = useState(100000);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
-  const [citiesList, setCitiesList] =
-    useState<{ value: string; label: string }[]>(cities);
+  const [citiesList, setCitiesList] = useState<
+    { value: string; label: string }[]
+  >([]);
   const [categoriesList, setCategoriesList] =
     useState<{ value: string; label: string }[]>(propertyCategories);
   const [amenityList, setAmenityList] = useState<string[]>(defaultAmenities);
@@ -207,18 +198,34 @@ export default function PropertySearch() {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Typewriter placeholder animation
+  // Typewriter placeholder animation dynamically adjusted for selected city
   const [placeholderText, setPlaceholderText] = useState(
-    "Search for properties in Chennai...",
+    "Search for properties...",
   );
+
   useEffect(() => {
-    const placeholderSequences = [
-      "Search for properties in Chennai...",
-      "2 BHK Apartment in Guindy...",
-      "Office Space in OMR...",
-      "Luxury Villa in ECR...",
-      "Independent House in Adyar...",
-    ];
+    const selectedCityObj = citiesList.find(
+      (c) => c.value.toLowerCase() === city.toLowerCase(),
+    );
+    const cityName =
+      selectedCityObj?.label ||
+      (city ? city.charAt(0).toUpperCase() + city.slice(1) : "");
+
+    const placeholderSequences = cityName
+      ? [
+          `Search for properties in ${cityName}...`,
+          `2 BHK Apartment in ${cityName}...`,
+          `Commercial Property in ${cityName}...`,
+          `Luxury Villa in ${cityName}...`,
+          `Plot for sale in ${cityName}...`,
+        ]
+      : [
+          "Search for properties...",
+          "2 BHK Apartment...",
+          "Luxury Villa...",
+          "Commercial Office Space...",
+          "Plots & Lands for sale...",
+        ];
 
     let sequenceIndex = 0;
     let charIndex = placeholderSequences[0].length;
@@ -226,7 +233,8 @@ export default function PropertySearch() {
     let timeoutId: NodeJS.Timeout;
 
     const runTypewriter = () => {
-      const currentText = placeholderSequences[sequenceIndex];
+      const currentText =
+        placeholderSequences[sequenceIndex] || "Search for properties...";
 
       if (isDeleting) {
         if (charIndex > 0) {
@@ -253,10 +261,10 @@ export default function PropertySearch() {
       }
     };
 
-    timeoutId = setTimeout(runTypewriter, 1500);
+    timeoutId = setTimeout(runTypewriter, 500);
 
     return () => clearTimeout(timeoutId);
-  }, []);
+  }, [city, citiesList]);
 
   // ── Sync local state FROM context (home page only) ────────────────────────
   // This keeps PropertySearch in sync when FeaturedProperties (or any other
@@ -293,14 +301,15 @@ export default function PropertySearch() {
             value: c.name.toLowerCase().includes("plot")
               ? "plots"
               : c.name.toLowerCase().includes("villa")
-              ? "villas"
-              : c.name.toLowerCase().includes("apartment")
-              ? "apartments"
-              : c.name.toLowerCase().includes("house")
-              ? "house"
-              : c.name.toLowerCase().includes("commercial") || c.type === "commercial"
-              ? "commercial"
-              : String(c.id),
+                ? "villas"
+                : c.name.toLowerCase().includes("apartment")
+                  ? "apartments"
+                  : c.name.toLowerCase().includes("house")
+                    ? "house"
+                    : c.name.toLowerCase().includes("commercial") ||
+                        c.type === "commercial"
+                      ? "commercial"
+                      : String(c.id),
             label: c.name,
           }));
           setCategoriesList(list);
@@ -312,28 +321,37 @@ export default function PropertySearch() {
   useEffect(() => {
     async function loadBackendData() {
       try {
-        const statesRes = await getStates();
-        if (statesRes.success && statesRes.data) {
+        const citiesRes = await getCities();
+        if (citiesRes.success && citiesRes.data && citiesRes.data.length > 0) {
           const list: { value: string; label: string }[] = [];
-          for (const state of statesRes.data) {
-            const citiesRes = await getCities(Number(state.id));
-            if (citiesRes.success && citiesRes.data) {
-              citiesRes.data.forEach((c) => {
-                if (!list.some((item) => item.value === c.name.toLowerCase())) {
-                  list.push({
-                    value: c.name.toLowerCase(),
-                    label: c.name,
-                  });
-                }
+          citiesRes.data.forEach((c) => {
+            const val = c.name.toLowerCase().trim();
+            if (!list.some((item) => item.value === val)) {
+              list.push({
+                value: val,
+                label: c.name.trim(),
               });
             }
-          }
+          });
+          setCitiesList(list);
           if (list.length > 0) {
-            setCitiesList(list);
+            const chennaiItem = list.find(
+              (c) => c.value.toLowerCase() === "chennai",
+            );
+            const defaultCity = chennaiItem ? chennaiItem.value : list[0].value;
+            if (!city) {
+              setCity(defaultCity);
+              if (isHomePage) {
+                setFilters({
+                  ...homeFilters,
+                  city: homeFilters.city || defaultCity,
+                });
+              }
+            }
           }
         }
       } catch (e) {
-        console.error("Failed to load cities from backend, using fallback:", e);
+        console.error("Failed to load cities from backend:", e);
       }
 
       try {
@@ -439,6 +457,13 @@ export default function PropertySearch() {
       }
     }
   }, [searchParams]);
+
+  const handleCityChange = (newCity: string) => {
+    setCity(newCity);
+    if (isHomePage) {
+      setFilters({ ...homeFilters, city: newCity });
+    }
+  };
 
   const handleSearch = (overrides?: {
     keyword?: string;
@@ -579,19 +604,19 @@ export default function PropertySearch() {
 
     const queryParts: string[] = [];
     if (searchPurpose)
-      queryParts.push(
-        `property_purpose=${encodeURIComponent(searchPurpose)}`,
-      );
+      queryParts.push(`property_purpose=${encodeURIComponent(searchPurpose)}`);
     if (searchCategory && searchCategory !== "all")
       queryParts.push(`category=${encodeURIComponent(searchCategory)}`);
     if (searchLocation)
       queryParts.push(`location=${encodeURIComponent(searchLocation)}`);
-    if (searchCity && searchCity.toLowerCase() !== "chennai" && searchCity !== "")
+    if (searchCity && searchCity.toLowerCase() !== "all" && searchCity !== "")
       queryParts.push(`city=${encodeURIComponent(searchCity)}`);
     if (searchKeyword)
       queryParts.push(`keyword=${encodeURIComponent(searchKeyword)}`);
     if (searchAmenities && searchAmenities.length > 0)
-      queryParts.push(`amenities=${encodeURIComponent(searchAmenities.join(","))}`);
+      queryParts.push(
+        `amenities=${encodeURIComponent(searchAmenities.join(","))}`,
+      );
     if (searchMaxPrice)
       queryParts.push(`max_price=${encodeURIComponent(searchMaxPrice)}`);
     if (searchMaxArea)
@@ -677,29 +702,21 @@ export default function PropertySearch() {
           {/* City Dropdown */}
           <Select
             value={city || "chennai"}
-            onValueChange={(v) => setCity(v === "chennai" ? "" : v)}
+            onValueChange={handleCityChange}
           >
             <SelectTrigger className="w-[160px] bg-white rounded-full px-6 py-3 h-12 shadow-sm border border-gray-100 text-sm text-gray-800 font-bold focus:ring-0 focus:ring-offset-0 focus:outline-none my-0 cursor-pointer justify-between border-solid select-none">
               <SelectValue placeholder="Chennai" />
             </SelectTrigger>
             <SelectContent className="bg-white border border-gray-100 rounded-2xl shadow-md duration-300 ease-out z-50">
-              <SelectItem
-                value="chennai"
-                className="font-bold text-gray-800 cursor-pointer"
-              >
-                Chennai
-              </SelectItem>
-              {citiesList
-                .filter((o) => o.value !== "chennai")
-                .map((o) => (
-                  <SelectItem
-                    key={o.value}
-                    value={o.value}
-                    className="font-bold text-gray-800 cursor-pointer"
-                  >
-                    {o.label}
-                  </SelectItem>
-                ))}
+              {citiesList.map((o) => (
+                <SelectItem
+                  key={o.value}
+                  value={o.value}
+                  className="font-bold text-gray-800 cursor-pointer"
+                >
+                  {o.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

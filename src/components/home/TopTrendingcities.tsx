@@ -72,16 +72,21 @@ function CityCard({ image, name, propertiesCount, growthRate, locations }: CityC
 const CARD_WIDTH = 296; // 280px card + 16px gap (gap-4)
 const GAP = 24; // gap-6 = 24px
 
-export default function TopTrendingCities() {
+export default function TopTrendingCities({ city: propCity }: { city?: string } = {}) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoplayTimeoutRef = useRef<any>(null);
   const isAutoplayEnabledRef = useRef(true);
+  const { filters } = useHomeFilter();
+  const activeCity = propCity !== undefined ? propCity : filters.city;
+
   const [cities, setCities] = useState<PopularRegionApiItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
-    getPopularRegions()
+    setIsLoading(true);
+    setCities([]);
+    getPopularRegions(activeCity)
       .then((data) => {
         if (isMounted) setCities(data);
       })
@@ -92,7 +97,7 @@ export default function TopTrendingCities() {
         if (isMounted) setIsLoading(false);
       });
     return () => { isMounted = false; };
-  }, []);
+  }, [activeCity]);
 
   // Only duplicate for a seamless infinite loop once there are enough distinct
   // regions to make the loop read as more content, not the same region repeated.

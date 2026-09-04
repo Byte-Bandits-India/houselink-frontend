@@ -4,13 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAds } from "@/lib/api";
-
-
-
-const SLIDE_DURATION = 5000;
-
+import { useHomeFilter } from "@/contexts/HomeFilterContext";
 import type { Variants } from "framer-motion";
 import type { BannerSlide } from "@/types/home";
+
+const SLIDE_DURATION = 5000;
 
 const slideVariants: Variants = {
   enter: (direction: number) => ({
@@ -35,16 +33,23 @@ const slideVariants: Variants = {
   }),
 };
 
-const Banner = () => {
+interface BannerProps {
+  city?: string;
+}
+
+const Banner = ({ city: propCity }: BannerProps) => {
+  const { filters: homeFilters } = useHomeFilter();
+  const activeCity = propCity !== undefined ? propCity : homeFilters.city;
+
   const [banners, setBanners] = useState<BannerSlide[]>([]);
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
 
-  // Fetch banners from API
+  // Fetch banners from API whenever activeCity changes
   useEffect(() => {
     async function loadBanners() {
       try {
-        const res = await getAds();
+        const res = await getAds(activeCity);
         if (res.success && res.data && res.data.length > 0) {
           const now = new Date();
           const activeBanners = res.data
@@ -69,7 +74,7 @@ const Banner = () => {
               const pc = resolveUrl(ad.pcImage);
               const tab = resolveUrl(ad.tabletImage);
               const mob = resolveUrl(ad.mobileImage);
-              const fallback = pc || tab || mob || "/assets/default_images/Banner.png";
+              const fallback = pc || tab || mob;
 
               return {
                 id: ad.id,
@@ -83,17 +88,18 @@ const Banner = () => {
               };
             });
 
-          if (activeBanners.length > 0) {
-            setBanners(activeBanners);
-            setCurrent(0);
-          }
+          setBanners(activeBanners);
+          setCurrent(0);
+        } else {
+          setBanners([]);
         }
       } catch (err) {
         console.error("Failed to load banner ads:", err);
+        setBanners([]);
       }
     }
     loadBanners();
-  }, []);
+  }, [activeCity]);
 
   const handleNext = useCallback(() => {
     setDirection(1);

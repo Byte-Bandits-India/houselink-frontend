@@ -32,15 +32,14 @@ export async function getStates(countryId?: number): Promise<StatesResponse> {
 }
 
 /**
- * Fetch cities for a given stateId.
- * Returns 400 if stateId is missing.
+ * Fetch cities (optionally filtered for a given stateId).
  */
 export async function getCities(stateId?: number): Promise<CitiesResponse> {
-  if (stateId === undefined || stateId === null || isNaN(Number(stateId))) {
-    return { success: true, data: [] } as CitiesResponse;
-  }
+  const query = stateId !== undefined && stateId !== null && !isNaN(Number(stateId))
+    ? `?stateId=${stateId}`
+    : "";
   return apiClient.get<CitiesResponse>(
-    `/locations/cities?stateId=${stateId}`,
+    `/locations/cities${query}`,
     { skipAuth: true }
   );
 }
